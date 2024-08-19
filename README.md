@@ -20,7 +20,10 @@ DA-BlueRing
 ├── docs                         # Documentation files - to be expanded on soon
 │   ├── meetings
 │     ├── meeting minutes template.md
-│     ├── sprint one             # Sprint folders - more to be added soon
+│     ├── sprint one             
+|       ├── sprint planning.md
 |       ├── sprint standups.md
+|       ├── sprint standups.md   # to be added soon
+|   ├── risk tracking table
 └── README.md                    # THIS FILE
 ```
