@@ -1,4 +1,39 @@
 ﻿# AI-Budgerigar
+
+## Roles and Responsibilities
+### Product Owner
+- Define and prioritise the product backlog to align with project goals.
+- Act as the primary liaison between stakeholders and the development team.
+- Clearly communicate the product vision and objectives to the team.
+- Make decisions on scope, release plans, and feature prioritisation.
+- Review and accept completed work to ensure it meets the project requirements.
+
+### Scrum Master
+- Facilitate Scrum ceremonies, including sprint planning, daily stand-ups, sprint reviews, and retrospectives.
+- Remove obstacles that impede the team's progress.
+- Ensure the team adheres to Agile principles and practices.
+- Promote continuous improvement within the team.
+- Foster a collaborative and productive team environment.
+
+### Development Environment Lead
+- Set up and maintain the development environment, including tools, and software.
+- Ensure the environment is stable, scalable, and accessible to all team members.
+- Monitor and optimise the performance of the development environment.
+- Provide technical support to the development team for environment-related issues.
+- Keep the environment up to date with the latest updates, and security measures.
+
+### Quality Assurance (QA) Lead
+- Develop and implement a comprehensive QA strategy and test plans.
+- Oversee all testing activities, including unit tests, integration tests, system tests, and user acceptance tests.
+- Ensure the product meets the required quality standards before release.
+- Identify, document, and track defects; work with the development team to resolve them.
+- Continuously improve QA processes and methodologies.
+
+### Architecture Lead
+- Design and oversee the overall system architecture, ensuring it meets technical and business requirements.
+- Review and approve architectural changes and technical decisions.
+- Provide technical guidance to the team.
+- Ensure the architecture is scalable, secure, and maintainable.
  
 ## Meet The Team
 | **Name**              | **Role**                     | **Contact**                         |
