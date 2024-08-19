@@ -21,6 +21,6 @@ DA-BlueRing
 │   ├── meetings
 │     ├── meeting minutes template.md
 │     ├── sprint one             # Sprint folders - more to be added soon
-|       ├── sprint planning.md
+|       ├── sprint standups.md
 └── README.md                    # THIS FILE
 ```
