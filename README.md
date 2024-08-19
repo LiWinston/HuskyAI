@@ -23,7 +23,7 @@ DA-BlueRing
 │     ├── sprint one             
 |       ├── sprint planning.md
 |       ├── sprint standups.md
-|       ├── sprint standups.md   # to be added soon
+|       ├── sprint retrospective.md   # to be added soon
 |   ├── risk tracking table
 └── README.md                    # THIS FILE
 ```
