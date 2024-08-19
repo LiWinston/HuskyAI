@@ -10,7 +10,7 @@
 | Xiang Wang            |                           | xiang.wang2411@gmail.com            |
 | Pengyuan Yu           |                           | pengyuany@student.unimelb.edu.au    |
 | Rong Wang             |                           | rongwang@student.unimelb.edu.au     |
-| Yuxin Ren             |                           | yuxinr1@student.unimelb.edu.au      |
+| Yuxin Ren             | Quality Assurance Lead   | yuxinr1@student.unimelb.edu.au      |
 
 
 
