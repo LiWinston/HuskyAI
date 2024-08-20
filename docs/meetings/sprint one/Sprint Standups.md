@@ -134,4 +134,33 @@ Assigned to Scrum Master Adrian.
 <!Tasks assigned to team members, including deadlines and responsibilities>
 ## Action Items
 
-* Finish assigned tasks by Tuesday
+* Finish assigned tasks by Wednesday
+
+# Team Meeting #5 (20/08/2024)
+<!Prepared in advance to guide the meeting’s discussions>
+## Agenda
+
+* Provide updates on sprint 1 artefacts. 
+
+<!A record of attendees for accountability and reference>
+## Participants
+
+* Shrimant Kohli
+* Adrian Dam
+* Weiran Xu
+* Yongchun Li
+* Xiang Wang
+* Pengyuan Yu
+* Rong Wang
+* Yuxin Ren
+
+<!Key points and decisions made during the meeting>
+## Discussion Summary
+
+* Documentation space will be stored on Github repo
+* Executable Architecture will uploaded to Github and Canvas
+
+<!Tasks assigned to team members, including deadlines and responsibilities>
+## Action Items
+
+* Finish assigned tasks by Wednesday
