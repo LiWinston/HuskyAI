@@ -17,6 +17,7 @@ With regards to part 2, the technologies that will be used will be:
 - React
 - Node.js
 - PostGreSQL (With the PGVector extension)
+- Docker
 
 ## 3. Reuse Plan
 The following table refers to the components depicted in Section 1: the UML Component Diagram. 
@@ -24,6 +25,13 @@ The following table refers to the components depicted in Section 1: the UML Comp
 ## 4. Learning References
 A list of resources that are helpful for this project
 
-### 4.1 Introduction to RAG and Fine
+### 4.1 Introduction to RAG 
+https://www.youtube.com/watch?v=T-D1OfcDW1M
+
+### 4.2 How to Fine-Tune LLMs
+https://www.youtube.com/watch?v=eC6Hd1hFvos
+
+### 4.3 Fine Tuning Llama 3 and using it locally (training it on medical data)
+https://www.datacamp.com/tutorial/llama3-fine-tuning-locally
 
 ## 5. Design Notebook
