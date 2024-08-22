@@ -164,3 +164,33 @@ Assigned to Scrum Master Adrian.
 ## Action Items
 
 * Finish assigned tasks by Wednesday
+
+# Team Meeting #6 (22/08/2024)
+<!Prepared in advance to guide the meeting’s discussions>
+## Agenda
+
+* Finalise deliverables, and assign remaining tasks
+
+<!A record of attendees for accountability and reference>
+## Participants
+
+* Shrimant Kohli
+* Adrian Dam
+* Weiran Xu
+* Yongchun Li
+* Xiang Wang
+* Pengyuan Yu
+* Rong Wang
+* Yuxin Ren
+
+<!Key points and decisions made during the meeting>
+## Discussion Summary
+
+* Change weekly standup to more appropriate time
+
+<!Tasks assigned to team members, including deadlines and responsibilities>
+## Action Items
+
+* Create the acceptance test narrative
+* Create the skeleton code
+* Proofread all work (To be done by QA lead @Yuxin)
