@@ -6,11 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
+@RequestMapping("/chat")
 public class ChatController {
     @Autowired
     @Qualifier("baidu")
@@ -22,6 +23,18 @@ public class ChatController {
         try {
             // Use chatService to handle the request
             String response = chatService.chat(prompt);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            // Catch any exception and return error response
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<?> chatPost(@RequestBody Map<String, String> body) {
+        try {
+            // Use chatService to handle the request
+            String response = chatService.chat(body.get("prompt"));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             // Catch any exception and return error response

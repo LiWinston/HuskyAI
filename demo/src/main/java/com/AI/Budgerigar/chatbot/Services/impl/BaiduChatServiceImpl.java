@@ -4,6 +4,7 @@ import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.model.chat.ChatResponse;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,9 +29,9 @@ public class BaiduChatServiceImpl implements ChatService {
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
 
     // Initialize a fixed greeting for the user.
-    private static final String GREETING_USER = "Hello";
+    private static final String GREETING_USER = "Hi";
     // Initialize a fixed greeting for the assistant in response to the user.
-    private static final String GREETING_ASSISTANT = "Hello! What can I do for you?";
+    private static final String GREETING_ASSISTANT = "What can I do for U?";
 
     @PostConstruct
     public void init() {
@@ -45,8 +46,8 @@ public class BaiduChatServiceImpl implements ChatService {
     @Override
     public String chat(String input) {
         try {
-            // Add the user's input to the conversation history.
-            conversationHistory.add(new String[]{"user", input});
+            // Add the user's input to the conversation history with HTML escaping.
+            conversationHistory.add(new String[]{"user", StringEscapeUtils.escapeHtml4(input)});
 
             // Create a ChatCompletion object and configure it with the model from BaiduConfig.
             var chatCompletion = qianfan.chatCompletion()
@@ -66,13 +67,15 @@ public class BaiduChatServiceImpl implements ChatService {
             logInfo(result);
 
             // Add the model's response to the conversation history.
-            conversationHistory.add(new String[]{"assistant", result});
+            conversationHistory.add(new String[]{"assistant", StringEscapeUtils.escapeHtml4(result)});
 
             // Return the result to the caller.
             return result;
         } catch (Exception e) {
             // Log any exceptions that occur during the chat processing.
             logger.log(Level.SEVERE, "Error occurred in " + BaiduChatServiceImpl.class.getName() + ": " + e.getMessage(), e);
+            // Add a user-friendly error message to the conversation history.
+            conversationHistory.add(new String[]{"assistant", "Query failed. Please try again."});
             // Throw a RuntimeException to indicate an error in processing the chat request.
             throw new RuntimeException("Error processing chat request", e);
         }

@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { okaidia } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import './Chat.css';
+import DOMPurify from 'dompurify';
 
 function Chat() {
     const [messages, setMessages] = useState([]);
@@ -15,14 +16,19 @@ function Chat() {
         if (input.trim() === '') return;
 
         setMessages([...messages, { sender: 'user', text: input }]);
-        setLoading(true); // Set loading state to true
+        setLoading(true);
 
         try {
-            const response = await axios.get('http://localhost:8080/chat', {
-                params: { prompt: input }
-            });
+            // 使用 POST 请求发送数据
+            const response = await axios.post('http://localhost:8080/chat',
+                { prompt: input }, // 请求体中的数据
+                { headers: { 'Content-Type': 'application/json' } } // 设置请求头为 JSON 类型
+            );
 
-            setMessages([...messages, { sender: 'user', text: input }, { sender: 'bot', text: response.data }]);
+            // Sanitize response data
+            const sanitizedResponse = DOMPurify.sanitize(response.data);
+
+            setMessages([...messages, { sender: 'user', text: input }, { sender: 'bot', text: sanitizedResponse }]);
             setError(null);
         } catch (error) {
             let errorMessage = 'An unexpected error occurred';
@@ -43,7 +49,7 @@ function Chat() {
         }
 
         setInput('');
-        setLoading(false); // Reset loading state to false
+        setLoading(false);
     };
 
     return (
@@ -52,7 +58,7 @@ function Chat() {
                 {messages.map((msg, index) => (
                     <div key={index} className={`message ${msg.sender}`}>
                         <ReactMarkdown
-                            children={msg.text}
+                            children={DOMPurify.sanitize(msg.text)} // Sanitize user input
                             components={{
                                 code({ node, inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '');
@@ -82,11 +88,11 @@ function Chat() {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder="Type your message..."
-                    disabled={loading} // Disable input when loading
-                    className={loading ? 'input-disabled' : ''} // Apply class when loading
+                    disabled={loading}
+                    className={loading ? 'input-disabled' : ''}
                 />
                 <button onClick={sendMessage} disabled={loading}>
-                    {loading ? 'Sending...' : 'Send'} {/* Show loading text when loading */}
+                    {loading ? 'Sending...' : 'Send'}
                 </button>
             </div>
         </div>
