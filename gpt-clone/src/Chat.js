@@ -9,11 +9,13 @@ function Chat() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const sendMessage = async () => {
         if (input.trim() === '') return;
 
         setMessages([...messages, { sender: 'user', text: input }]);
+        setLoading(true); // Set loading state to true
 
         try {
             const response = await axios.get('http://localhost:8080/chat', {
@@ -26,7 +28,7 @@ function Chat() {
             let errorMessage = 'An unexpected error occurred';
             if (error.response) {
                 if (error.response.data && typeof error.response.data === 'object') {
-                    errorMessage = error.response.data.error + ': ' + error.response.data.message + ' (' + error.response.data.status + ')'  || 'No error message in response';
+                    errorMessage = error.response.data.error + ': ' + error.response.data.message + ' (' + error.response.data.status + ')' || 'No error message in response';
                 } else if (typeof error.response.data === 'string') {
                     errorMessage = error.response.data;
                 } else {
@@ -41,6 +43,7 @@ function Chat() {
         }
 
         setInput('');
+        setLoading(false); // Reset loading state to false
     };
 
     return (
@@ -77,10 +80,14 @@ function Chat() {
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder="Type your message..."
+                    disabled={loading} // Disable input when loading
+                    className={loading ? 'input-disabled' : ''} // Apply class when loading
                 />
-                <button onClick={sendMessage}>Send</button>
+                <button onClick={sendMessage} disabled={loading}>
+                    {loading ? 'Sending...' : 'Send'} {/* Show loading text when loading */}
+                </button>
             </div>
         </div>
     );
