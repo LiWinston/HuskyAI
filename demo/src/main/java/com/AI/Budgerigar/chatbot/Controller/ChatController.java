@@ -19,12 +19,16 @@ import java.util.List;
 @RestController
 public class ChatController {
 
-    @Autowired
-    private ArkService arkService;
+    private final ArkService arkService;
 
 //    @Value("${volcengine.model}")
     @Value("ep-20240823074926-tvjgz")
     private String model;
+
+    @Autowired
+    public ChatController(ArkService arkService) {
+        this.arkService = arkService;
+    }
 
     @GetMapping("/chat")
     public ResponseEntity<?> chat(@RequestParam String prompt) {

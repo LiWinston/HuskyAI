@@ -4,7 +4,9 @@ import com.volcengine.ark.runtime.service.ArkService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
+@Lazy
 @Configuration
 public class ArkServiceConfig {
 
@@ -21,7 +23,7 @@ public class ArkServiceConfig {
     private String region;
 
     @Bean
-    public ArkService arkService() {
+        public ArkService arkService() {
         return ArkService.builder()
                 .ak(ak)
                 .sk(sk)
