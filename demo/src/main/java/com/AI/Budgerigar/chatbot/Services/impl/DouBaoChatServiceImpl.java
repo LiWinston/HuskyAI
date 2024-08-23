@@ -31,7 +31,7 @@ public class DouBaoChatServiceImpl implements ChatService {
         ChatCompletionRequest request = ChatCompletionRequest.builder()
                 .model(model)
                 .messages(List.of(
-                        ChatMessage.builder().role(ChatMessageRole.SYSTEM).content("你是豆包，是由字节跳动开发的 AI 人工智能助手").build(),
+//                        ChatMessage.builder().role(ChatMessageRole.SYSTEM).content("你是豆包，是由字节跳动开发的 AI 人工智能助手").build(),
                         ChatMessage.builder().role(ChatMessageRole.USER).content(prompt).build()
                 ))
                 .build();

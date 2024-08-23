@@ -1,6 +1,7 @@
 package com.AI.Budgerigar.chatbot.Config;
 
 import com.AI.Budgerigar.chatbot.Services.ChatService;
+import com.AI.Budgerigar.chatbot.Services.impl.BaiduChatServiceImpl;
 import com.AI.Budgerigar.chatbot.Services.impl.DouBaoChatServiceImpl;
 import com.AI.Budgerigar.chatbot.Services.impl.OpenAIChatServiceImpl;
 import com.volcengine.ark.runtime.service.ArkService;
@@ -26,7 +27,7 @@ public class AppConfig {
 
     @Bean
     @Qualifier("doubao")
-    public ChatService chatService(Environment environment, ArkService arkService) {
+    public ChatService DouBaoChatService(Environment environment, ArkService arkService) {
         try {
             if (arkService == null) {
                 return openAIChatService();
@@ -40,5 +41,18 @@ public class AppConfig {
 //            return openAIChatService();
         }
         return null;
+    }
+
+
+    @Bean
+    @Qualifier("baidu")
+    public ChatService BaiduChatService() {
+        try {
+            return new BaiduChatServiceImpl();
+        } catch (Exception e) {
+            // 可以选择记录日志或进行其他处理
+            e.printStackTrace();
+            return null;
+        }
     }
 }

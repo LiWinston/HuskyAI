@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ChatController {
     @Autowired
-    @Qualifier("doubao")
+    @Qualifier("baidu")
     private ChatService chatService;
 
 
