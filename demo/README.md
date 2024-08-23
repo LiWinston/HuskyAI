@@ -39,3 +39,16 @@ get your api key from openai, and set it in application.properties -- openai.api
 ```
 https://platform.openai.com/settings/profile?tab=api-keys
 ```
+
+
+
+
+
+## Tip
+- sometimes people do force push, which leads to the local branch out of sync with the remote branch. To fix this, you can run the following commands:
+  ```bash
+  git fetch origin
+  git reset --hard origin/main
+  ```
+  This will reset your local branch to the remote branch's state. Be careful with this command as it will discard all your local changes.
+  (After all, force push is not recommended as a good practice)
