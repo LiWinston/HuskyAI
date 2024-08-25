@@ -5,7 +5,7 @@
 
 ## 1. UML Component Diagram
 
-  
+![Component Diagram](./component_diagram.png)
 
 ## 2. Technologies To be Used In Project
 
@@ -51,11 +51,11 @@ The following table refers to the components depicted in Section 1: the UML Comp
 
 |----------|----------|----------|
 
-| | | |
+| Webapp| Develop| |
 
-| | | |
+| Large Language Model| Reuse with modification| Use prebuilt transformer (e.g llama 3.1) and fine-tune|
 
-| | | |
+| Database| Reuse generic| Use PostgreSQL with pgvector framework|
 
   
 
