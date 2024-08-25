@@ -50,15 +50,77 @@
 
 
 ```
-DA-BlueRing
-│
-├── docs                         # Documentation files - to be expanded on soon
-│   ├── meetings
-│     ├── meeting minutes template.md
-│     ├── sprint one             
-|       ├── sprint planning.md
-|       ├── sprint standups.md
-|       ├── sprint retrospective.md   # to be added soon
-|   ├── risk tracking table
-└── README.md                    # THIS FILE
+|   Dockerfile
+|   README.md
+|   
++---demo
+|   |   mvnw
+|   |   mvnw.cmd
+|   |   pom.xml
+|   |   README.md
+|   |   
+|   +---.mvn
+|   |           
+|   \---src
+|       +---main
+|       |   +---java
+|       |   |   \---com
+|       |   |       \---AI
+|       |   |           \---Budgerigar
+|       |   |               \---chatbot
+|       |   |                   |   ChatBotApplication.java
+|       |   |                   |   
+|       |   |                   +---AIUtil
+|       |   |                   |       Message.java
+|       |   |                   |       
+|       |   |                   +---Config
+|       |   |                   |       AppConfig.java
+|       |   |                   |       ArkServiceConfig.java
+|       |   |                   |       BaiduConfig.java
+|       |   |                   |       OpenAIRestTemplateConfig.java
+|       |   |                   |       WebConfig.java
+|       |   |                   |       
+|       |   |                   +---Controller
+|       |   |                   |       ChatController.java
+|       |   |                   |       
+|       |   |                   +---DTO
+|       |   |                   |       ChatRequest.java
+|       |   |                   |       ChatResponse.java
+|       |   |                   |       ErrorResponse.java
+|       |   |                   |       
+|       |   |                   \---Services
+|       |   |                       |   ChatService.java
+|       |   |                       |   
+|       |   |                       \---impl
+|       |   |                               BaiduChatServiceImpl.java
+|       |   |                               DouBaoChatServiceImpl.java
+|       |   |                               OpenAIChatServiceImpl.java
+|       |   |                               
+|       |   \---resources
+|       |           application.properties
+|       |           
+|       \---test
+|           \---java
+|               \---com
+|                   \---AI
+|                       \---Budgerigar
+|                           \---chatbot
+|                                   DemoApplicationTests.java
+|                                   
++---docs
+|   |   executable_architecture.pdf
+|   |   risk_tracking_table.md
+|   |   
+|   +---design concept
+|   |       component_diagram.png
+|   |       design_concept.md
+|   |       
+|   \---meetings
+|       |   meeting_minutes_template.md
+|       |   
+|       \---sprint one
+|               sprint_planning.md
+|               sprint_standups.md
+|               
+\---gpt-clone
 ```
