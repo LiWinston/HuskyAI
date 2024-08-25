@@ -1,11 +1,11 @@
 
 # Design Concept
 
-  
+
 
 ## 1. UML Component Diagram
 
-![Component Diagram](./component_diagram.png)
+![Component Diagram](./component diagram.png)
 
 ## 2. Technologies To be Used In Project
 
