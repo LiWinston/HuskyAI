@@ -5,7 +5,7 @@
 
 ## 1. UML Component Diagram
 
-![Component Diagram](./component diagram.png)
+![Component Diagram](./component_diagram.png)
 
 ## 2. Technologies To be Used In Project
 
