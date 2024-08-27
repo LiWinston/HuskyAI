@@ -121,6 +121,7 @@
 |       \---sprint one
 |               sprint_planning.md
 |               sprint_standups.md
+|               sprint_retro.md
 |               
 \---gpt-clone
 ```
