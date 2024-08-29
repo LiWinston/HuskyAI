@@ -20,7 +20,7 @@ function Chat() {
 
         try {
             // 使用 POST 请求发送数据
-            const response = await axios.post('http://localhost:8080/chat',
+            const response = await axios.post('http://localhost:8090/chat',
                 { prompt: input }, // 请求体中的数据
                 { headers: { 'Content-Type': 'application/json' } } // 设置请求头为 JSON 类型
             );
