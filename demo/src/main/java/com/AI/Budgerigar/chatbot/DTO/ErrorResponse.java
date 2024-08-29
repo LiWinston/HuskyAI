@@ -12,9 +12,9 @@ public class ErrorResponse {
     // Getter and Setter
     private String error;
 
-    public ErrorResponse(String error) {
-        this.error = error;
-        logger.error(error);
+    public ErrorResponse(Exception error) {
+        this.error = error.getMessage() + " " + error.getCause();
+        logger.error(error.getMessage());
     }
 
     public void setError(String error) {

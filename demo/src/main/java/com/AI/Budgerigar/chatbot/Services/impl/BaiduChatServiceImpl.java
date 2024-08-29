@@ -1,6 +1,8 @@
 package com.AI.Budgerigar.chatbot.Services.impl;
 
+import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
+import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.model.chat.ChatResponse;
@@ -9,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,66 +24,63 @@ public class BaiduChatServiceImpl implements ChatService {
     @Autowired
     private BaiduConfig baiduConfig;
 
-    private List<String[]> conversationHistory;
+    @Autowired
+    private ChatMessagesRedisDAO chatMessagesRedisDAO;
 
-    // Declare a static Logger object for logging within this class.
+    @Autowired
+    private ChatMessagesMongoDAO chatMessagesMongoDAO;
+
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
 
-    // Initialize a fixed greeting for the user.
-    private static final String GREETING_USER = "Hi";
-    // Initialize a fixed greeting for the assistant in response to the user.
-    private static final String GREETING_ASSISTANT = "What can I do for U?";
+    private String conversationId;
 
     @PostConstruct
     public void init() {
-        // Initialize the conversation history list.
-        conversationHistory = new ArrayList<>();
-        // Add the initial greeting from the user to the conversation history.
-        conversationHistory.add(new String[]{"user", GREETING_USER});
-        // Add the initial greeting response from the assistant to the conversation history.
-        conversationHistory.add(new String[]{"assistant", GREETING_ASSISTANT});
+        conversationId = "default_baidu_conversation"; // This would typically be dynamic per session/user
+//        chatMessagesRedisDAO.addMessage(conversationId, "user", "Hi");
+//        chatMessagesRedisDAO.addMessage(conversationId, "assistant", "What can I do for U?");
     }
 
     @Override
     public String chat(String input) {
         try {
-            // Add the user's input to the conversation history with HTML escaping.
-            conversationHistory.add(new String[]{"user", StringEscapeUtils.escapeHtml4(input)});
+            // 添加用户输入到 Redis 对话历史
+            chatMessagesRedisDAO.addMessage(conversationId, "user", StringEscapeUtils.escapeHtml4(input));
 
-            // Create a ChatCompletion object and configure it with the model from BaiduConfig.
-            var chatCompletion = qianfan.chatCompletion()
-                    .model(baiduConfig.getModel());
+            // 创建 ChatCompletion 请求对象
+            var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getModel());
 
-            // Add each message from the conversation history to the ChatCompletion request.
-            for (String[] message : conversationHistory) {
-                chatCompletion.addMessage(message[0], message[1]);
+            // 从 Redis 中获取完整的对话历史
+            List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
+
+            // 添加对话历史到请求对象中
+            for (String[] entry : conversationHistory) {
+                chatCompletion.addMessage(entry[0], entry[1]); // entry[0] 是角色，entry[1] 是内容
             }
 
-            // Execute the ChatCompletion request and get the response.
+            // 执行请求
             ChatResponse response = chatCompletion.execute();
-
-            // Get the result from the response.
             String result = response.getResult();
-            // Log the result for debugging purposes.
             logInfo(result);
 
-            // Add the model's response to the conversation history.
-            conversationHistory.add(new String[]{"assistant", StringEscapeUtils.escapeHtml4(result)});
+            // 将助手的响应添加到 Redis 对话历史
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", StringEscapeUtils.escapeHtml4(result));
 
-            // Return the result to the caller.
+            // 检查是否需要将对话历史持久化到 MongoDB 中
+            if (conversationHistory.size() >= 3) {
+//                 Call to persist to MongoDB
+                 chatMessagesMongoDAO.updateHistoryById(conversationId, 3); // Example to persist the latest 3 entries
+            }
+
             return result;
         } catch (Exception e) {
-            // Log any exceptions that occur during the chat processing.
             logger.log(Level.SEVERE, "Error occurred in " + BaiduChatServiceImpl.class.getName() + ": " + e.getMessage(), e);
-            // Add a user-friendly error message to the conversation history.
-            conversationHistory.add(new String[]{"assistant", "Query failed. Please try again."});
-            // Throw a RuntimeException to indicate an error in processing the chat request.
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", "Query failed. Please try again.");
             throw new RuntimeException("Error processing chat request", e);
         }
     }
 
     public void logInfo(String message) {
-        // Log an information message with a prefix indicating the class name.
         logger.info(BaiduChatServiceImpl.class.getName() + " : " + message.substring(0, Math.min(20, message.length())));
     }
 }

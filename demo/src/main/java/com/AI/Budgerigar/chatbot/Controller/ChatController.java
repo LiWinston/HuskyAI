@@ -27,7 +27,7 @@ public class ChatController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             // Catch any exception and return error response
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e));
         }
     }
 
@@ -39,7 +39,7 @@ public class ChatController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             // Catch any exception and return error response
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e));
         }
     }
 

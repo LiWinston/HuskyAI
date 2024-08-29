@@ -7,9 +7,36 @@ public interface ChatService {
     String chat(String prompt) throws Exception;
 
     // 默认方法来记录信息
+//    default void logInfo(String message) {
+//        String className = getCallingClassName();
+//        logger.info(className + " : " + message.substring(0, Math.min(40, message.length())));
+//    }
+
+    //
     default void logInfo(String message) {
         String className = getCallingClassName();
-        logger.info(className + " : " + message.substring(0, Math.min(40, message.length())));
+        Logger logger = Logger.getLogger(className);
+
+        // Format the message to split into lines if it exceeds 200 characters
+        StringBuilder formattedMessage = new StringBuilder();
+        int maxLineLength = 200;
+        int start = 0;
+
+        // Loop through the message and break into lines
+        while (start < message.length()) {
+            int end = Math.min(start + maxLineLength, message.length());
+            formattedMessage.append(message, start, end);
+
+            // If not at the end of the message, add a newline for the next chunk
+            if (end < message.length()) {
+                formattedMessage.append("\n");
+            }
+
+            start = end;
+        }
+
+        // Log the formatted message
+        logger.info(className + " : " + formattedMessage.toString());
     }
 
     // 默认方法来记录错误
