@@ -81,7 +81,7 @@ EXPOSE 8090
 
 # 启动 Nginx 和 Spring Boot 应用程序
 # Start Nginx and the Spring Boot application
-CMD ["sh", "-c", "nginx && java -jar -Dserver.port=8090 app.jar"]
+CMD ["sh", "-c", "nginx && java -jar app.jar"]
 # 指定 Spring Boot 运行在 8090 端口
 
 
@@ -89,4 +89,4 @@ CMD ["sh", "-c", "nginx && java -jar -Dserver.port=8090 app.jar"]
 
 #Instructions for building the Docker image and running the container
 # docker build -t lms-gpt .
-# docker run -p 80:80 -p 8080:8080 lms-gpt
+# docker run -p 80:80 -p 8090:8090 lms-gpt
