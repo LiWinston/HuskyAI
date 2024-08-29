@@ -1,5 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
+import './Chat.css';
+import './index.css';
 import React from 'react';
 import Chat from "./Chat";
 
