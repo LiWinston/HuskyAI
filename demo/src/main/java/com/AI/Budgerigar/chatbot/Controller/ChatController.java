@@ -31,7 +31,7 @@ public class ChatController {
         }
     }
 
-    @PostMapping
+    @PostMapping()
     public ResponseEntity<?> chatPost(@RequestBody Map<String, String> body) {
         try {
             // Use chatService to handle the request
@@ -41,5 +41,10 @@ public class ChatController {
             // Catch any exception and return error response
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e.getMessage()));
         }
+    }
+
+    @RequestMapping(value = "/chat", method = RequestMethod.OPTIONS)
+    public ResponseEntity<Void> handleOptionsRequest() {
+        return ResponseEntity.ok().build();
     }
 }
