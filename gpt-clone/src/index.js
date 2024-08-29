@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import axios from 'axios';
+import logo from './logo.svg'; // 确保导入你的logo文件
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -11,13 +12,26 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 const LOCAL_URLS = ['http://localhost:8080/chat', 'http://localhost:8090/chat'];
 const REMOTE_URL = 'https://lmsgpt.onrender.com/chat';
 
+// 加载时显示的 Loading 组件
+function LoadingScreen() {
+    return (
+        <div className="loading-screen">
+            <img src={logo} alt="Loading..." className="loading-logo" />
+            <p>Loading, please wait...</p>
+        </div>
+    );
+}
+
 async function detectEnvironment() {
+    let isLocalServiceAvailable = false;
+
     for (const url of LOCAL_URLS) {
         try {
             // 尝试向本地服务发送请求以检测其可用性
             await axios.post(url, { prompt: 'ping' });
             // 如果请求成功，将基础URL设置为本地URL
             window.API_BASE_URL = url.replace('/chat', '');
+            isLocalServiceAvailable = true;
             break;
         } catch (error) {
             // 捕获错误并继续尝试下一个URL
@@ -25,17 +39,24 @@ async function detectEnvironment() {
     }
 
     // 如果所有本地服务都不可用，设置为远程URL
-    if (!window.API_BASE_URL) {
+    if (!isLocalServiceAvailable) {
         window.API_BASE_URL = REMOTE_URL.replace('/chat', '');
     }
 
-    // 渲染应用
+    // 渲染主应用
     root.render(
         <React.StrictMode>
             <App />
         </React.StrictMode>
     );
 }
+
+// 初始渲染 LoadingScreen
+root.render(
+    <React.StrictMode>
+        <LoadingScreen />
+    </React.StrictMode>
+);
 
 // 调用检测环境函数
 detectEnvironment();
