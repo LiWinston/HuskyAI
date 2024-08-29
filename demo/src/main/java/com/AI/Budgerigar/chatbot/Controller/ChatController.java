@@ -19,7 +19,7 @@ public class ChatController {
     private ChatService chatService;
 
 
-    @GetMapping("/chat")
+    @GetMapping()
     public ResponseEntity<?> chat(@RequestParam String prompt) {
         try {
             // Use chatService to handle the request

@@ -9,7 +9,7 @@ import logo from './logo.svg'; // Make sure to import your logo file / 确保导
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 // Set default API URLs / 设置默认API URL
-const LOCAL_URLS = ['http://localhost:8080/health', 'http://localhost:8090/health'];
+const LOCAL_URLS = ['http://localhost:8090/health'];
 const REMOTE_URL = '/health';
 
 // Loading screen component displayed while checking service availability / 检测服务可用性时显示的加载组件
@@ -41,16 +41,15 @@ async function detectEnvironment(updateStatus, setError, finishDetection) {
     for (const url of LOCAL_URLS) {
         try {
             updateStatus(`Trying to connect to local service: ${url}`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Add a short delay / 添加短暂延迟
             await axios.get(url); // Use GET request to check service availability / 使用GET请求检测服务可用性
             window.API_BASE_URL = url.replace('/health', ''); // Set base URL to the root of the service / 设置基础URL为服务的根路径
             isLocalServiceAvailable = true;
             updateStatus(`Connected to local service: ${url}`);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Display status message / 显示状态消息
+            await new Promise(resolve => setTimeout(resolve, 300)); // Display status message / 显示状态消息
             break;
         } catch (error) {
             updateStatus(`Failed to connect to local service: ${url}`);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Display status message / 显示状态消息
+            await new Promise(resolve => setTimeout(resolve, 300)); // Display status message / 显示状态消息
         }
     }
 
@@ -58,12 +57,11 @@ async function detectEnvironment(updateStatus, setError, finishDetection) {
     if (!isLocalServiceAvailable) {
         try {
             updateStatus(`Trying to connect to remote server: ${REMOTE_URL}`);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Add a short delay / 添加短暂延迟
             await axios.get(REMOTE_URL); // Use GET request to check remote service availability / 使用GET请求检测远程服务可用性
             window.API_BASE_URL = REMOTE_URL.replace('/health', '/api');
 
             updateStatus('Connected to remote server');
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Display status message / 显示状态消息
+            await new Promise(resolve => setTimeout(resolve, 300)); // Display status message / 显示状态消息
         } catch (error) {
             // If remote service is unavailable or blocked by CORS policy / 如果远程服务不可用或被CORS策略阻止
             setError('Failed to connect');
