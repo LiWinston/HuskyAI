@@ -11,7 +11,7 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-.loading-screen {
+.loading-screen, .error-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,7 +26,7 @@ code {
   margin-bottom: 20px;
 }
 
-.loading-screen p {
+.loading-screen p, .error-screen p {
   font-size: 1.2em;
   color: #333;
 }

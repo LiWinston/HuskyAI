@@ -4,15 +4,15 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import axios from 'axios';
-import logo from './logo.svg'; // 确保导入你的logo文件
+import logo from './logo.svg'; // Make sure to import your logo file / 确保导入你的logo文件
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-// 设置默认API URL
-const LOCAL_URLS = ['http://localhost:8080/chat', 'http://localhost:8090/chat'];
-const REMOTE_URL = 'https://lmsgpt.onrender.com/chat';
+// Set default API URLs / 设置默认API URL
+const LOCAL_URLS = ['http://localhost:8080/health', 'http://localhost:8090/health'];
+const REMOTE_URL = '/health';
 
-// 加载时显示的 Loading 组件
+// Loading screen component displayed while checking service availability / 检测服务可用性时显示的加载组件
 function LoadingScreen({ statusMessage }) {
     return (
         <div className="loading-screen">
@@ -23,58 +23,84 @@ function LoadingScreen({ statusMessage }) {
     );
 }
 
-async function detectEnvironment(updateStatus) {
-    let isLocalServiceAvailable = false;
-
-    for (const url of LOCAL_URLS) {
-        try {
-            updateStatus(`Trying to connect to local service: ${url}`);
-            // 尝试向本地服务发送请求以检测其可用性
-            await axios.post(url, { prompt: 'ping' });
-            // 如果请求成功，将基础URL设置为本地URL
-            window.API_BASE_URL = url.replace('/chat', '');
-            isLocalServiceAvailable = true;
-            updateStatus(`Connected to local service: ${url}`);
-            break;
-        } catch (error) {
-            updateStatus(`Failed to connect to local service: ${url}`);
-            // 捕获错误并继续尝试下一个URL
-        }
-    }
-
-    // 如果所有本地服务都不可用，设置为远程URL
-    if (!isLocalServiceAvailable) {
-        window.API_BASE_URL = REMOTE_URL.replace('/chat', '');
-        updateStatus('Connected to remote server');
-    }
-
-    // 渲染主应用
-    root.render(
-        <React.StrictMode>
-            <App />
-        </React.StrictMode>
+// Error screen component displayed if a connection error occurs / 如果发生连接错误时显示的错误组件
+function ErrorScreen({ errorMessage }) {
+    return (
+        <div className="error-screen">
+            <img src={logo} alt="Error" className="loading-logo" />
+            <p>{errorMessage}</p>
+        </div>
     );
 }
 
-function LoadingContainer() {
-    const [statusMessage, setStatusMessage] = useState('');
+// Function to detect the environment by checking the availability of services / 通过检查服务的可用性来检测环境的函数
+async function detectEnvironment(updateStatus, setError, finishDetection) {
+    let isLocalServiceAvailable = false;
 
-    useEffect(() => {
-        // 调用检测环境函数并传递状态更新函数
-        detectEnvironment(setStatusMessage);
-    }, []);
+    // Check local services / 检查本地服务
+    for (const url of LOCAL_URLS) {
+        try {
+            updateStatus(`Trying to connect to local service: ${url}`);
+            await new Promise(resolve => setTimeout(resolve, 500)); // Add a short delay / 添加短暂延迟
+            await axios.get(url); // Use GET request to check service availability / 使用GET请求检测服务可用性
+            window.API_BASE_URL = url.replace('/health', ''); // Set base URL to the root of the service / 设置基础URL为服务的根路径
+            isLocalServiceAvailable = true;
+            updateStatus(`Connected to local service: ${url}`);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Display status message / 显示状态消息
+            break;
+        } catch (error) {
+            updateStatus(`Failed to connect to local service: ${url}`);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Display status message / 显示状态消息
+        }
+    }
 
-    return <LoadingScreen statusMessage={statusMessage} />;
+    // If local services are not available, check remote service / 如果本地服务不可用，检测远程服务
+    if (!isLocalServiceAvailable) {
+        try {
+            updateStatus(`Trying to connect to remote server: ${REMOTE_URL}`);
+            await new Promise(resolve => setTimeout(resolve, 500)); // Add a short delay / 添加短暂延迟
+            await axios.get(REMOTE_URL); // Use GET request to check remote service availability / 使用GET请求检测远程服务可用性
+            window.API_BASE_URL = REMOTE_URL.replace('/health', '');
+            updateStatus('Connected to remote server');
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Display status message / 显示状态消息
+        } catch (error) {
+            // If remote service is unavailable or blocked by CORS policy / 如果远程服务不可用或被CORS策略阻止
+            setError('Failed to connect to remote server due to network error or CORS policy.');
+            return; // Stop further processing / 停止进一步处理
+        }
+    }
+
+    // Complete detection and notify to render the main application / 完成检测并通知渲染主应用
+    finishDetection();
 }
 
-// 初始渲染 LoadingContainer，它将负责状态管理
+// Loading container component to manage state / 管理状态的加载容器组件
+function LoadingContainer() {
+    const [statusMessage, setStatusMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const [isDetectionComplete, setDetectionComplete] = useState(false);
+
+    useEffect(() => {
+        detectEnvironment(setStatusMessage, setErrorMessage, () => setDetectionComplete(true));
+    }, []);
+
+    if (errorMessage) {
+        return <ErrorScreen errorMessage={errorMessage} />; // Display error screen if there is an error / 如果有错误，显示错误屏幕
+    }
+
+    if (isDetectionComplete) {
+        return <App />; // Render the main application if detection is complete / 如果检测完成，渲染主应用
+    }
+
+    return <LoadingScreen statusMessage={statusMessage} />; // Display loading screen while checking / 检查时显示加载屏幕
+}
+
+// Initial rendering of LoadingContainer, which will manage state / 初始渲染LoadingContainer，它将负责状态管理
 root.render(
     <React.StrictMode>
         <LoadingContainer />
     </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+// Report web vitals (optional) / 报告网页指标（可选）
 reportWebVitals();
