@@ -60,12 +60,13 @@ async function detectEnvironment(updateStatus, setError, finishDetection) {
             updateStatus(`Trying to connect to remote server: ${REMOTE_URL}`);
             await new Promise(resolve => setTimeout(resolve, 500)); // Add a short delay / 添加短暂延迟
             await axios.get(REMOTE_URL); // Use GET request to check remote service availability / 使用GET请求检测远程服务可用性
-            window.API_BASE_URL = REMOTE_URL.replace('/health', '');
+            window.API_BASE_URL = REMOTE_URL.replace('/health', '/api');
+
             updateStatus('Connected to remote server');
             await new Promise(resolve => setTimeout(resolve, 1000)); // Display status message / 显示状态消息
         } catch (error) {
             // If remote service is unavailable or blocked by CORS policy / 如果远程服务不可用或被CORS策略阻止
-            setError('Failed to connect to remote server due to network error or CORS policy.');
+            setError('Failed to connect');
             return; // Stop further processing / 停止进一步处理
         }
     }
