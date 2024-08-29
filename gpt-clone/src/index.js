@@ -3,13 +3,42 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import axios from 'axios';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+
+// 设置默认API URL
+const LOCAL_URLS = ['http://localhost:8080/chat', 'http://localhost:8090/chat'];
+const REMOTE_URL = 'https://lmsgpt.onrender.com/chat';
+
+async function detectEnvironment() {
+    for (const url of LOCAL_URLS) {
+        try {
+            // 尝试向本地服务发送请求以检测其可用性
+            await axios.post(url, { prompt: 'ping' });
+            // 如果请求成功，将基础URL设置为本地URL
+            window.API_BASE_URL = url.replace('/chat', '');
+            break;
+        } catch (error) {
+            // 捕获错误并继续尝试下一个URL
+        }
+    }
+
+    // 如果所有本地服务都不可用，设置为远程URL
+    if (!window.API_BASE_URL) {
+        window.API_BASE_URL = REMOTE_URL.replace('/chat', '');
+    }
+
+    // 渲染应用
+    root.render(
+        <React.StrictMode>
+            <App />
+        </React.StrictMode>
+    );
+}
+
+// 调用检测环境函数
+detectEnvironment();
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

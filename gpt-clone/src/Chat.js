@@ -19,11 +19,8 @@ function Chat() {
         setLoading(true);
 
         try {
-            // 使用 POST 请求发送数据
-            const response = await axios.post('http://localhost:8090/chat',
-                { prompt: input }, // 请求体中的数据
-                { headers: { 'Content-Type': 'application/json' } } // 设置请求头为 JSON 类型
-            );
+            // 使用动态API URL
+            const response = await axios.post(`${window.API_BASE_URL}/chat`, { prompt: input }, { headers: { 'Content-Type': 'application/json' } });
 
             // Sanitize response data
             const sanitizedResponse = DOMPurify.sanitize(response.data);
