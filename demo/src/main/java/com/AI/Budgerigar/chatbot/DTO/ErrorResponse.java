@@ -17,6 +17,11 @@ public class ErrorResponse {
         logger.error(error.getMessage());
     }
 
+    public ErrorResponse(Throwable error) {
+        this.error = error.getMessage() + " " + error.getCause();
+        logger.error(error.getMessage());
+    }
+
     public void setError(String error) {
         this.error = error;
     }

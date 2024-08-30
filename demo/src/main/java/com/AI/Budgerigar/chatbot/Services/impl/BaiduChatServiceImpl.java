@@ -34,7 +34,9 @@ public class BaiduChatServiceImpl implements ChatService {
 
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
 
-    private String conversationId;
+    public String conversationId;
+//    // 使用 ThreadLocal 来存储 conversationId
+//    private static final ThreadLocal<String> conversationIdThreadLocal = ThreadLocal.withInitial(() -> "default_baidu_conversation");
 
     private final ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -52,7 +54,7 @@ public class BaiduChatServiceImpl implements ChatService {
             chatMessagesRedisDAO.addMessage(conversationId, "user", StringEscapeUtils.escapeHtml4(input));
 
             // 创建 ChatCompletion 请求对象
-            var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getModel());
+            var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getCurrentModel());
 
             // 从 Redis 中获取完整的对话历史
             List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
@@ -65,7 +67,7 @@ public class BaiduChatServiceImpl implements ChatService {
             // 执行请求
             ChatResponse response = chatCompletion.execute();
             String result = response.getResult();
-            logInfo(result);
+            logInfo(" # " + baiduConfig.getCurrentModel() + "\\n" + result);
 
             // 将助手的响应添加到 Redis 对话历史
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", StringEscapeUtils.escapeHtml4(result));
@@ -86,10 +88,6 @@ public class BaiduChatServiceImpl implements ChatService {
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", "Query failed. Please try again.");
             throw new RuntimeException("Error processing chat request", e);
         }
-    }
-
-    public void logInfo(String message) {
-        logger.info(BaiduChatServiceImpl.class.getName() + " : " + message.substring(0, Math.min(20, message.length())));
     }
 
     private int getMongoConversationLength(String conversationId) {

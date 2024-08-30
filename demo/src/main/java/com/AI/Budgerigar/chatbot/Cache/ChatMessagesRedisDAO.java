@@ -73,4 +73,15 @@ public class ChatMessagesRedisDAO {
             logger.log(Level.SEVERE, "Failed to clear conversation history for " + conversationId, e);
         }
     }
+
+    // 删除最近添加的消息
+    public void deleteLastMessage(String conversationId) {
+        String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
+        try {
+            redisTemplate.opsForList().rightPop(key);
+            logger.info("Last message deleted from conversation " + conversationId);
+        } catch (DataAccessException e) {
+            logger.log(Level.SEVERE, "Failed to delete last message from conversation " + conversationId, e);
+        }
+    }
 }
