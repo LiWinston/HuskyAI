@@ -51,10 +51,12 @@
 
 .user-timestamp {
     text-align: right;
+    color: rgba(255, 255, 255, 0.7); /* 白色但稍微深一点的颜色 */
 }
 
 .bot-timestamp {
     text-align: left;
+    color: #666; /* 默认灰色 */
 }
 
 .input-container {
