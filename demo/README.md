@@ -52,3 +52,30 @@ https://platform.openai.com/settings/profile?tab=api-keys
   ```
   This will reset your local branch to the remote branch's state. Be careful with this command as it will discard all your local changes.
   (After all, force push is not recommended as a good practice)
+
+
+## useful Remote redis CLI:
+refers to https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/  to get cli environment
+```
+REDISCLI_AUTH=rP0r0Fl6GqEXn5ZsiBdRtiG75iarhG7M redis-cli --user red-cr87h9rtq21c739lu2n0 -h singapore-redis.render.com -p 6379 --tls
+```
+if not working, try to set SysVar manually like:
+(for linux)
+```
+nano ~/.bashrc
+export REDISCLI_AUTH=rP0r0Fl6GqEXn5ZsiBdRtiG75iarhG7M
+source ~/.bashrc
+```
+(for Mac)
+```
+nano ~/.zshrc
+export REDISCLI_AUTH=rP0r0Fl6GqEXn5ZsiBdRtiG75iarhG7M
+source ~/.zshrc
+```
+
+(To save the config above, Ctrl + O, then Enter, then Ctrl + X)
+then run the command above again
+To check the chat history:
+```
+LRANGE chat:history:default_baidu_conversation 0 -1
+```
