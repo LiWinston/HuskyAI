@@ -67,7 +67,7 @@ public class BaiduChatServiceImpl implements ChatService {
             // 执行请求
             ChatResponse response = chatCompletion.execute();
             String result = response.getResult();
-            logInfo(" # " + baiduConfig.getCurrentModel() + "\\n" + result);
+            logInfo(" # " + baiduConfig.getCurrentModel() + "\n" + result);
 
             // 将助手的响应添加到 Redis 对话历史
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", StringEscapeUtils.escapeHtml4(result));

@@ -37,14 +37,14 @@ public class ModelSwitchingAspect {
                 baiduConfig.switchToNextModel(); // 切换到下一个模型
                 BaiduChatServiceImpl impl = (BaiduChatServiceImpl) joinPoint.getTarget();
                 var conversationId = impl.conversationId;
-                chatMessagesRedisDAO.deleteLastMessage(conversationId);
+                chatMessagesRedisDAO.maintainMessageHistory(conversationId);
             }
         }
 
         // 如果所有尝试都失败，抛出最后一个异常
         if (lastException != null) return new ErrorResponse(lastException);
         else {
-            return new ErrorResponse(new Exception("No model available"));
+            return "None of the models worked";
         }
     }
 }
