@@ -2,6 +2,7 @@ package com.AI.Budgerigar.chatbot.DTO;
 
 import com.AI.Budgerigar.chatbot.AIUtil.Message;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,10 +16,10 @@ public class ChatRequestDTO {
     private double temperature = 0.7; // 默认值，根据需要调整
 
     // 原有的构造函数，保留以处理单一的prompt
-    public ChatRequestDTO(String model, String prompt) {
+    public ChatRequestDTO(String model, String prompt, Instant timestamp) {
         this.model = model;
         this.messages = new ArrayList<>();
-        this.messages.add(new Message("user", prompt));
+        this.messages.add(new Message("user", timestamp.toString(),prompt));
     }
 
     // 私有的构造函数
@@ -33,10 +34,10 @@ public class ChatRequestDTO {
     }
 
     // 工厂方法，用于从 List<String[]> 创建 ChatRequestDTO
-    public static ChatRequestDTO fromStringPairs(String model, List<String[]> stringPairList) {
+    public static ChatRequestDTO fromStringTuples(String model, List<String[]> stringPairList) {
         List<Message> messages = new ArrayList<>();
         for (String[] stringPair : stringPairList) {
-            messages.add(new Message(stringPair[0], stringPair[1]));
+            messages.add(new Message(stringPair[0], stringPair[1], stringPair[2]));
         }
         return new ChatRequestDTO(model, messages);
     }

@@ -6,9 +6,9 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.AI.Budgerigar.chatbot.Constant.ApplicationConstant.CONVERSATION_HISTORY_KEY_PREFIX;
@@ -34,15 +34,18 @@ public class ChatMessagesRedisDAO {
         }
     }
 
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
 
-    // 添加新消息
-    public void addMessage(String conversationId, String speaker, String message) {
+    // 添加新消息（更新后的方法）
+    public void addMessage(String conversationId, String speaker, String timestamp,String message) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
+//        String timestamp = Instant.now().toString().formatted(formatter);
+        String messageWithTimestamp = speaker + "|" + timestamp + "|" + message;
         try {
-            redisTemplate.opsForList().rightPush(key, speaker + ":" + message);
-            log.info("Message added to conversation {}", conversationId);
+            redisTemplate.opsForList().rightPush(key, messageWithTimestamp);
+//            log.info("Message added to conversation {}: {}", conversationId, messageWithTimestamp);
         } catch (DataAccessException e) {
-            log.error("Mongo save fail for: {}", conversationId, e);
+            log.error("Failed to add message to conversation {}", conversationId, e);
         }
     }
 
@@ -66,10 +69,10 @@ public class ChatMessagesRedisDAO {
             if (entries == null) {
                 log.info("No conversation history found in Redis for {}", conversationId);
                 return List.of(); // 返回空列表而不是null
-            }else{
-//                log.info("Retrieved conversation history for {}", conversationId);
+            } else {
                 return entries.stream()
-                        .map(entry -> entry.split(":", 2)) // 解析 "role:message" 格式
+                        .map(entry -> entry.split("\\|", 3)) // 使用 ":" 分隔符拆分，获取时间戳
+                        .map(parts -> new String[]{parts[0], parts[1], parts[2]}) // 处理带时间戳的消息
                         .collect(Collectors.toList());
             }
         } catch (DataAccessException e) {
@@ -77,6 +80,7 @@ public class ChatMessagesRedisDAO {
             return List.of(); // 返回空列表以保持方法一致性
         }
     }
+
 
     // 清除整个对话历史
     public void clearConversation(String conversationId) {
@@ -89,84 +93,14 @@ public class ChatMessagesRedisDAO {
         }
     }
 
-//    // 以维护对话历史，若对话由于某种原因中断，可确保奇偶性和角色正确
-//    // 若总个数为奇数，最后发言的是user，则删除最近添加的消息
-//    // 若总个数为偶数，最后发言的是user, 则说明对话已乱序，遍历消息并做出调整，确保总数为偶的同时保持角色正确，允许添加空消息
-//    // 相同的人发出的话有连着两条或更多则只保留第一条
-//    public void maintainMessageHistory(String conversationId) {
-//        log.info("Maintaining conversation history for {}", conversationId);
-//        String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
-//
-//        try {
-//            // 获取对话历史列表
-//            List<String> entries = redisTemplate.opsForList().range(key, 0, -1);
-//            if (entries == null || entries.isEmpty()) {
-//                log.info("No conversation history found for {}", conversationId);
-//                return;
-//            }
-//
-//            int size = entries.size();
-//
-//            // 如果对话条目总数为奇数且最后一个是用户消息，则删除最后一条消息
-//            if (size % 2 == 1 && entries.get(size - 1).startsWith("user")) {
-//                redisTemplate.opsForList().rightPop(key);
-//                log.info("Removed the last user message from conversation {}", conversationId);
-//            } else if (size % 2 == 0) {
-//                // 检查对话是否按正确顺序交替（user -> assistant）
-//                boolean needsAdjustment = false;
-//
-//                for (int i = 0; i < size; i += 2) {
-//                    String userMessage = entries.get(i);
-//                    if (!userMessage.startsWith("user")) {
-//                        needsAdjustment = true;
-//                        break;
-//                    }
-//                    // 检查是否有对应的 assistant 消息
-//                    if (i + 1 < size) {
-//                        String assistantMessage = entries.get(i + 1);
-//                        if (!assistantMessage.startsWith("assistant")) {
-//                            needsAdjustment = true;
-//                            break;
-//                        }
-//                    }
-//                }
-//
-//                if (needsAdjustment) {
-//                    log.info("Adjusting conversation history for {}", conversationId);
-//                    List<String> adjustedEntries = new ArrayList<>();
-//
-//                    for (int i = 0; i < size; i++) {
-//                        String entry = entries.get(i);
-//                        // 确保对话的交替顺序
-//                        if (i % 2 == 0) {
-//                            // 偶数索引应为用户消息
-//                            if (!entry.startsWith("user")) {
-//                                adjustedEntries.add("user: ");
-//                            } else {
-//                                adjustedEntries.add(entry);
-//                            }
-//                        } else {
-//                            // 奇数索引应为 assistant 消息
-//                            if (!entry.startsWith("assistant")) {
-//                                adjustedEntries.add("assistant: ");
-//                            } else {
-//                                adjustedEntries.add(entry);
-//                            }
-//                        }
-//                    }
-//
-//                    // 清空原始列表并保存调整后的对话
-//                    redisTemplate.delete(key);
-//                    redisTemplate.opsForList().rightPushAll(key, adjustedEntries);
-//                    log.info("Conversation history adjusted for {}", conversationId);
-//                } else {
-//                    log.info("Conversation history is already consistent for {}", conversationId);
-//                }
-//            }
-//        } catch (DataAccessException e) {
-//            log.error("Failed to maintain conversation history for {}", conversationId, e);
-//        }
-//    }
+
+    @Autowired
+    DateTimeFormatter dateTimeFormatter;
+
+    String getNowTimeStamp() {
+        return Instant.now().toString().formatted(dateTimeFormatter);
+    }
+
 
     public void maintainMessageHistory(String conversationId) {
         log.info("Maintaining conversation history for {}", conversationId);
@@ -180,53 +114,65 @@ public class ChatMessagesRedisDAO {
                 return;
             }
 
-            int size = entries.size();
             List<String> adjustedEntries = new ArrayList<>();
+            Set<String> uniqueEntries = new HashSet<>();  // 用于去重
             String lastRole = "";
             boolean needsAdjustment = false;
 
-            // 遍历对话历史以确保交替顺序，并移除连续相同角色的消息
-            for (int i = 0; i < size; i++) {
-                String entry = entries.get(i);
-                String currentRole = entry.startsWith("user") ? "user" : "assistant";
-
-                // 如果当前消息与上一个消息的角色相同，跳过
-                if (currentRole.equals(lastRole)) {
-                    needsAdjustment = true;
-                    log.info("Found consecutive {} messages, skipping the extra one: {}", currentRole, entry);
+            // 去重并维护交替顺序
+            for (String entry : entries) {
+                String[] parts = entry.split("\\|", 3);
+                if (parts.length < 3) {
+                    log.warn("Invalid message format, skipping: {}", entry);
                     continue;
                 }
 
-                // 更新最后一个角色，并添加到调整后的列表中
-                lastRole = currentRole;
-                adjustedEntries.add(entry);
+                String role = parts[0];
+                String timestamp = parts[1];
+                String content = parts[2];
+
+                // 如果是重复的消息或内容为空，跳过
+                if (uniqueEntries.contains(entry) || content.trim().isEmpty()) {
+//                    log.info("Removed duplicate or empty message: {}", entry);
+                    continue;
+                }
+
+                uniqueEntries.add(entry);
+
+                // 检查消息交替顺序
+                if (adjustedEntries.size() % 2 == 0) { // 偶数索引应为用户消息
+                    if (role.equals("user")) {
+                        adjustedEntries.add(entry);
+                        lastRole = role;
+                    } else {
+                        needsAdjustment = true;
+                        log.warn("Expected user message, but found assistant. Skipping entry.");
+                    }
+                } else { // 奇数索引应为助手消息
+                    if (role.equals("assistant")) {
+                        adjustedEntries.add(entry);
+                        lastRole = role;
+                    } else {
+                        needsAdjustment = true;
+                        log.warn("Expected assistant message, but found user. Skipping entry.");
+                    }
+                }
             }
 
-            // 确保调整后的对话以user开头，以assistant结尾，且总数为偶数
-            if (adjustedEntries.size() % 2 == 1 && adjustedEntries.get(adjustedEntries.size() - 1).startsWith("user")) {
-                adjustedEntries.remove(adjustedEntries.size() - 1);
-                needsAdjustment = true;
-                log.info("Removed last user message to ensure even number of messages.");
-            }
-
-            if (!adjustedEntries.isEmpty() && !adjustedEntries.get(adjustedEntries.size() - 1).startsWith("assistant")) {
-                adjustedEntries.add("assistant: ");
-                needsAdjustment = true;
-                log.info("Added empty assistant message to ensure proper conversation ending.");
+            // 保证总数为偶数且助手结束
+            if (adjustedEntries.size() % 2 == 1 || !lastRole.equals("assistant")) {
+                String lastTimestamp = getNowTimeStamp();
+                adjustedEntries.add("assistant|" + lastTimestamp + "| ");
+                log.info("Added placeholder to ensure conversation ends with assistant.");
             }
 
             // 更新 Redis 中的对话历史
-            if (needsAdjustment) {
-                redisTemplate.delete(key);
-                redisTemplate.opsForList().rightPushAll(key, adjustedEntries);
-                log.info("Conversation history adjusted for {}", conversationId);
-            } else {
-                log.info("Conversation history is already consistent for {}", conversationId);
-            }
+            redisTemplate.delete(key);
+            redisTemplate.opsForList().rightPushAll(key, adjustedEntries);
+            log.info("Maintained history adjusted for {}", conversationId);
+
         } catch (DataAccessException e) {
-            log.error("Failed to maintain conversation history for {}", conversationId, e);
+            log.error("Failed to maintain history for {}", conversationId, e);
         }
     }
-
-
 }

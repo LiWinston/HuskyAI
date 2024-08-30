@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,6 +47,13 @@ public class DouBaoChatServiceImpl implements ChatService {
     private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     @Autowired
+    DateTimeFormatter dateTimeFormatter;
+
+    String getNowTimeStamp() {
+        return Instant.now().toString().formatted(dateTimeFormatter);
+    }
+
+    @Autowired
     public DouBaoChatServiceImpl(ArkService arkService) {
         this.arkService = arkService;
     }
@@ -59,7 +68,7 @@ public class DouBaoChatServiceImpl implements ChatService {
         List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
 
         // Add user prompt to Redis conversation history
-        chatMessagesRedisDAO.addMessage(conversationId, "user", prompt);
+        chatMessagesRedisDAO.addMessage(conversationId, "user",getNowTimeStamp(), prompt);
 
         // Build ChatMessage list from conversation history
         List<ChatMessage> messages = new java.util.ArrayList<>(conversationHistory.stream()
@@ -86,7 +95,7 @@ public class DouBaoChatServiceImpl implements ChatService {
 
             logInfo(responseContent);
             // Add assistant response to Redis conversation history
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", responseContent);
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant",getNowTimeStamp(), responseContent);
 
             // Calculate the difference in conversation length
             int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
@@ -94,7 +103,11 @@ public class DouBaoChatServiceImpl implements ChatService {
             int diff = redisLength - mongoLength;
 
             // If difference exceeds threshold, update MongoDB asynchronously
-            if (diff > 5) chatSyncService.updateHistoryFromRedis(conversationId, diff);
+            if (Math.abs(diff) > 5) {
+                executorService.submit(() -> {
+                    chatSyncService.updateHistoryFromRedis(conversationId);
+                });
+            }
 
             return responseContent;
         } else {

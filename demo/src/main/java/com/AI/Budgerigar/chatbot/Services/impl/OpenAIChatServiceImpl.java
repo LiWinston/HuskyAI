@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,6 +45,13 @@ public class OpenAIChatServiceImpl implements ChatService {
     @Value("${openai.api.url}")
     private String apiUrl;
 
+    @Autowired
+    DateTimeFormatter dateTimeFormatter;
+
+    String getNowTimeStamp() {
+        return Instant.now().toString().formatted(dateTimeFormatter);
+    }
+
     @Override
     public String chat(String prompt) throws Exception {
         conversationId = "openai_conversation_id"; // 实际应用中应生成唯一会话ID
@@ -51,10 +60,10 @@ public class OpenAIChatServiceImpl implements ChatService {
         List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
 
         // 将用户的输入添加到 Redis 会话历史
-        chatMessagesRedisDAO.addMessage(conversationId, "user", prompt);
+        chatMessagesRedisDAO.addMessage(conversationId, "user",getNowTimeStamp(), prompt);
 
         // 使用工厂方法从 String[] 列表创建 ChatRequestDTO
-        ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringPairs(model, conversationHistory);
+        ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
 
         // 调用 OpenAI API
         ChatResponseDTO chatResponseDTO = restTemplate.postForObject(apiUrl, chatRequestDTO, ChatResponseDTO.class);
@@ -66,7 +75,7 @@ public class OpenAIChatServiceImpl implements ChatService {
         String responseContent = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
         // 将助手的响应添加到 Redis 会话历史
-        chatMessagesRedisDAO.addMessage(conversationId, "assistant", responseContent);
+        chatMessagesRedisDAO.addMessage(conversationId, "assistant",getNowTimeStamp(), responseContent);
 
         // 计算 Redis 和 MongoDB 中会话长度的差异
         int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
@@ -74,7 +83,11 @@ public class OpenAIChatServiceImpl implements ChatService {
         int diff = redisLength - mongoLength;
 
         // 如果差异超过阈值，则异步更新 MongoDB
-        if (diff > 5) chatSyncService.updateHistoryFromRedis(conversationId, diff);
+        if (Math.abs(diff) > 5) {
+            executorService.submit(() -> {
+                chatSyncService.updateHistoryFromRedis(conversationId);
+            });
+        }
 
         return responseContent;
     }

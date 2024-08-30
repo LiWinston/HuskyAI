@@ -8,5 +8,10 @@ import lombok.AllArgsConstructor;
 public class Message {
 
     private String role;
+    private String timestamp;
     private String content;
+    
+    public String toString() {
+        return role + "|" + timestamp + "|" + content;
+    }
 }

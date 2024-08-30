@@ -1,10 +1,14 @@
 package com.AI.Budgerigar.chatbot.DTO;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+@Setter
 @Getter
+@ToString
 public class ErrorResponse {
     private static final Logger logger = LoggerFactory.getLogger(ErrorResponse.class);
 
@@ -22,7 +26,4 @@ public class ErrorResponse {
         logger.error(error.getMessage());
     }
 
-    public void setError(String error) {
-        this.error = error;
-    }
 }

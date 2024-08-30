@@ -4,23 +4,27 @@ import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
+import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.model.chat.ChatResponse;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Service
 @Setter
+@Slf4j
 public class BaiduChatServiceImpl implements ChatService {
 
     @Autowired
@@ -36,7 +40,7 @@ public class BaiduChatServiceImpl implements ChatService {
     private ChatMessagesMongoDAO chatMessagesMongoDAO;
 
     @Autowired
-    private ChatSyncServiceImpl chatSyncService;
+    private ChatSyncService chatSyncService;
 
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
 
@@ -48,6 +52,14 @@ public class BaiduChatServiceImpl implements ChatService {
 
     private final ExecutorService executorService = Executors.newCachedThreadPool();
 
+    @Autowired
+    DateTimeFormatter dateTimeFormatter;
+
+    String getNowTimeStamp() {
+        return Instant.now().toString().formatted(dateTimeFormatter);
+    }
+
+
     @PostConstruct
     public void init() {
         conversationId = "default_baidu_conversation"; // This would typically be dynamic per session/user
@@ -58,8 +70,11 @@ public class BaiduChatServiceImpl implements ChatService {
     @Override
     public String chat(String input) {
         try {
+            chatSyncService.updateRedisFromMongo(conversationId);
+
+            chatMessagesRedisDAO.maintainMessageHistory(conversationId);
             // 添加用户输入到 Redis 对话历史
-            chatMessagesRedisDAO.addMessage(conversationId, "user", StringEscapeUtils.escapeHtml4(input));
+            chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(), StringEscapeUtils.escapeHtml4(input));
 
             // 创建 ChatCompletion 请求对象
             var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getCurrentModel());
@@ -69,7 +84,7 @@ public class BaiduChatServiceImpl implements ChatService {
 
             // 添加对话历史到请求对象中
             for (String[] entry : conversationHistory) {
-                chatCompletion.addMessage(entry[0], entry[1]); // entry[0] 是角色，entry[1] 是内容
+                chatCompletion.addMessage(entry[0], entry[2]); // entry[0] 是角色，entry[2] 是内容
             }
 
             // 执行请求
@@ -78,7 +93,8 @@ public class BaiduChatServiceImpl implements ChatService {
             logInfo(" # " + baiduConfig.getCurrentModel() + "\n" + result);
 
             // 将助手的响应添加到 Redis 对话历史
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", StringEscapeUtils.escapeHtml4(result));
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant",
+                    getNowTimeStamp(), StringEscapeUtils.escapeHtml4(result));
 
             // Calculate the difference in conversation length
             long redisLength = chatMessagesRedisDAO.getMessageCount(conversationId);
@@ -87,13 +103,17 @@ public class BaiduChatServiceImpl implements ChatService {
             logger.info("Redis length: " + redisLength + ", MongoDB length: " + mongoLength + ", diff: " + diff);
 
             // If difference exceeds threshold, update MongoDB asynchronously
-            if (diff > 5) chatSyncService.updateHistoryFromRedis(conversationId, Math.toIntExact(diff));
+            if (Math.abs(diff) > 5) {
+                executorService.submit(() -> {
+                    chatSyncService.updateHistoryFromRedis(conversationId);
+                });
+            }
 
 
             return result;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error occurred in " + BaiduChatServiceImpl.class.getName() + ": " + e.getMessage(), e);
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", "Query failed. Please try again.");
+            log.error("Error occurred in {}: {}", BaiduChatServiceImpl.class.getName(), e.getMessage(), e);
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),"Query failed. Please try again.");
             throw new RuntimeException("Error processing chat request", e);
         }
     }
@@ -103,4 +123,5 @@ public class BaiduChatServiceImpl implements ChatService {
         // Assuming ChatMessagesMongoDAO has a method to get the conversation length
         return chatMessagesMongoDAO.getConversationLengthById(conversationId);
     }
+
 }
