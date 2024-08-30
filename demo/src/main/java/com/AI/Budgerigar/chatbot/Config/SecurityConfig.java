@@ -21,7 +21,17 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Disable CSRF if not needed
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Apply CORS configuration
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()); // Allow all requests
+                        .requestMatchers("/", "/login**", "/css/**", "/js/**", "/img/**").permitAll() // Allow specific paths
+                        .anyRequest().authenticated() // All other requests require authentication
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login") // Custom login page
+                        .defaultSuccessUrl("/chat", true) // Redirect after successful login
+                        .failureUrl("/login?error=true") // Redirect after login failure
+                )
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/").permitAll() // Redirect after logout
+                );
 
         return http.build();
     }
