@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,6 +35,8 @@ public class BaiduChatServiceImpl implements ChatService {
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
 
     private String conversationId;
+
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     @PostConstruct
     public void init() {
@@ -66,10 +70,14 @@ public class BaiduChatServiceImpl implements ChatService {
             // 将助手的响应添加到 Redis 对话历史
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", StringEscapeUtils.escapeHtml4(result));
 
-            // 检查是否需要将对话历史持久化到 MongoDB 中
-            if (conversationHistory.size() >= 3) {
-//                 Call to persist to MongoDB
-                 chatMessagesMongoDAO.updateHistoryById(conversationId, 3); // Example to persist the latest 3 entries
+            // Calculate the difference in conversation length
+            int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
+            int mongoLength = getMongoConversationLength(conversationId);
+            int diff = redisLength - mongoLength;
+
+            // If difference exceeds threshold, update MongoDB asynchronously
+            if (diff > 5) {
+                executorService.submit(() -> chatMessagesMongoDAO.updateHistoryById(conversationId, diff));
             }
 
             return result;
@@ -82,5 +90,11 @@ public class BaiduChatServiceImpl implements ChatService {
 
     public void logInfo(String message) {
         logger.info(BaiduChatServiceImpl.class.getName() + " : " + message.substring(0, Math.min(20, message.length())));
+    }
+
+    private int getMongoConversationLength(String conversationId) {
+        // Implement the logic to get the conversation length from MongoDB
+        // Assuming ChatMessagesMongoDAO has a method to get the conversation length
+        return chatMessagesMongoDAO.getConversationLengthById(conversationId);
     }
 }
