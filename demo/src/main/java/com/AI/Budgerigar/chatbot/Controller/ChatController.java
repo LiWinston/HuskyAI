@@ -20,15 +20,11 @@ public class ChatController {
 
 
     @GetMapping()
-    public ResponseEntity<?> chat(@RequestParam String prompt) {
-        try {
-            // Use chatService to handle the request
-            String response = chatService.chat(prompt);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            // Catch any exception and return error response
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e));
-        }
+    //用get传输ConversationId，后续可扩展
+    public ResponseEntity<?> chat(@RequestParam String request) {
+        //读取 ConversationId
+        chatService.setConversationId(request);
+        return ResponseEntity.ok("ConversationId set to " + request);
     }
 
     @PostMapping()
