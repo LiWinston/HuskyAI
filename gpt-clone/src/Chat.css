@@ -23,6 +23,7 @@
 }
 
 .message {
+    position: relative;
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 8px;
@@ -42,13 +43,28 @@
     color: #333;
 }
 
+.timestamp {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.user-timestamp {
+    text-align: right;
+}
+
+.bot-timestamp {
+    text-align: left;
+}
+
 .input-container {
     display: flex;
     border-top: 1px solid #e0e0e0;
     background-color: #fff;
+    padding: 10px;
 }
 
-input {
+textarea {
     flex: 1;
     border: none;
     padding: 15px;
@@ -56,6 +72,8 @@ input {
     border-radius: 0;
     outline: none;
     box-shadow: none;
+    max-height: 120px; /* limit height to approximately 6 lines */
+    overflow-y: auto;
 }
 
 button {
@@ -72,7 +90,6 @@ button:hover {
     background-color: #0056b3;
 }
 
-/* Media query to adjust width to two-thirds of the screen width */
 @media (min-width: 768px) {
     .chat-container {
         width: 66.67%;
@@ -80,7 +97,6 @@ button:hover {
     }
 }
 
-/* Media query for portrait mode to make chat-container full width with 10px margin */
 @media (orientation: portrait) {
     .chat-container {
         width: calc(100% - 20px);

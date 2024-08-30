@@ -16,17 +16,16 @@ function Chat() {
     const sendMessage = async () => {
         if (input.trim() === '') return;
 
-        setMessages([...messages, { sender: 'user', text: input }]);
+        const timestamp = new Date().toLocaleTimeString();
+
+        setMessages([...messages, { sender: 'user', text: input, timestamp }]);
         setLoading(true);
 
         try {
-            // 使用动态API URL
             const response = await axios.post(`${window.API_BASE_URL}/chat`, { prompt: input }, { headers: { 'Content-Type': 'application/json' } });
-
-            // Sanitize response data
             const sanitizedResponse = DOMPurify.sanitize(response.data);
 
-            setMessages([...messages, { sender: 'user', text: input }, { sender: 'bot', text: sanitizedResponse }]);
+            setMessages([...messages, { sender: 'user', text: input, timestamp }, { sender: 'bot', text: sanitizedResponse, timestamp }]);
             setError(null);
         } catch (error) {
             let errorMessage = 'An unexpected error occurred';
@@ -42,7 +41,7 @@ function Chat() {
                 errorMessage = error.message + ' (no response received)';
             }
 
-            setMessages([...messages, { sender: 'user', text: input }, { sender: 'bot', text: errorMessage }]);
+            setMessages([...messages, { sender: 'user', text: input, timestamp }, { sender: 'bot', text: errorMessage, timestamp }]);
             setError(null);
         }
 
@@ -50,12 +49,11 @@ function Chat() {
         setLoading(false);
     };
 
-    // useEffect to auto-scroll to the bottom of the chat window smoothly
     useEffect(() => {
         if (chatWindowRef.current) {
             chatWindowRef.current.scrollTo({
                 top: chatWindowRef.current.scrollHeight,
-                behavior: 'smooth'  // Smooth scrolling effect
+                behavior: 'smooth'
             });
         }
     }, [messages]);
@@ -66,7 +64,7 @@ function Chat() {
                 {messages.map((msg, index) => (
                     <div key={index} className={`message ${msg.sender}`}>
                         <ReactMarkdown
-                            children={DOMPurify.sanitize(msg.text)} // Sanitize user input
+                            children={DOMPurify.sanitize(msg.text)}
                             components={{
                                 code({ node, inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '');
@@ -86,18 +84,20 @@ function Chat() {
                                 }
                             }}
                         />
+                        <div className={`timestamp ${msg.sender}-timestamp`}>{msg.timestamp}</div>
                     </div>
                 ))}
             </div>
             <div className="input-container">
-                <input
-                    type="text"
+                <textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
                     placeholder="Type your message..."
                     disabled={loading}
                     className={loading ? 'input-disabled' : ''}
+                    rows="1"
+                    style={{ resize: 'none', overflow: 'auto', maxHeight: '120px' }} // maximum height set to 6 lines
                 />
                 <button onClick={sendMessage} disabled={loading}>
                     {loading ? 'Sending...' : 'Send'}
