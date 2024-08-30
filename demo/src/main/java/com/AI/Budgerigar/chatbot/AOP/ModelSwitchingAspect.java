@@ -24,6 +24,7 @@ public class ModelSwitchingAspect {
 
     @Around("execution(* com.AI.Budgerigar.chatbot.Services.impl.BaiduChatServiceImpl.chat(..))")
     public Object aroundChatMethod(ProceedingJoinPoint joinPoint) throws Throwable {
+        log.info("Chat method intercepted");
         int maxRetries = baiduConfig.getModelList().size();
         Throwable lastException = null;
 
@@ -32,7 +33,7 @@ public class ModelSwitchingAspect {
                 log.info("Using model: " + baiduConfig.getCurrentModel());
                 return joinPoint.proceed(); // 尝试执行原始方法
             } catch (Exception e) {
-                log.error("Error using model " + baiduConfig.getCurrentModel() + ": " + e.getMessage(), e);
+                log.error("Error using model {}: {}", baiduConfig.getCurrentModel(), e.getMessage());
                 lastException = e;
                 baiduConfig.switchToNextModel(); // 切换到下一个模型
                 ChatService impl = (ChatService) joinPoint.getTarget();

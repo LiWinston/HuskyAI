@@ -84,6 +84,7 @@ public class BaiduChatServiceImpl implements ChatService {
             long redisLength = chatMessagesRedisDAO.getMessageCount(conversationId);
             int mongoLength = getMongoConversationLength(conversationId);
             long diff = redisLength - mongoLength;
+            logger.info("Redis length: " + redisLength + ", MongoDB length: " + mongoLength + ", diff: " + diff);
 
             // If difference exceeds threshold, update MongoDB asynchronously
             if (diff > 5) chatSyncService.updateHistoryFromRedis(conversationId, Math.toIntExact(diff));

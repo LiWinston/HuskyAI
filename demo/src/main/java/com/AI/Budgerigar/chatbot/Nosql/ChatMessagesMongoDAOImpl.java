@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+
 @Repository
 @Slf4j
 public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
@@ -40,16 +41,20 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
         try {
             // 使用聚合框架来计算消息数量
             MatchOperation match = Aggregation.match(Criteria.where("_id").is(conversationId));
-            ProjectionOperation project = Aggregation.project().and("messages").size().as("messageCount");
+            ProjectionOperation project = Aggregation.project().and("messages").size().as("chat_conversations");
             Aggregation aggregation = Aggregation.newAggregation(match, project);
 
-            AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, "chatConversation", Document.class);
+            AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, "chat_conversations", Document.class);
             Document document = result.getUniqueMappedResult();
 
-            int messageCount = (document != null) ? document.getInteger("messageCount", 0) : 0;
-
-            log.info("Conversation ID: " + conversationId + ", Message count: " + messageCount);
-            return messageCount;
+            if (document != null) {
+                int messageCount = document.getInteger("messageCount", 0);
+                log.info("Conversation ID: " + conversationId + ", Message count: " + messageCount);
+                return messageCount;
+            } else {
+                log.warn("No document found for Conversation ID: " + conversationId);
+                return 0;
+            }
 
         } catch (Exception e) {
             log.error("Failed to get conversation length for conversation ID: {}", conversationId, e);
