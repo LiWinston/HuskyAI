@@ -79,3 +79,8 @@ To check the chat history:
 ```
 LRANGE chat:history:default_baidu_conversation 0 -1
 ```
+
+To clear the chat history:
+```
+Flushall
+```
