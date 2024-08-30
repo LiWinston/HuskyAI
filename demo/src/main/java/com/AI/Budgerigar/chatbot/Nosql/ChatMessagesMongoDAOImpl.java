@@ -1,7 +1,6 @@
 package com.AI.Budgerigar.chatbot.Nosql;
 
-import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
-import com.AI.Budgerigar.chatbot.DTO.ChatConversation;
+import com.AI.Budgerigar.chatbot.DTO.ChatConversationDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,21 +21,17 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    @Autowired
-    private ChatMessagesRedisDAO chatMessagesRedisDAO;
-
     @Override
-    public void updateHistoryById(String conversationId, int numberOfEntries) {
-        ChatConversation chatConversation = mongoTemplate.findById(conversationId, ChatConversation.class);
-        List<String[]> newEntries = getNewEntriesFromRedis(conversationId, numberOfEntries);
-        if (chatConversation != null) {
-            chatConversation.addMessage(newEntries);
-            mongoTemplate.save(chatConversation);
+    public void updateHistoryById(String conversationId, List<String[]> newEntries) {
+        ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
+        if (chatConversationDTO != null) {
+            chatConversationDTO.addMessage(newEntries);
+            mongoTemplate.save(chatConversationDTO);
         } else {
-            ChatConversation newChatConversation = new ChatConversation();
-            newChatConversation.setMessages(newEntries);
-            newChatConversation.setConversationId(conversationId);
-            mongoTemplate.save(newChatConversation);
+            ChatConversationDTO newChatConversationDTO = new ChatConversationDTO();
+            newChatConversationDTO.setMessages(newEntries);
+            newChatConversationDTO.setConversationId(conversationId);
+            mongoTemplate.save(newChatConversationDTO);
         }
     }
 
@@ -61,10 +56,5 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
             return 0; // 出现异常时返回0
         }
     }
-    private List<String[]> getNewEntriesFromRedis(String conversationId, int numberOfEntries) {
-        //返回最新的numberOfEntries条消息
-        return chatMessagesRedisDAO.getConversationHistory(conversationId).stream()
-                .skip(Math.max(0, chatMessagesRedisDAO.getConversationHistory(conversationId).size() - numberOfEntries))
-                .toList();
-    }
+
 }

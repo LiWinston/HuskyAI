@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 @Document(collection = "chat_conversations")
 @Setter
-public class ChatConversation {
+public class ChatConversationDTO {
 
     // Getter 和 Setter 方法
     @Setter
@@ -23,12 +23,12 @@ public class ChatConversation {
     private List<String[]> messages;
 
     // 无参构造函数，用于MongoDB的反序列化
-    public ChatConversation() {
+    public ChatConversationDTO() {
         this.messages = new ArrayList<>();
     }
 
     // 构造函数，用于手动创建ChatConversation对象
-    public ChatConversation(String conversationId, List<String[]> messages) {
+    public ChatConversationDTO(String conversationId, List<String[]> messages) {
         this.conversationId = conversationId;
         this.messages = messages;
     }
@@ -58,7 +58,7 @@ public class ChatConversation {
     // toString 方法用于输出对象信息
     @Override
     public String toString() {
-        return "ChatConversation{" +
+        return "ChatConversationDTO{" +
                 "conversationId='" + conversationId + '\'' +
                 ", messages=" + messages +
                 '}';

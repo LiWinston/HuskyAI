@@ -39,6 +39,9 @@ public class DouBaoChatServiceImpl implements ChatService {
     @Qualifier("chatMessagesMongoDAOImpl")
     private ChatMessagesMongoDAO chatMessagesMongoDAO;
 
+    @Autowired
+    private ChatSyncServiceImpl chatSyncService;
+
     private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     @Autowired
@@ -91,9 +94,7 @@ public class DouBaoChatServiceImpl implements ChatService {
             int diff = redisLength - mongoLength;
 
             // If difference exceeds threshold, update MongoDB asynchronously
-            if (diff > 5) {
-                executorService.submit(() -> chatMessagesMongoDAO.updateHistoryById(conversationId, diff));
-            }
+            if (diff > 5) chatSyncService.updateHistoryFromRedis(conversationId, diff);
 
             return responseContent;
         } else {

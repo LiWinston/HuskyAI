@@ -35,6 +35,9 @@ public class BaiduChatServiceImpl implements ChatService {
     @Autowired
     private ChatMessagesMongoDAO chatMessagesMongoDAO;
 
+    @Autowired
+    private ChatSyncServiceImpl chatSyncService;
+
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
 
     @Setter
@@ -83,9 +86,8 @@ public class BaiduChatServiceImpl implements ChatService {
             long diff = redisLength - mongoLength;
 
             // If difference exceeds threshold, update MongoDB asynchronously
-            if (diff > 5) {
-                executorService.submit(() -> chatMessagesMongoDAO.updateHistoryById(conversationId, Math.toIntExact(diff)));
-            }
+            if (diff > 5) chatSyncService.updateHistoryFromRedis(conversationId, Math.toIntExact(diff));
+
 
             return result;
         } catch (Exception e) {

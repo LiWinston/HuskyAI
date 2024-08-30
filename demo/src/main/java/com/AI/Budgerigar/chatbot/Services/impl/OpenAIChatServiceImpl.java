@@ -1,8 +1,8 @@
 package com.AI.Budgerigar.chatbot.Services.impl;
 
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
-import com.AI.Budgerigar.chatbot.DTO.ChatRequest;
-import com.AI.Budgerigar.chatbot.DTO.ChatResponse;
+import com.AI.Budgerigar.chatbot.DTO.ChatRequestDTO;
+import com.AI.Budgerigar.chatbot.DTO.ChatResponseDTO;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import lombok.Getter;
@@ -32,6 +32,9 @@ public class OpenAIChatServiceImpl implements ChatService {
     @Autowired
     private ChatMessagesMongoDAO chatMessagesMongoDAO;
 
+    @Autowired
+    private ChatSyncServiceImpl chatSyncService;
+
     private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     @Value("${openai.model}")
@@ -50,17 +53,17 @@ public class OpenAIChatServiceImpl implements ChatService {
         // 将用户的输入添加到 Redis 会话历史
         chatMessagesRedisDAO.addMessage(conversationId, "user", prompt);
 
-        // 使用工厂方法从 String[] 列表创建 ChatRequest
-        ChatRequest chatRequest = ChatRequest.fromStringPairs(model, conversationHistory);
+        // 使用工厂方法从 String[] 列表创建 ChatRequestDTO
+        ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringPairs(model, conversationHistory);
 
         // 调用 OpenAI API
-        ChatResponse chatResponse = restTemplate.postForObject(apiUrl, chatRequest, ChatResponse.class);
+        ChatResponseDTO chatResponseDTO = restTemplate.postForObject(apiUrl, chatRequestDTO, ChatResponseDTO.class);
 
-        if (chatResponse == null || chatResponse.getChoices() == null || chatResponse.getChoices().isEmpty()) {
+        if (chatResponseDTO == null || chatResponseDTO.getChoices() == null || chatResponseDTO.getChoices().isEmpty()) {
             throw new Exception("No response from API");
         }
 
-        String responseContent = chatResponse.getChoices().get(0).getMessage().getContent();
+        String responseContent = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
         // 将助手的响应添加到 Redis 会话历史
         chatMessagesRedisDAO.addMessage(conversationId, "assistant", responseContent);
@@ -71,9 +74,7 @@ public class OpenAIChatServiceImpl implements ChatService {
         int diff = redisLength - mongoLength;
 
         // 如果差异超过阈值，则异步更新 MongoDB
-        if (diff > 5) {
-            executorService.submit(() -> chatMessagesMongoDAO.updateHistoryById(conversationId, diff));
-        }
+        if (diff > 5) chatSyncService.updateHistoryFromRedis(conversationId, diff);
 
         return responseContent;
     }

@@ -9,7 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 @lombok.Setter
 @lombok.Getter
-public class ChatResponse {
+public class ChatResponseDTO {
 
     private List<Choice> choices;
 

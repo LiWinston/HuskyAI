@@ -19,13 +19,23 @@ public class ChatController {
     private ChatService chatService;
 
 
-    @GetMapping()
+//    @GetMapping()
+//    //获取DB中所有对话清单，以备用户选取
+//    public ResponseEntity<?> getConversationList(@RequestParam String uuid) {
+//        //读取用户uuid
+//
+//    }
+
+
     //用get传输ConversationId，后续可扩展
-    public ResponseEntity<?> chat(@RequestParam String request) {
-        //读取 ConversationId
-        chatService.setConversationId(request);
-        return ResponseEntity.ok("ConversationId set to " + request);
+    @GetMapping("/{conversationId}")
+    public ResponseEntity<?> chat(@PathVariable String conversationId) {
+        // 读取 ConversationId 并设置到 chatService 中
+        chatService.setConversationId(conversationId);
+        return ResponseEntity.ok("ConversationId set to " + conversationId);
     }
+
+
 
     @PostMapping()
     public ResponseEntity<?> chatPost(@RequestBody Map<String, String> body) {
