@@ -6,6 +6,8 @@ import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.model.chat.ChatResponse;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Service
+@Setter
 public class BaiduChatServiceImpl implements ChatService {
 
     @Autowired
@@ -34,6 +37,8 @@ public class BaiduChatServiceImpl implements ChatService {
 
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
 
+    @Setter
+    @Getter
     public String conversationId;
 //    // 使用 ThreadLocal 来存储 conversationId
 //    private static final ThreadLocal<String> conversationIdThreadLocal = ThreadLocal.withInitial(() -> "default_baidu_conversation");

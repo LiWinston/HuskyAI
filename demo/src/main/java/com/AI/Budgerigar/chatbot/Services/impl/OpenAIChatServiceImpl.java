@@ -5,6 +5,8 @@ import com.AI.Budgerigar.chatbot.DTO.ChatRequest;
 import com.AI.Budgerigar.chatbot.DTO.ChatResponse;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,10 @@ import java.util.concurrent.Executors;
 
 @Service
 public class OpenAIChatServiceImpl implements ChatService {
+
+    @Setter
+    @Getter
+    public String conversationId;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -36,7 +42,7 @@ public class OpenAIChatServiceImpl implements ChatService {
 
     @Override
     public String chat(String prompt) throws Exception {
-        String conversationId = "openai_conversation_id"; // 实际应用中应生成唯一会话ID
+        conversationId = "openai_conversation_id"; // 实际应用中应生成唯一会话ID
 
         // 从 Redis 获取完整的会话历史
         List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);

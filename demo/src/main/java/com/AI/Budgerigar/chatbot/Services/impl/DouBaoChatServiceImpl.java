@@ -8,6 +8,8 @@ import com.volcengine.ark.runtime.model.completion.chat.ChatCompletionResult;
 import com.volcengine.ark.runtime.model.completion.chat.ChatMessage;
 import com.volcengine.ark.runtime.model.completion.chat.ChatMessageRole;
 import com.volcengine.ark.runtime.service.ArkService;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,6 +22,10 @@ import java.util.concurrent.Executors;
 
 @Service
 public class DouBaoChatServiceImpl implements ChatService {
+
+    @Setter
+    @Getter
+    public String conversationId;
 
     private final ArkService arkService;
 
@@ -44,7 +50,7 @@ public class DouBaoChatServiceImpl implements ChatService {
     @Override
     public String chat(String prompt) {
         // Use a fixed or consistent conversationId to ensure continuity across messages
-        String conversationId = "default_doubao_conversation"; // Replace with a proper session/user ID in a real-world scenario
+        conversationId = "default_doubao_conversation"; // Replace with a proper session/user ID in a real-world scenario
 
         // Retrieve full conversation history from Redis
         List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);

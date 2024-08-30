@@ -3,7 +3,7 @@ package com.AI.Budgerigar.chatbot.AOP;
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.DTO.ErrorResponse;
-import com.AI.Budgerigar.chatbot.Services.impl.BaiduChatServiceImpl;
+import com.AI.Budgerigar.chatbot.Services.ChatService;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -35,8 +35,8 @@ public class ModelSwitchingAspect {
                 log.error("Error using model " + baiduConfig.getCurrentModel() + ": " + e.getMessage(), e);
                 lastException = e;
                 baiduConfig.switchToNextModel(); // 切换到下一个模型
-                BaiduChatServiceImpl impl = (BaiduChatServiceImpl) joinPoint.getTarget();
-                var conversationId = impl.conversationId;
+                ChatService impl = (ChatService) joinPoint.getTarget();
+                String conversationId = impl.getConversationId();
                 chatMessagesRedisDAO.maintainMessageHistory(conversationId);
             }
         }

@@ -56,4 +56,7 @@ public interface ChatService {
         }
         return "Unknown";
     }
+
+    void setConversationId(String conversationId);
+    String getConversationId();
 }
