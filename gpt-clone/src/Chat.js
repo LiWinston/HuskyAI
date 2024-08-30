@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -11,6 +11,7 @@ function Chat() {
     const [input, setInput] = useState('');
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const chatWindowRef = useRef(null);
 
     const sendMessage = async () => {
         if (input.trim() === '') return;
@@ -49,9 +50,19 @@ function Chat() {
         setLoading(false);
     };
 
+    // useEffect to auto-scroll to the bottom of the chat window smoothly
+    useEffect(() => {
+        if (chatWindowRef.current) {
+            chatWindowRef.current.scrollTo({
+                top: chatWindowRef.current.scrollHeight,
+                behavior: 'smooth'  // Smooth scrolling effect
+            });
+        }
+    }, [messages]);
+
     return (
         <div className="chat-container">
-            <div className="chat-window">
+            <div className="chat-window" ref={chatWindowRef}>
                 {messages.map((msg, index) => (
                     <div key={index} className={`message ${msg.sender}`}>
                         <ReactMarkdown
