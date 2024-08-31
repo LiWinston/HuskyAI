@@ -10,6 +10,7 @@
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #f4f2ed; /* 柔和的米色背景 */
 }
 
 .chat-window {
@@ -17,8 +18,8 @@
     display: flex;
     flex-direction: column;
     padding: 20px;
-    background-color: #f9f9f9;
-    border-bottom: 1px solid #e0e0e0;
+    background-color: #fafafa; /* 浅灰白色，减少视觉疲劳 */
+    border-bottom: 1px solid #d1ccc0; /* 浅灰色边框 */
     overflow-y: auto;
 }
 
@@ -29,29 +30,41 @@
     border-radius: 8px;
     max-width: 80%;
     word-wrap: break-word;
+    text-align: left; /* 确保所有消息靠左对齐 */
 }
 
 .message.user {
     align-self: flex-end;
-    background-color: #007bff;
-    color: white;
+    background-color: #a0d6b4; /* 柔和的绿色，给人清新的感觉 */
+    color: #2e2e2e; /* 深灰色字体，提升可读性 */
 }
 
 .message.bot {
     align-self: flex-start;
-    background-color: #e0e0e0;
-    color: #333;
+    background-color: #d3cfcf; /* 浅灰色，保持中性 */
+    color: #2e2e2e; /* 深灰色字体，提升可读性 */
+}
+
+.message.user code, .message.user pre {
+    background-color: #c4c4b8; /* 柔和的灰绿色背景，符合莫兰迪色系 */
+    border: 1px solid #8b8b7e; /* 边框颜色稍深以增强对比 */
+    padding: 8px;
+    border-radius: 5px;
+    display: block;
+    margin: 10px 0;
+    text-align: left;
+    color: #2e2e2e; /* 深灰色字体 */
 }
 
 .timestamp {
     font-size: 0.8em;
-    color: #666;
+    color: #a6a6a6;
     margin-top: 5px;
 }
 
 .user-timestamp {
     text-align: right;
-    color: rgba(255, 255, 255, 0.7); /* 白色但稍微深一点的颜色 */
+    color: rgba(46, 46, 46, 0.7); /* 深灰色 */
 }
 
 .bot-timestamp {
@@ -61,8 +74,8 @@
 
 .input-container {
     display: flex;
-    border-top: 1px solid #e0e0e0;
-    background-color: #fff;
+    border-top: 1px solid #d1ccc0; /* 浅灰色边框 */
+    background-color: #ffffff; /* 白色背景 */
     padding: 10px;
 }
 
@@ -71,25 +84,27 @@ textarea {
     border: none;
     padding: 15px;
     font-size: 16px;
-    border-radius: 0;
+    border-radius: 5px;
     outline: none;
     box-shadow: none;
     max-height: 120px; /* limit height to approximately 6 lines */
     overflow-y: auto;
+    background-color: #f4f2ed; /* 浅米色，和背景一致 */
+    color: #2e2e2e; /* 深灰色字体 */
 }
 
 button {
     padding: 15px;
     border: none;
-    background-color: #007bff;
-    color: white;
+    background-color: #a0d6b4; /* 柔和的绿色 */
+    color: #2e2e2e; /* 深灰色字体 */
     cursor: pointer;
     font-size: 16px;
-    border-radius: 0;
+    border-radius: 5px;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #89b898; /* 更深的绿色以显示悬停效果 */
 }
 
 @media (min-width: 768px) {
