@@ -26,6 +26,12 @@ public class ChatSyncServiceImpl implements ChatSyncService {
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
 
+    //get历史传给前端显示，何尝不是一种同步捏
+    @Override
+    public List<Message> getHistory(String conversationId) {
+        return chatMessagesMongoDAO.getConversationHistory(conversationId);
+    }
+
     // 更新历史记录，从 Redis 获取最新消息并更新到 MongoDB
     public void updateHistoryFromRedis(String conversationId, int numberOfEntries) {
         List<Message> newEntries = chatMessagesRedisDAO.getConversationHistory(conversationId).stream()

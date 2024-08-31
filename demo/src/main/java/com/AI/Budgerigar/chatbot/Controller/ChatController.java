@@ -1,7 +1,9 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
+import com.AI.Budgerigar.chatbot.AIUtil.Message;
 import com.AI.Budgerigar.chatbot.DTO.ErrorResponse;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
+import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
 import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.model.Cid;
 import com.AI.Budgerigar.chatbot.result.Result;
@@ -25,8 +27,13 @@ public class ChatController {
     @Autowired
     private userService userService;
 
+    @Autowired
+    private ChatSyncService chatSyncService;
 
-    // 获取DB中所有对话清单，以备用户选取
+
+    // 获取DB中所有对话清单，以备用户选取.每个对话清单包含对话ID和对话节选
+    // get all conversation list from DB for user to choose.
+    // Each conversation list contains conversation ID and conversation excerpt
     @GetMapping()
     public Result<?> getConversationList(@RequestParam String uuid) {
         try {
@@ -46,12 +53,19 @@ public class ChatController {
         }
     }
 
-    //用get传输ConversationId，后续可扩展
+    //用get传输ConversationId，表达获取历史记录之义
+    //use get to transfer ConversationId, express the meaning of getting history restfully
     @GetMapping("/{conversationId}")
     public ResponseEntity<?> chat(@PathVariable String conversationId) {
-        // 读取 ConversationId 并设置到 chatService 中
+        // 读取 ConversationId 并设置到 chatService 中: read ConversationId and set to chatService
         chatService.setConversationId(conversationId);
-        return ResponseEntity.ok("ConversationId set to " + conversationId);
+        //get历史传给前端显示: get history to show in front end
+        try{
+            List<Message> messageList = chatSyncService.getHistory(conversationId);
+            return ResponseEntity.ok(messageList);
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e));
+        }
     }
 
 
@@ -59,11 +73,11 @@ public class ChatController {
     @PostMapping()
     public ResponseEntity<?> chatPost(@RequestBody Map<String, String> body) {
         try {
-            // Use chatService to handle the request
+            // 调用 chatService 的 chat 方法并返回结果 : Use chatService to handle the request
             String response = chatService.chat(body.get("prompt"));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            // Catch any exception and return error response
+            // Catch any exception and return an error response
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(e));
         }
     }
