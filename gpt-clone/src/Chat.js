@@ -10,12 +10,14 @@ import VscDarkPlus from "react-syntax-highlighter/src/styles/prism/vsc-dark-plus
 import Vs from "react-syntax-highlighter/src/styles/hljs/vs";
 import Xcode from "react-syntax-highlighter/src/styles/hljs/xcode";
 import Darcula from "react-syntax-highlighter/src/styles/hljs/darcula";
+import {BrowserRouter} from "react-router-dom";
+import * as root from "react-dom";
 
 function Chat() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [conversations, setConversations] = useState([]);
+    const [conversations, setConversations] = useState([]); // Ensure initial state is an array
     const [selectedConversation, setSelectedConversation] = useState(null);
     const chatWindowRef = useRef(null);
 
@@ -92,7 +94,7 @@ function Chat() {
         <div className="chat-interface">
             <div className="conversation-list">
                 <h3>Conversations</h3>
-                {conversations.map((conv) => (
+                {Array.isArray(conversations) && conversations.map((conv) => (
                     <div
                         key={conv.id}
                         className={`conversation-item ${selectedConversation === conv.id ? 'selected' : ''}`}
