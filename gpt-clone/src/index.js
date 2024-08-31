@@ -4,7 +4,8 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import axios from 'axios';
-import logo from './logo.svg'; // Make sure to import your logo file / 确保导入你的logo文件
+import logo from './logo.svg';
+import {BrowserRouter, useNavigate} from "react-router-dom"; // Make sure to import your logo file / 确保导入你的logo文件
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -78,28 +79,80 @@ function LoadingContainer() {
     const [statusMessage, setStatusMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [isDetectionComplete, setDetectionComplete] = useState(false);
+    const [showUuidInput, setShowUuidInput] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        detectEnvironment(setStatusMessage, setErrorMessage, () => setDetectionComplete(true));
+        detectEnvironment(setStatusMessage, setErrorMessage, () => {
+            setDetectionComplete(true);
+            setShowUuidInput(true);
+        });
     }, []);
 
+    const handleUuidSubmit = async (uuid) => {
+        try {
+            // Store UUID in localStorage for future use
+            localStorage.setItem('userUUID', uuid);
+
+            // Send GET request to /chat with UUID
+            await axios.get(`${window.API_BASE_URL}/chat?uuid=${uuid}`);
+
+            // Navigate to main app
+            navigate('/chat');
+        } catch (error) {
+            console.error('Error fetching chat data:', error);
+            setErrorMessage('Failed to fetch chat data. Please try again.');
+        }
+    };
+
     if (errorMessage) {
-        return <ErrorScreen errorMessage={errorMessage} />; // Display error screen if there is an error / 如果有错误，显示错误屏幕
+        return <ErrorScreen errorMessage={errorMessage} />;
+    }
+
+    if (showUuidInput) {
+        return <UUIDInput onSubmit={handleUuidSubmit} />;
     }
 
     if (isDetectionComplete) {
-        return <App />; // Render the main application if detection is complete / 如果检测完成，渲染主应用
+        return <LoadingScreen statusMessage="Environment detection complete. Please enter your UUID." />;
     }
 
-    return <LoadingScreen statusMessage={statusMessage} />; // Display loading screen while checking / 检查时显示加载屏幕
+    return <LoadingScreen statusMessage={statusMessage} />;
 }
 
 // Initial rendering of LoadingContainer, which will manage state / 初始渲染LoadingContainer，它将负责状态管理
 root.render(
+    <BrowserRouter>
     <React.StrictMode>
         <LoadingContainer />
     </React.StrictMode>
+    </BrowserRouter>
 );
+
+function UUIDInput({ onSubmit }) {
+    const [uuid, setUuid] = useState('');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSubmit(uuid);
+    };
+
+    return (
+        <div className="uuid-input-container">
+            <h2>Enter Your UUID</h2>
+            <form onSubmit={handleSubmit}>
+                <input
+                    type="text"
+                    value={uuid}
+                    onChange={(e) => setUuid(e.target.value)}
+                    placeholder="Enter your UUID"
+                    required
+                />
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    );
+}
 
 // Report web vitals (optional) / 报告网页指标（可选）
 reportWebVitals();

@@ -2,12 +2,16 @@ package com.AI.Budgerigar.chatbot.Controller;
 
 import com.AI.Budgerigar.chatbot.DTO.ErrorResponse;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
+import com.AI.Budgerigar.chatbot.Services.userService;
+import com.AI.Budgerigar.chatbot.model.Cid;
+import com.AI.Budgerigar.chatbot.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @CrossOrigin(origins = "*")
@@ -18,14 +22,29 @@ public class ChatController {
     @Qualifier("baidu")
     private ChatService chatService;
 
+    @Autowired
+    private userService userService;
 
-//    @GetMapping()
-//    //获取DB中所有对话清单，以备用户选取
-//    public ResponseEntity<?> getConversationList(@RequestParam String uuid) {
-//        //读取用户uuid
-//
-//    }
 
+    // 获取DB中所有对话清单，以备用户选取
+    @GetMapping()
+    public Result<?> getConversationList(@RequestParam String uuid) {
+        try {
+            // 使用 userService 查询用户是否存在
+            boolean userExists = userService.checkUserExists(uuid);
+            if (!userExists) {
+                return Result.error("User not found");
+            }
+
+            // 获取用户的对话列表及消息节选
+            List<Cid> conversations
+                    = userService.getConversations(uuid);
+            return Result.success(conversations);
+
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
 
     //用get传输ConversationId，后续可扩展
     @GetMapping("/{conversationId}")
