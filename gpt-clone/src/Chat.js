@@ -2,52 +2,81 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { okaidia } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import './Chat.css';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import DOMPurify from 'dompurify';
+import { motion, AnimatePresence } from 'framer-motion';
+import './Chat.css';
+import VscDarkPlus from "react-syntax-highlighter/src/styles/prism/vsc-dark-plus";
+import Vs from "react-syntax-highlighter/src/styles/hljs/vs";
+import Xcode from "react-syntax-highlighter/src/styles/hljs/xcode";
+import Darcula from "react-syntax-highlighter/src/styles/hljs/darcula";
 
 function Chat() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
-    const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [conversations, setConversations] = useState([]);
+    const [selectedConversation, setSelectedConversation] = useState(null);
     const chatWindowRef = useRef(null);
+
+    useEffect(() => {
+        fetchConversations();
+    }, []);
+
+    const fetchConversations = async () => {
+        try {
+            const response = await axios.get(`${window.API_BASE_URL}/chat`, {
+                params: { uuid: localStorage.getItem('userUUID') }
+            });
+            setConversations(response.data);
+        } catch (error) {
+            console.error('Error fetching conversations:', error);
+        }
+    };
+
+    const loadConversation = async (conversationId) => {
+        try {
+            const response = await axios.get(`${window.API_BASE_URL}/chat/${conversationId}`);
+            const loadedMessages = response.data.map(msg => {
+                const [role, timestamp, content] = msg.split('|');
+                return { sender: role, text: content, timestamp };
+            });
+            setMessages(loadedMessages);
+            setSelectedConversation(conversationId);
+        } catch (error) {
+            console.error('Error loading conversation:', error);
+        }
+    };
 
     const sendMessage = async () => {
         if (input.trim() === '') return;
 
         const timestamp = new Date().toLocaleTimeString();
+        const newMessage = { sender: 'user', text: input, timestamp };
 
-        setMessages([...messages, { sender: 'user', text: input, timestamp }]);
+        setMessages(prevMessages => [...prevMessages, newMessage]);
+        setInput('');
         setLoading(true);
 
         try {
-            const response = await axios.post(`${window.API_BASE_URL}/chat`, { prompt: input }, { headers: { 'Content-Type': 'application/json' } });
+            const response = await axios.post(`${window.API_BASE_URL}/chat`, {
+                prompt: input,
+                conversationId: selectedConversation
+            });
             const sanitizedResponse = DOMPurify.sanitize(response.data);
+            const botMessage = { sender: 'bot', text: sanitizedResponse, timestamp: new Date().toLocaleTimeString() };
 
+            setMessages(prevMessages => [...prevMessages, botMessage]);
+            setLoading(false);
 
-            setMessages([...messages, { sender: 'user', text: input, timestamp }, { sender: 'bot', text: sanitizedResponse, timestamp }]);
-            setError(null);
-        } catch (error) {
-            let errorMessage = 'An unexpected error occurred';
-            if (error.response) {
-                if (error.response.data && typeof error.response.data === 'object') {
-                    errorMessage = error.response.data.error + ': ' + error.response.data.message + ' (' + error.response.data.status + ')' || 'No error message in response';
-                } else if (typeof error.response.data === 'string') {
-                    errorMessage = error.response.data;
-                } else {
-                    errorMessage = 'Error response received but no message available';
-                }
-            } else if (error.message) {
-                errorMessage = error.message + ' (no response received)';
+            if (!selectedConversation) {
+                setSelectedConversation(response.data.conversationId);
+                fetchConversations();
             }
-
-            setMessages([...messages, { sender: 'user', text: input, timestamp }, { sender: 'bot', text: errorMessage, timestamp }]);
-            setError(null);
+        } catch (error) {
+            console.error('Error sending message:', error);
+            setLoading(false);
         }
-
-        setInput('');
-        setLoading(false);
     };
 
     useEffect(() => {
@@ -60,51 +89,74 @@ function Chat() {
     }, [messages]);
 
     return (
-        <div className="chat-container">
-            <div className="chat-window" ref={chatWindowRef}>
-                {messages.map((msg, index) => (
-                    <div key={index} className={`message ${msg.sender}`}>
-                        <ReactMarkdown
-                            children={DOMPurify.sanitize(msg.text)}
-                            components={{
-                                code({ node, inline, className, children, ...props }) {
-                                    const match = /language-(\w+)/.exec(className || '');
-                                    const detectedLanguage = detectLanguage(String(children));
-                                    return !inline ? (
-                                        <SyntaxHighlighter
-                                            style={okaidia}
-                                            language={match ? match[1] : detectedLanguage}
-                                            PreTag="div"
-                                            children={String(children).replace(/\n$/, '')}
-                                            {...props}
-                                        />
-                                    ) : (
-                                        <code className={className} {...props}>
-                                            {children}
-                                        </code>
-                                    );
-                                }
-                            }}
-                        />
-
-                        <div className={`timestamp ${msg.sender}-timestamp`}>{msg.timestamp}</div>
+        <div className="chat-interface">
+            <div className="conversation-list">
+                <h3>Conversations</h3>
+                {conversations.map((conv) => (
+                    <div
+                        key={conv.id}
+                        className={`conversation-item ${selectedConversation === conv.id ? 'selected' : ''}`}
+                        onClick={() => loadConversation(conv.id)}
+                    >
+                        {conv.title}
                     </div>
                 ))}
             </div>
-            <div className="input-container">
-                <textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                    placeholder="Type your message..."
-                    disabled={loading}
-                    className={loading ? 'input-disabled' : ''}
-                    rows="1"
-                    style={{ resize: 'none', overflow: 'auto', maxHeight: '120px' }} // maximum height set to 6 lines
-                />
-                <button onClick={sendMessage} disabled={loading}>
-                    {loading ? 'Sending...' : 'Send'}
-                </button>
+            <div className="chat-container">
+                <div className="chat-window" ref={chatWindowRef}>
+                    <AnimatePresence>
+                        {messages.map((msg, index) => (
+                            <motion.div
+                                key={index}
+                                className={`message-container ${msg.sender}`}
+                                initial={{opacity: 0, y: 20}}
+                                animate={{opacity: 1, y: 0}}
+                                exit={{opacity: 0, y: -20}}
+                                transition={{duration: 0.3}}
+                            >
+                                <div className={`message ${msg.sender}`}>
+                                    <ReactMarkdown
+                                        children={DOMPurify.sanitize(msg.text)}
+                                        components={{
+                                            code({node, inline, className, children, ...props}) {
+                                                const match = /language-(\w+)/.exec(className || '');
+                                                const detectedLanguage = detectLanguage(String(children));
+                                                return !inline ? (
+                                                    <SyntaxHighlighter
+                                                        style={VscDarkPlus}
+                                                        language={match ? match[1] : detectedLanguage}
+                                                        PreTag="div"
+                                                        children={String(children).replace(/\n$/, '')}
+                                                        {...props}
+                                                    />
+                                                ) : (
+                                                    <code className={className} {...props}>
+                                                        {children}
+                                                    </code>
+                                                );
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div className={`timestamp ${msg.sender}-timestamp`}>{msg.timestamp}</div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+
+                <div className="input-container">
+                    <textarea
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                        placeholder="Type your message..."
+                        disabled={loading}
+                        rows="1"
+                    />
+                    <button onClick={sendMessage} disabled={loading}>
+                        {loading ? 'Sending...' : 'Send'}
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -118,35 +170,35 @@ function detectLanguage(code) {
         {
             name: 'javascript',
             rules: [
-                { pattern: /\b(const|let|var)\s+\w+\s*=/, score: 2 },
-                { pattern: /function\s+\w+\s*\(.*\)\s*{/, score: 2 },
-                { pattern: /=>\s*{/, score: 2 },
-                { pattern: /console\.(log|error|warn|info)\(/, score: 2 },
-                { pattern: /document\.getElementById\(/, score: 3 },
-                { pattern: /\}\s*else\s*{/, score: 1 },
-                { pattern: /new Promise\(/, score: 3 },
-                { pattern: /async\s+function/, score: 3 },
-                { pattern: /\bawait\b/, score: 3 },
-                { pattern: /import\s+.*\s+from\s+['"]/, score: 3 },
-                { pattern: /export\s+(default\s+)?(function|class|const|let|var)/, score: 3 },
-                { pattern: /\.[0-9]+e[+-]?[0-9]+/, score: 1 }
+                {pattern: /\b(const|let|var)\s+\w+\s*=/, score: 2},
+                {pattern: /function\s+\w+\s*\(.*\)\s*{/, score: 2},
+                {pattern: /=>\s*{/, score: 2},
+                {pattern: /console\.(log|error|warn|info)\(/, score: 2},
+                {pattern: /document\.getElementById\(/, score: 3},
+                {pattern: /\}\s*else\s*{/, score: 1},
+                {pattern: /new Promise\(/, score: 3},
+                {pattern: /async\s+function/, score: 3},
+                {pattern: /\bawait\b/, score: 3},
+                {pattern: /import\s+.*\s+from\s+['"]/, score: 3},
+                {pattern: /export\s+(default\s+)?(function|class|const|let|var)/, score: 3},
+                {pattern: /\.[0-9]+e[+-]?[0-9]+/, score: 1}
             ]
         },
         {
             name: 'python',
             rules: [
-                { pattern: /def\s+\w+\s*\(.*\):\s*$/, score: 2 },
-                { pattern: /class\s+\w+(\(\w+\))?:\s*$/, score: 2 },
-                { pattern: /import\s+\w+(\s+as\s+\w+)?/, score: 2 },
-                { pattern: /from\s+\w+\s+import\s+/, score: 2 },
-                { pattern: /print\s*\(/, score: 1 },
-                { pattern: /if\s+__name__\s*==\s*('|")__main__\1:/, score: 3 },
-                { pattern: /^\s*@\w+/, score: 2 },
-                { pattern: /\bfor\s+\w+\s+in\s+/, score: 2 },
-                { pattern: /\bwith\s+.*\s+as\s+/, score: 3 },
-                { pattern: /\blambda\s+.*:/, score: 3 },
-                { pattern: /:\s*$/, score: 1 },
-                { pattern: /\s{4}/, score: 1 }
+                {pattern: /def\s+\w+\s*\(.*\):\s*$/, score: 2},
+                {pattern: /class\s+\w+(\(\w+\))?:\s*$/, score: 2},
+                {pattern: /import\s+\w+(\s+as\s+\w+)?/, score: 2},
+                {pattern: /from\s+\w+\s+import\s+/, score: 2},
+                {pattern: /print\s*\(/, score: 1},
+                {pattern: /if\s+__name__\s*==\s*('|")__main__\1:/, score: 3},
+                {pattern: /^\s*@\w+/, score: 2},
+                {pattern: /\bfor\s+\w+\s+in\s+/, score: 2},
+                {pattern: /\bwith\s+.*\s+as\s+/, score: 3},
+                {pattern: /\blambda\s+.*:/, score: 3},
+                {pattern: /:\s*$/, score: 1},
+                {pattern: /\s{4}/, score: 1}
             ]
         },
         {
@@ -265,31 +317,3 @@ function detectLanguage(code) {
 }
 
 export default Chat;
-
-
-// function detectLanguage(code) {
-//     const languagePatterns = [
-//         { name: 'javascript', pattern: /(?:function|const|let|var|console\.log|=>|async|await|document\.|window\.|import\s+React|\/\/[^\n]*|\/\*[\s\S]*?\*\/)/ },
-//         { name: 'python', pattern: /(?:def|print\(|import|self|lambda|async|await|class\s+\w+|__init__|#.*)/ },
-//         {
-//             name: 'java',
-//             pattern: /(?:public\s+class|System\.out\.println|void\s+main|@Override|new|@Autowired|@Component|@Service|@Repository|@Controller|@Configuration|@RestController|@SpringBootApplication|@RequestMapping|@PathVariable|@Value|@Bean|@PostConstruct|import\s+org\.springframework\.|import\s+javax\.|Logger\.getLogger|\/\/[^\n]*|\/\*[\s\S]*?\*\/)/
-//         },
-//         { name: 'cpp', pattern: /(?:#include\s+<|std::|int\s+main|#define|->|cout\s*<<|using\s+namespace|\/\/[^\n]*|\/\*[\s\S]*?\*\/)/ },
-//         { name: 'ruby', pattern: /(?:def\s+|puts\s+|end|do\s+|:|\$|class\s+\w+|module\s+\w+|#.*)/ },
-//         { name: 'php', pattern: /(?:<\?php|echo|->|::|\$|function\s+|use\s+|namespace\s+|\/\/[^\n]*|\/\*[\s\S]*?\*\/)/ },
-//         { name: 'csharp', pattern: /(?:using\s+System|namespace\s+|class\s+|Console\.WriteLine|new\s+|public\s+static\s+void\s+Main|\/\/[^\n]*|\/\*[\s\S]*?\*\/)/ },
-//         { name: 'go', pattern: /(?:package\s+main|import\s+|func\s+|fmt\.Println|var\s+|:=|\/\/[^\n]*|\/\*[\s\S]*?\*\/)/ },
-//         { name: 'kotlin', pattern: /(?:fun\s+main|println\(|val\s+|var\s+|class\s+|data\s+class|\/\/[^\n]*|\/\*[\s\S]*?\*\/)/ },
-//         { name: 'swift', pattern: /(?:import\s+Foundation|let\s+|var\s+|func\s+|print\(|class\s+\w+|\/\/[^\n]*|\/\*[\s\S]*?\*\/)/ },
-//         // 添加更多语言特征匹配
-//     ];
-//
-//     for (const { name, pattern } of languagePatterns) {
-//         if (pattern.test(code)) {
-//             return name;
-//         }
-//     }
-//
-//     return 'plaintext'; // 默认语言
-// }

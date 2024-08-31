@@ -8,9 +8,9 @@ import Chat from "./Chat";
 function App() {
   return (
       <div className="App">
-        <header className="App-header">
-          <h1>GPT Clone Chat</h1>
-        </header>
+        {/*<header className="App-header">*/}
+        {/*  <h1>GPT Clone Chat</h1>*/}
+        {/*</header>*/}
         <Chat />
       </div>
   );
