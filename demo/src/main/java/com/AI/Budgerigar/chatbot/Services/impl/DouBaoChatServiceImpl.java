@@ -8,6 +8,7 @@ import com.volcengine.ark.runtime.model.completion.chat.ChatCompletionResult;
 import com.volcengine.ark.runtime.model.completion.chat.ChatMessage;
 import com.volcengine.ark.runtime.model.completion.chat.ChatMessageRole;
 import com.volcengine.ark.runtime.service.ArkService;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -58,17 +59,23 @@ public class DouBaoChatServiceImpl implements ChatService {
         this.arkService = arkService;
     }
 
+    @PostConstruct
+    public void init() {
+        conversationId = "default_doubao_conversation";
+    }
+
     @SneakyThrows
     @Override
     public String chat(String prompt) {
-        // Use a fixed or consistent conversationId to ensure continuity across messages
-        conversationId = "default_doubao_conversation"; // Replace with a proper session/user ID in a real-world scenario
+        chatSyncService.updateRedisFromMongo(conversationId);
 
-        // Retrieve full conversation history from Redis
-        List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
+        chatMessagesRedisDAO.maintainMessageHistory(conversationId);
 
         // Add user prompt to Redis conversation history
         chatMessagesRedisDAO.addMessage(conversationId, "user",getNowTimeStamp(), prompt);
+
+        // Retrieve full conversation history from Redis
+        List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
 
         // Build ChatMessage list from conversation history
         List<ChatMessage> messages = new java.util.ArrayList<>(conversationHistory.stream()

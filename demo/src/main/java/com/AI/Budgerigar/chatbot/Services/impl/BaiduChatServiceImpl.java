@@ -27,33 +27,25 @@ import java.util.logging.Logger;
 @Slf4j
 public class BaiduChatServiceImpl implements ChatService {
 
-    @Autowired
-    private Qianfan qianfan;
-
-    @Autowired
-    private BaiduConfig baiduConfig;
-
-    @Autowired
-    private ChatMessagesRedisDAO chatMessagesRedisDAO;
-
-    @Autowired
-    private ChatMessagesMongoDAO chatMessagesMongoDAO;
-
-    @Autowired
-    private ChatSyncService chatSyncService;
-
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
-
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
     @Setter
     @Getter
     public String conversationId;
-//    // 使用 ThreadLocal 来存储 conversationId
-//    private static final ThreadLocal<String> conversationIdThreadLocal = ThreadLocal.withInitial(() -> "default_baidu_conversation");
-
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
-
     @Autowired
     DateTimeFormatter dateTimeFormatter;
+    @Autowired
+    private Qianfan qianfan;
+    @Autowired
+    private BaiduConfig baiduConfig;
+    @Autowired
+    private ChatMessagesRedisDAO chatMessagesRedisDAO;
+//    // 使用 ThreadLocal 来存储 conversationId
+//    private static final ThreadLocal<String> conversationIdThreadLocal = ThreadLocal.withInitial(() -> "default_baidu_conversation");
+    @Autowired
+    private ChatMessagesMongoDAO chatMessagesMongoDAO;
+    @Autowired
+    private ChatSyncService chatSyncService;
 
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
@@ -93,8 +85,7 @@ public class BaiduChatServiceImpl implements ChatService {
             logInfo(" # " + baiduConfig.getCurrentModel() + "\n" + result);
 
             // 将助手的响应添加到 Redis 对话历史
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant",
-                    getNowTimeStamp(), StringEscapeUtils.escapeHtml4(result));
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), StringEscapeUtils.escapeHtml4(result));
 
             // Calculate the difference in conversation length
             long redisLength = chatMessagesRedisDAO.getMessageCount(conversationId);
@@ -109,11 +100,10 @@ public class BaiduChatServiceImpl implements ChatService {
                 });
             }
 
-
             return result;
         } catch (Exception e) {
             log.error("Error occurred in {}: {}", BaiduChatServiceImpl.class.getName(), e.getMessage(), e);
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),"Query failed. Please try again.");
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), "Query failed. Please try again.");
             throw new RuntimeException("Error processing chat request", e);
         }
     }

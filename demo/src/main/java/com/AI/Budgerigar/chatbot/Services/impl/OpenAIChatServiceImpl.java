@@ -7,11 +7,13 @@ import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -21,46 +23,45 @@ import java.util.concurrent.Executors;
 @Service
 public class OpenAIChatServiceImpl implements ChatService {
 
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
     @Setter
     @Getter
     public String conversationId;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private ChatMessagesRedisDAO chatMessagesRedisDAO;
-
-    @Autowired
-    private ChatMessagesMongoDAO chatMessagesMongoDAO;
-
-    @Autowired
-    private ChatSyncServiceImpl chatSyncService;
-
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
-
-    @Value("${openai.model}")
-    private String model;
-
-    @Value("${openai.api.url}")
-    private String apiUrl;
-
     @Autowired
     DateTimeFormatter dateTimeFormatter;
+    @Autowired
+    private RestTemplate restTemplate;
+    @Autowired
+    private ChatMessagesRedisDAO chatMessagesRedisDAO;
+    @Autowired
+    private ChatMessagesMongoDAO chatMessagesMongoDAO;
+    @Autowired
+    private ChatSyncServiceImpl chatSyncService;
+    @Value("${openai.model}")
+    private String model;
+    @Value("${openai.api.url}")
+    private String apiUrl;
 
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
     }
 
+    @PostConstruct
+    public void init() {
+        conversationId = "default_openai_conversation";
+    }
+
     @Override
     public String chat(String prompt) throws Exception {
-        conversationId = "openai_conversation_id"; // 实际应用中应生成唯一会话ID
+        chatSyncService.updateRedisFromMongo(conversationId);
+
+        chatMessagesRedisDAO.maintainMessageHistory(conversationId);
+
+        // 将用户的输入添加到 Redis 会话历史
+        chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(), prompt);
 
         // 从 Redis 获取完整的会话历史
         List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
-
-        // 将用户的输入添加到 Redis 会话历史
-        chatMessagesRedisDAO.addMessage(conversationId, "user",getNowTimeStamp(), prompt);
 
         // 使用工厂方法从 String[] 列表创建 ChatRequestDTO
         ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
@@ -75,12 +76,13 @@ public class OpenAIChatServiceImpl implements ChatService {
         String responseContent = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
         // 将助手的响应添加到 Redis 会话历史
-        chatMessagesRedisDAO.addMessage(conversationId, "assistant",getNowTimeStamp(), responseContent);
+        chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), StringEscapeUtils.escapeHtml4(responseContent));
 
         // 计算 Redis 和 MongoDB 中会话长度的差异
         int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
         int mongoLength = getMongoConversationLength(conversationId);
         int diff = redisLength - mongoLength;
+        logger.info("Redis length: " + redisLength + ", MongoDB length: " + mongoLength + ", diff: " + diff);
 
         // 如果差异超过阈值，则异步更新 MongoDB
         if (Math.abs(diff) > 5) {
