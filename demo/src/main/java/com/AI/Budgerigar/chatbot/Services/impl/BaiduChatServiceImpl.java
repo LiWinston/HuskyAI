@@ -6,6 +6,7 @@ import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
+import com.AI.Budgerigar.chatbot.result.Result;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.model.chat.ChatResponse;
 import lombok.Getter;
@@ -73,7 +74,7 @@ public class BaiduChatServiceImpl implements ChatService {
     }
 
     @Override
-    public String chat(String input) {
+    public Result<String> chat(String input) {
         try {
             chatSyncService.updateRedisFromMongo(conversationId);
 
@@ -124,7 +125,7 @@ public class BaiduChatServiceImpl implements ChatService {
                 });
             }
 
-            return result;
+            return Result.success(result, "Answer based on previous " + conversationHistory.size() + " messages Context~");
         } catch (Exception e) {
             log.error("Error occurred in {}: {}", BaiduChatServiceImpl.class.getName(), e.getMessage(), e);
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), "Query failed. Please try again.");

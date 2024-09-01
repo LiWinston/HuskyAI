@@ -38,7 +38,7 @@ public class TokenLimiter {
     private List<String[]> getAdaptiveHistory(String conversationId, int maxTokens) {
         LinkedList<String[]> adaptiveHistory = new LinkedList<>();
         int tokenCount = 0;
-        int batchSize = 20; // 增加初始批量读取数量，减少循环次数
+        int batchSize = 8; // 初始批量读取数量
 
         int finalMaxTokens = Math.min(maxTokenLimit, maxTokens);
         long messageCount = chatMessagesRedisDAO.getMessageCount(conversationId);
@@ -72,6 +72,7 @@ public class TokenLimiter {
                 break;
             }
 
+            batchSize *= 2;
             startIndex = actualStartIndex - 1;
         }
 

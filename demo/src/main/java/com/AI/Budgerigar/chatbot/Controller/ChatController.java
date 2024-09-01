@@ -80,8 +80,8 @@ public class ChatController {
     public Result<?> chatPost(@RequestBody Map<String, String> body) {
         try {
             // 调用 chatService 的 chat 方法并返回结果 : Use chatService to handle the request
-            String response = chatService.chat(body.get("prompt"));
-            return Result.success(response);
+            Result<String> response = chatService.chat(body.get("prompt"));
+            return Result.success(response.getData(), response.getMsg());
         } catch (Exception e) {
             // Catch any exception and return an error response
             return Result.error(e.getMessage());

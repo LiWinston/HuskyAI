@@ -3,6 +3,7 @@ package com.AI.Budgerigar.chatbot.Services.impl;
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
+import com.AI.Budgerigar.chatbot.result.Result;
 import com.volcengine.ark.runtime.model.completion.chat.ChatCompletionRequest;
 import com.volcengine.ark.runtime.model.completion.chat.ChatCompletionResult;
 import com.volcengine.ark.runtime.model.completion.chat.ChatMessage;
@@ -66,7 +67,7 @@ public class DouBaoChatServiceImpl implements ChatService {
 
     @SneakyThrows
     @Override
-    public String chat(String prompt) {
+    public Result<String> chat(String prompt) {
         chatSyncService.updateRedisFromMongo(conversationId);
 
         chatMessagesRedisDAO.maintainMessageHistory(conversationId);
@@ -116,7 +117,7 @@ public class DouBaoChatServiceImpl implements ChatService {
                 });
             }
 
-            return responseContent;
+            return Result.success(responseContent);
         } else {
             throw new Exception("No response from API");
         }

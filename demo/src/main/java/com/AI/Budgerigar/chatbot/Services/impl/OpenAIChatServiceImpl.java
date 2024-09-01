@@ -5,6 +5,7 @@ import com.AI.Budgerigar.chatbot.DTO.ChatRequestDTO;
 import com.AI.Budgerigar.chatbot.DTO.ChatResponseDTO;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
+import com.AI.Budgerigar.chatbot.result.Result;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +58,7 @@ public class OpenAIChatServiceImpl implements ChatService {
     }
 
     @Override
-    public String chat(String prompt) {
+    public Result<String> chat(String prompt) {
         try {
             chatSyncService.updateRedisFromMongo(conversationId);
 
@@ -97,7 +98,7 @@ public class OpenAIChatServiceImpl implements ChatService {
                 executorService.submit(() -> chatSyncService.updateHistoryFromRedis(conversationId));
             }
 
-            return responseContent;
+            return Result.success(responseContent);
         } catch (Exception e) {
             log.error("Error occurred in {}: {}", OpenAIChatServiceImpl.class.getName(), e.getMessage());
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), "Query failed. Please try again.");
