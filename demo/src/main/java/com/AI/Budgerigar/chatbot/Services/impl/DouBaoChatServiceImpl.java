@@ -21,7 +21,6 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Service
 public class DouBaoChatServiceImpl implements ChatService {
@@ -45,7 +44,8 @@ public class DouBaoChatServiceImpl implements ChatService {
     @Autowired
     private ChatSyncServiceImpl chatSyncService;
 
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    @Autowired
+    private ExecutorService executorService;
 
     @Autowired
     DateTimeFormatter dateTimeFormatter;

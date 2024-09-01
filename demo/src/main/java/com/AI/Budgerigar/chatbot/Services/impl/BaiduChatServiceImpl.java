@@ -19,7 +19,6 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 @Service
@@ -28,7 +27,9 @@ import java.util.logging.Logger;
 public class BaiduChatServiceImpl implements ChatService {
 
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+
+    @Autowired
+    private ExecutorService executorService;
 
     public void setConversationId(String conversationId) {
         this.conversationId = conversationId;

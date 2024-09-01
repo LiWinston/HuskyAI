@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -27,6 +28,9 @@ public class ChatController {
 
     @Autowired
     private ChatSyncService chatSyncService;
+
+    @Autowired
+    private ExecutorService executorService;//线程池 thread pool
 
 
     // 获取DB中所有对话清单，以备用户选取.每个对话清单包含对话ID和对话节选
@@ -55,6 +59,8 @@ public class ChatController {
     //use get to transfer ConversationId, express the meaning of getting history restfully
     @GetMapping("/{conversationId}")
     public Result<?> chat(@PathVariable String conversationId) {
+        //先把当前对话缓存提交到DB: first submit current conversation cache to DB
+        executorService.submit(() -> chatSyncService.updateHistoryFromRedis(chatService.getConversationId()));
         // 读取 ConversationId 并设置到 chatService 中: read ConversationId and set to chatService
         chatService.setConversationId(conversationId);
         chatSyncService.updateHistoryFromRedis(conversationId);
