@@ -7,7 +7,6 @@ import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
@@ -41,7 +40,7 @@ public class ChatSyncServiceImpl implements ChatSyncService {
         chatMessagesMongoDAO.updateHistoryById(conversationId, newEntries);
     }
 
-    @Transactional
+//    @Transactional
     // 更新历史记录，从 Redis 获取所有消息, 比照存储，综合处理重复消息并全量更新到 MongoDB
     public void updateHistoryFromRedis(String conversationId) {
         log.info("Starting sync operation from Redis to MongoDB for conversation ID: {}", conversationId);
@@ -116,13 +115,14 @@ public class ChatSyncServiceImpl implements ChatSyncService {
 
         // 按照时间戳排序所有消息
         mongoMessages.sort((m1, m2) -> parseTimestamp(m1.getTimestamp()).compareTo(parseTimestamp(m2.getTimestamp())));
+        log.info("Messages sorted : {}", conversationId);
 
         try{
             // 保存更新后的消息列表到MongoDB
             chatMessagesMongoDAO.replaceHistoryById(conversationId, mongoMessages);
         }catch (Exception e){
             log.error("Error occurred while updating MongoDB for conversation ID: {}", conversationId, e);
-            throw new RuntimeException("Error updating MongoDB", e);
+            throw new RuntimeException("Error updating MongoDB in " + getClass(), e);
         }
     }
 

@@ -30,19 +30,39 @@ function Chat() {
             const response = await axios.get(`${window.API_BASE_URL}/chat`, {
                 params: { uuid: localStorage.getItem('userUUID') }
             });
-            setConversations(response.data);
+            console.log('Fetched conversations:', response.data);
+            // setConversations(response.data.data);
+            // {
+            //     "code": 1,
+            //     "data": [
+            //     { "conversationId": "chat:history:default_baidu_conversation", "firstMessage": "YEEZY?" },
+            //     { "conversationId": "chat:history:default_openai_conversation", "firstMessage": "没东西啊" },
+            //     { "conversationId": "cid-456", "firstMessage": "Hi, I need some assistance." }
+            // ],
+            //     "msg": null
+            // }
+            setConversations(response.data.data.map(conv => ({
+                id: conv.conversationId,
+                title: conv.firstMessage
+            })));
         } catch (error) {
             console.error('Error fetching conversations:', error);
         }
     };
 
+
     const loadConversation = async (conversationId) => {
         try {
+            console.log('Loading conversation:', conversationId);
             const response = await axios.get(`${window.API_BASE_URL}/chat/${conversationId}`);
-            const loadedMessages = response.data.map(msg => {
-                const [role, timestamp, content] = msg.split('|');
-                return { sender: role, text: content, timestamp };
-            });
+
+            // 直接使用返回的消息对象
+            const loadedMessages = response.data.data.map(msg => ({
+                sender: msg.role,
+                text: msg.content,
+                timestamp: msg.timestamp
+            }));
+
             setMessages(loadedMessages);
             setSelectedConversation(conversationId);
         } catch (error) {
@@ -65,14 +85,14 @@ function Chat() {
                 prompt: input,
                 conversationId: selectedConversation
             });
-            const sanitizedResponse = DOMPurify.sanitize(response.data);
+            const sanitizedResponse = DOMPurify.sanitize(response.data.data);
             const botMessage = { sender: 'bot', text: sanitizedResponse, timestamp: new Date().toLocaleTimeString() };
 
             setMessages(prevMessages => [...prevMessages, botMessage]);
             setLoading(false);
 
             if (!selectedConversation) {
-                setSelectedConversation(response.data.conversationId);
+                setSelectedConversation(response.data.data.conversationId);
                 fetchConversations();
             }
         } catch (error) {
@@ -122,11 +142,11 @@ function Chat() {
                                         components={{
                                             code({node, inline, className, children, ...props}) {
                                                 const match = /language-(\w+)/.exec(className || '');
-                                                const detectedLanguage = detectLanguage(String(children));
+                                                // const detectedLanguage = detectLanguage(String(children));
                                                 return !inline ? (
                                                     <SyntaxHighlighter
                                                         style={VscDarkPlus}
-                                                        language={match ? match[1] : detectedLanguage}
+                                                        language={match ? match[1] : 'plaintext'}
                                                         PreTag="div"
                                                         children={String(children).replace(/\n$/, '')}
                                                         {...props}
@@ -166,7 +186,7 @@ function Chat() {
 
 function detectLanguage(code) {
     // 移除注释，以避免干扰检测
-    code = code.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
+    // code = code.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
 
     const languageRules = [
         {

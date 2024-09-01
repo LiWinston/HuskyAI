@@ -29,7 +29,12 @@ public class BaiduChatServiceImpl implements ChatService {
 
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
     private final ExecutorService executorService = Executors.newCachedThreadPool();
-    @Setter
+
+    public void setConversationId(String conversationId) {
+        this.conversationId = conversationId;
+        log.info("FE SET conversation ID to: " + conversationId);
+    }
+
     @Getter
     public String conversationId;
     @Autowired
@@ -94,11 +99,7 @@ public class BaiduChatServiceImpl implements ChatService {
             logger.info("Redis length: " + redisLength + ", MongoDB length: " + mongoLength + ", diff: " + diff);
 
             // If difference exceeds threshold, update MongoDB asynchronously
-            if (Math.abs(diff) > 5) {
-                executorService.submit(() -> {
-                    chatSyncService.updateHistoryFromRedis(conversationId);
-                });
-            }
+            if(diff > 5) chatSyncService.updateHistoryFromRedis(conversationId, 5);
 
             return result;
         } catch (Exception e) {

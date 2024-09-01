@@ -29,15 +29,19 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
                 .map(this::convertToArray)
                 .collect(Collectors.toList());
 
-        ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
-        if (chatConversationDTO != null) {
-            chatConversationDTO.addStringMessages(messageArrays); // 使用字符串数组
-            mongoTemplate.save(chatConversationDTO);
-        } else {
-            ChatConversationDTO newChatConversationDTO = new ChatConversationDTO();
-            newChatConversationDTO.setMessages(messageArrays);
-            newChatConversationDTO.setConversationId(conversationId);
-            mongoTemplate.save(newChatConversationDTO);
+        try {
+            ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
+            if (chatConversationDTO != null) {
+                chatConversationDTO.addStringMessages(messageArrays); // 使用字符串数组
+                mongoTemplate.save(chatConversationDTO);
+            } else {
+                ChatConversationDTO newChatConversationDTO = new ChatConversationDTO();
+                newChatConversationDTO.setMessages(messageArrays);
+                newChatConversationDTO.setConversationId(conversationId);
+                mongoTemplate.save(newChatConversationDTO);
+            }
+        }catch (Exception e){
+            log.error("Failed to update history(简单方法) for conversation ID: {}", conversationId, e);
         }
     }
 
@@ -65,22 +69,29 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
 
     @Override
     public List<Message> getConversationHistory(String conversationId) {
-        ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
-        if (chatConversationDTO != null) {
-            List<String[]> messagesList = chatConversationDTO.getMessages();
+        try{
 
-            // Check if messagesList is actually a List<String[]> and not List<String[][]>
-            if (messagesList != null && !messagesList.isEmpty() && messagesList.get(0) != null) {
-                return messagesList.stream()
-                        .map(this::convertToMessage)
-                        .collect(Collectors.toList());
+            ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
+            if (chatConversationDTO != null) {
+                List<String[]> messagesList = chatConversationDTO.getMessages();
+
+                // Check if messagesList is actually a List<String[]> and not List<String[][]>
+                if (messagesList != null && !messagesList.isEmpty() && messagesList.get(0) != null) {
+                    return messagesList.stream()
+                            .map(this::convertToMessage)
+                            .collect(Collectors.toList());
+                } else {
+                    log.error("Invalid message structure for conversation ID: " + conversationId);
+                    return List.of();
+                }
             } else {
-                log.error("Invalid message structure for conversation ID: " + conversationId);
+                log.error("No conversation in MongoDB for ID: {}. Returning empty list.{}", conversationId, ChatMessagesMongoDAOImpl.class.getName());
                 return List.of();
             }
-        } else {
-            return List.of();
+        }catch (Exception e){
+            log.error(e.getMessage());
         }
+        return List.of();
     }
 
     // 将 String[] 转换为 Message 对象的方法
@@ -100,21 +111,27 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
                 .collect(Collectors.toList());
 
         // 查找现有的 ChatConversationDTO
-        ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
+        try{
+            ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
 
-        if (chatConversationDTO != null) {
-            // 更新现有的消息列表
-            chatConversationDTO.setMessages(messageArrays);
-        } else {
-            // 如果不存在，创建一个新的 ChatConversationDTO
-            chatConversationDTO = new ChatConversationDTO();
-            chatConversationDTO.setConversationId(conversationId);
-            chatConversationDTO.setMessages(messageArrays);
+            if (chatConversationDTO != null) {
+                // 更新现有的消息列表
+                chatConversationDTO.setMessages(messageArrays);
+            } else {
+                // 如果不存在，创建一个新的 ChatConversationDTO
+                chatConversationDTO = new ChatConversationDTO();
+                chatConversationDTO.setConversationId(conversationId);
+                chatConversationDTO.setMessages(messageArrays);
+            }
+
+            // 保存更新后的 ChatConversationDTO
+            mongoTemplate.save(chatConversationDTO);
+            log.info("Replaced history for conversation ID: {} with {} messages.", conversationId, newMessages.size());
+        }catch (Exception e){
+            log.error("Failed to replace history for conversation ID: {}", conversationId, e);
+            throw e;
         }
 
-        // 保存更新后的 ChatConversationDTO
-        mongoTemplate.save(chatConversationDTO);
-        log.info("Replaced history for conversation ID: {} with {} messages.", conversationId, newMessages.size());
     }
 
     private String[] convertToArray(Message message) {

@@ -2,8 +2,8 @@ package com.AI.Budgerigar.chatbot.AOP;
 
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
-import com.AI.Budgerigar.chatbot.DTO.ErrorResponse;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
+import com.AI.Budgerigar.chatbot.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -43,7 +43,7 @@ public class ModelSwitchingAspect {
         }
 
         // 如果所有尝试都失败，抛出最后一个异常
-        if (lastException != null) return new ErrorResponse(lastException);
+        if (lastException != null) return Result.error(lastException.getMessage());
         else {
             return "None of the models worked";
         }
