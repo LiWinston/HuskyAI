@@ -24,6 +24,34 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
     private MongoTemplate mongoTemplate;
 
     @Override
+    public int getConversationLengthById(String conversationId) {
+        try {
+            MatchOperation match = Aggregation.match(Criteria.where("_id").is(conversationId));
+            ProjectionOperation project = Aggregation.project().and("messages").size().as("messageCount");
+            Aggregation aggregation = Aggregation.newAggregation(match, project);
+
+            AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, "chat_conversations", Document.class);
+            Document document = result.getUniqueMappedResult();
+
+            if (document != null) {
+                return document.getInteger("messageCount", 0);
+            } else {
+                return 0;
+            }
+
+        } catch (Exception e) {
+            log.error("MongoDB_GET_LENGTH : Failed to get conversation length for conversation ID: {}", conversationId, e);
+            //用传统方法获取
+            ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
+            if (chatConversationDTO != null) {
+                return chatConversationDTO.getMessages().size();
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    @Override
     public void updateHistoryById(String conversationId, List<Message> newMessages) {
         List<String[]> messageArrays = newMessages.stream()
                 .map(this::convertToArray)
@@ -41,42 +69,21 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
                 mongoTemplate.save(newChatConversationDTO);
             }
         }catch (Exception e){
-            log.error("Failed to update history(简单方法) for conversation ID: {}", conversationId, e);
+            log.error("Mongo_UPD_Simple : Failed to update (简单方法) for conversation ID: {}", conversationId, e);
         }
     }
 
-    @Override
-    public int getConversationLengthById(String conversationId) {
-        try {
-            MatchOperation match = Aggregation.match(Criteria.where("_id").is(conversationId));
-            ProjectionOperation project = Aggregation.project().and("messages").size().as("messageCount");
-            Aggregation aggregation = Aggregation.newAggregation(match, project);
-
-            AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, "chat_conversations", Document.class);
-            Document document = result.getUniqueMappedResult();
-
-            if (document != null) {
-                return document.getInteger("messageCount", 0);
-            } else {
-                return 0;
-            }
-
-        } catch (Exception e) {
-            log.error("Failed to get conversation length for conversation ID: {}", conversationId, e);
-            return 0;
-        }
-    }
 
     @Override
     public List<Message> getConversationHistory(String conversationId) {
         try{
-
             ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
             if (chatConversationDTO != null) {
                 List<String[]> messagesList = chatConversationDTO.getMessages();
 
                 // Check if messagesList is actually a List<String[]> and not List<String[][]>
                 if (messagesList != null && !messagesList.isEmpty() && messagesList.get(0) != null) {
+                    log.info("MongoDB_Get_History:Found " + messagesList.size() +" history - {}. Returning {} messages.", conversationId, messagesList.size());
                     return messagesList.stream()
                             .map(this::convertToMessage)
                             .collect(Collectors.toList());
@@ -85,7 +92,7 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
                     return List.of();
                 }
             } else {
-                log.error("No conversation in MongoDB for ID: {}. Returning empty list.{}", conversationId, ChatMessagesMongoDAOImpl.class.getName());
+                log.error("MongoDB_Get_History:No history - {}. Returning empty list.", conversationId);
                 return List.of();
             }
         }catch (Exception e){

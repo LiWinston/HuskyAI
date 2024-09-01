@@ -90,7 +90,7 @@ public class OpenAIChatServiceImpl implements ChatService {
             int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
             int mongoLength = getMongoConversationLength(conversationId);
             int diff = redisLength - mongoLength;
-            log.info("Redis length: {}, MongoDB length: {}, diff: {}", redisLength, mongoLength, diff);
+            log.info("Redis length: {}, MongoDB length: {}, diff: {} FROM {}", redisLength, mongoLength, diff, OpenAIChatServiceImpl.class.getName());
 
             // 如果差异超过阈值，则异步更新 MongoDB
             if (Math.abs(diff) > 5) {

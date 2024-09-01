@@ -99,7 +99,11 @@ public class BaiduChatServiceImpl implements ChatService {
             logger.info("Redis length: " + redisLength + ", MongoDB length: " + mongoLength + ", diff: " + diff);
 
             // If difference exceeds threshold, update MongoDB asynchronously
-            if(diff > 5) chatSyncService.updateHistoryFromRedis(conversationId, 5);
+            if (Math.abs(diff) > 5) {
+                executorService.submit(() -> {
+                    chatSyncService.updateHistoryFromRedis(conversationId);
+                });
+            }
 
             return result;
         } catch (Exception e) {

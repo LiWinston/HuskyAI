@@ -67,7 +67,7 @@ public class ChatMessagesRedisDAO {
         try {
             List<String> entries = redisTemplate.opsForList().range(key, 0, -1);
             if (entries == null) {
-                log.info("No conversation history found in Redis for {}", conversationId);
+                log.info("Redis:No history found for {}", conversationId);
                 return List.of(); // 返回空列表而不是null
             } else {
                 return entries.stream()
@@ -110,7 +110,7 @@ public class ChatMessagesRedisDAO {
             // 获取对话历史列表
             List<String> entries = redisTemplate.opsForList().range(key, 0, -1);
             if (entries == null || entries.isEmpty()) {
-                log.info("No conversation history found for {}", conversationId);
+                log.info("Maintaining:No redis history found for {}", conversationId);
                 return;
             }
 
