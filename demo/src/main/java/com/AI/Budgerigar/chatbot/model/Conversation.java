@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 @Getter
 @Setter
-public class Cid implements Serializable {
+public class Conversation implements Serializable {
     private String conversationId;
     private String firstMessage;
 }

@@ -31,12 +31,13 @@ INSERT INTO UserPw (uuid, username, password) VALUES
                                                   ('2222', 'user2', 'password2');
 
 INSERT INTO Cid (conversationId, firstMessage) VALUES
-                                                   ('default_baidu_conversation', 'baidu chat'),
-                                                   ('cid-456', 'Hi, I need some assistance.'),
-                                                   ('default_openai_conversation', 'OpenAI不好使，谁有大能谁修吧: OpenAI is not working, whoever has the ability can fix it.');
+                                                    ('default1_1', 'none'),
+                                                    ('default1_2', 'none'),
+                                                    ('default2_1', 'none'),
+                                                    ('default2_2', 'none');
 
 INSERT INTO UidCid (uuid, conversationId) VALUES
-                                              ('1111', 'default_baidu_conversation'),
-                                              ('1111', 'cid-456'),
-                                              ('1111', 'default_openai_conversation'),
-                                              ('2222', 'cid-456');
+                                              ('1111', 'default1_1'),
+                                              ('1111', 'default1_2'),
+                                              ('2222', 'default2_1'),
+                                              ('2222', 'default2_2');

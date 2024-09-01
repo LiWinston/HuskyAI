@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.lang.Math.min;
+
 @Component
 public class TokenLimiter {
 
@@ -35,17 +37,17 @@ public class TokenLimiter {
         }
     }
 
-    private List<String[]> getAdaptiveHistory(String conversationId, int maxTokens) {
+    public List<String[]> getAdaptiveHistory(String conversationId, int maxTokens) {
         LinkedList<String[]> adaptiveHistory = new LinkedList<>();
         int tokenCount = 0;
         int batchSize = 8; // 初始批量读取数量
 
-        int finalMaxTokens = Math.min(maxTokenLimit, maxTokens);
+        int finalMaxTokens = min(maxTokenLimit, maxTokens);
         long messageCount = chatMessagesRedisDAO.getMessageCount(conversationId);
         int startIndex = (int) messageCount - 1;
 
         while (startIndex >= 0 && tokenCount < finalMaxTokens) {
-            int endIndex = Math.min(startIndex, (int)messageCount - 1);
+            int endIndex = min(startIndex, (int)messageCount - 1);
             int actualStartIndex = Math.max(0, endIndex - batchSize + 1);
             List<String[]> batchMessages = chatMessagesRedisDAO.getMessagesRange(conversationId, actualStartIndex, endIndex);
 
@@ -83,9 +85,9 @@ public class TokenLimiter {
 
 
     // 固定：根据消息条数限制获取对话历史
-    private List<String[]> getFixedHistory(String conversationId) {
+    public List<String[]> getFixedHistory(String conversationId) {
         long totalMessages = chatMessagesRedisDAO.getMessageCount(conversationId);
-        int messageCount = Math.min(maxMessageLimit, (int) totalMessages);
+        int messageCount = min(maxMessageLimit, (int) totalMessages);
 
         if (messageCount % 2 == 0) {
             messageCount++;
@@ -99,8 +101,24 @@ public class TokenLimiter {
         return fixedHistory;
     }
 
+    public List<String[]> getFixedHistory(String conversationId, int maxMessageLimit) {
+        long totalMessages = chatMessagesRedisDAO.getMessageCount(conversationId);
+        int messageCount = min(maxMessageLimit, (int) totalMessages);
+
+        if (messageCount % 2 == 0) {
+            messageCount++;
+        }
+
+        List<String[]> fixedHistory = chatMessagesRedisDAO.getLastNMessages(conversationId, min(maxMessageLimit, messageCount));
+
+        // 更严格的调整：确保交替顺序
+        adjustHistoryForAlternatingRoles(fixedHistory);
+
+        return fixedHistory;
+    }
+
     // 确保历史以"user"开始和结束，且用户和助手消息交替
-    private List<String[]> adjustHistoryForAlternatingRoles(List<String[]> history) {
+    public List<String[]> adjustHistoryForAlternatingRoles(List<String[]> history) {
         if (history.isEmpty()) {
             return history;
         }

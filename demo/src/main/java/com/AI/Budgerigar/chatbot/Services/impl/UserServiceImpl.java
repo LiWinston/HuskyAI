@@ -1,7 +1,7 @@
 package com.AI.Budgerigar.chatbot.Services.impl;
 
 import com.AI.Budgerigar.chatbot.Services.userService;
-import com.AI.Budgerigar.chatbot.model.Cid;
+import com.AI.Budgerigar.chatbot.model.Conversation;
 import com.AI.Budgerigar.chatbot.model.UserPw;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ public class UserServiceImpl implements userService {
     }
 
     @Override
-    public List<Cid> getConversations(String uuid) {
+    public List<Conversation> getConversations(String uuid) {
         return userMapper.getConversationsByUserUuid(uuid);
     }
 }

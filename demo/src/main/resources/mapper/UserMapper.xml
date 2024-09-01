@@ -9,7 +9,7 @@
         WHERE uuid = #{uuid}
     </select>
 
-    <select id="getConversationsByUserUuid" resultType="com.AI.Budgerigar.chatbot.model.Cid">
+    <select id="getConversationsByUserUuid" resultType="com.AI.Budgerigar.chatbot.model.Conversation">
         SELECT c.conversationId, c.firstMessage
         FROM cid c
                  INNER JOIN uidcid uc ON c.conversationId = uc.conversationId

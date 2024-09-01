@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.AI.Budgerigar.chatbot.mapper.CidMapper">
+
+    <select id="getSummaryByCid" parameterType="string" resultType="String">
+        SELECT firstMessage
+        FROM cid
+        WHERE conversationId = #{conversationId}
+    </select>
+
+    <update id="setMessageForShort">
+        UPDATE cid
+        SET firstMessage = #{summary}
+        WHERE cid.conversationid = #{cid}
+    </update>
+
+    <select id="getConversationsByUserUuid" resultType="com.AI.Budgerigar.chatbot.model.Conversation">
+        SELECT *
+        FROM cid c
+                 INNER JOIN uidcid uc ON c.conversationId = uc.conversationId
+        WHERE uc.uuid = #{uuid}
+    </select>
+
+</mapper>

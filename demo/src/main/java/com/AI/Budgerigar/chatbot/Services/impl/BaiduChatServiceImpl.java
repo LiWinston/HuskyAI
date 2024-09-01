@@ -6,6 +6,7 @@ import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
+import com.AI.Budgerigar.chatbot.mapper.CidMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.model.chat.ChatResponse;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import java.time.Instant;
@@ -29,22 +31,16 @@ import java.util.logging.Logger;
 public class BaiduChatServiceImpl implements ChatService {
 
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
-
-    @Autowired
-    private ExecutorService executorService;
-
-    @Autowired
-    private TokenLimiter tokenLimiter;
-
-    public void setConversationId(String conversationId) {
-        this.conversationId = conversationId;
-        log.info("FE SET conversation ID to: " + conversationId);
-    }
-
     @Getter
     public String conversationId;
     @Autowired
     DateTimeFormatter dateTimeFormatter;
+    @Autowired
+    TokenLimitType tokenLimitType;
+    @Autowired
+    private ExecutorService executorService;
+    @Autowired
+    private TokenLimiter tokenLimiter;
     @Autowired
     private Qianfan qianfan;
     @Autowired
@@ -57,9 +53,13 @@ public class BaiduChatServiceImpl implements ChatService {
     private ChatMessagesMongoDAO chatMessagesMongoDAO;
     @Autowired
     private ChatSyncService chatSyncService;
-
     @Autowired
-    TokenLimitType tokenLimitType;
+    private CidMapper cidMapper;
+
+    public void setConversationId(String conversationId) {
+        this.conversationId = conversationId;
+        log.info("FE SET conversation ID to: " + conversationId);
+    }
 
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
@@ -90,9 +90,9 @@ public class BaiduChatServiceImpl implements ChatService {
             try{
                 conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId,1800);
                 log.info("自适应缩放到" + conversationHistory.size() + "条消息");
-                for (String[] entry : conversationHistory) {
-                    log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20, entry[2].length())));
-                }
+//                for (String[] entry : conversationHistory) {
+//                    log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20, entry[2].length())));
+//                }
             }catch (Exception e){
                 log.error("Error occurred in {}: {}", TokenLimiter.class.getName(), e.getMessage(), e);
                 chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), "Query failed. Please try again.");
@@ -137,6 +137,45 @@ public class BaiduChatServiceImpl implements ChatService {
         // Implement the logic to get the conversation length from MongoDB
         // Assuming ChatMessagesMongoDAO has a method to get the conversation length
         return chatMessagesMongoDAO.getConversationLengthById(conversationId);
+    }
+
+//    @Transactional
+    public Result<String> generateAndSetConversationTitle(String conversationId) {
+        try {
+            // Step 1: Get the last 15 messages of the conversation
+            List<String[]> recentMessages = tokenLimiter.getFixedHistory(conversationId, (int) Math.min(15, chatMessagesRedisDAO.getMessageCount(conversationId)));
+
+            if (recentMessages == null || recentMessages.isEmpty()) {
+                return Result.error(conversationId, "No messages found for the conversation.");
+            }
+
+            // Step 2: Generate a summary using AI service
+            var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getRandomModel());
+            recentMessages.add(new String[]{"assistant", getNowTimeStamp(), "Still to be answered"}); // Add a dummy entry to ensure the AI model has enough context
+            recentMessages.add(new String[]{"user", getNowTimeStamp(),"为此对话生成一个简洁且相关的标题，并匹配原始内容的语言，无论内容如何变化，都要提供标题。稍微更侧重于最近的消息，如果主题发生变化，请根据更新后的主题来确定标题。你的回应应只包含标题，不需要额外的问候、介绍或后缀。"});
+            recentMessages = tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
+            for (String[] entry : recentMessages) {
+                chatCompletion.addMessage(entry[0], entry[2]);
+            }
+
+            String summary = chatCompletion.execute().getResult();
+
+            if (summary == null || summary.isEmpty()) {
+                return Result.error(conversationId, "Failed to generate a title.");
+            }
+
+            log.info("Generated title: " + summary);
+
+            // Step 3: Update the 'firstmessage' field in the database
+            cidMapper.setMessageForShort(conversationId, summary);
+
+            return Result.success(summary);
+
+        } catch (Exception e) {
+            // Log the exception (use a logging framework)
+            e.printStackTrace();
+            return Result.error("An error occurred while generating and setting the conversation title.");
+        }
     }
 
 }

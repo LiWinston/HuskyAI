@@ -24,7 +24,7 @@ public class ModelSwitchingAspect {
 
     @Around("execution(* com.AI.Budgerigar.chatbot.Services.impl.BaiduChatServiceImpl.chat(..))")
     public Object aroundChatMethod(ProceedingJoinPoint joinPoint) throws Throwable {
-        log.info("Chat method intercepted");
+        log.info("ModelSwitchingAspect.aroundChatMethod()");
         int maxRetries = baiduConfig.getModelList().size();
         Throwable lastException = null;
 

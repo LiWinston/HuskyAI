@@ -4,7 +4,7 @@ import com.AI.Budgerigar.chatbot.AIUtil.Message;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
 import com.AI.Budgerigar.chatbot.Services.userService;
-import com.AI.Budgerigar.chatbot.model.Cid;
+import com.AI.Budgerigar.chatbot.model.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,7 +46,7 @@ public class ChatController {
             }
 
             // 获取用户的对话列表及消息节选
-            List<Cid> conversations
+            List<Conversation> conversations
                     = userService.getConversations(uuid);
             return Result.success(conversations);
 

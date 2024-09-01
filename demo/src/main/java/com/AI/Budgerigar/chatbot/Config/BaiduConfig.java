@@ -4,6 +4,7 @@ import com.baidubce.qianfan.Qianfan;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -12,10 +13,12 @@ import org.springframework.context.annotation.Configuration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 @Configuration
 @Setter
 @Getter
+@Slf4j
 public class BaiduConfig {
 
     @Value("${baidu.api.key}")
@@ -39,13 +42,29 @@ public class BaiduConfig {
 
     @PostConstruct
     public void init() {
+        Random Random = new Random();
         // 初始化模型列表
         modelList = Arrays.asList(models.split(","));
+        currentModelIndex = Random.nextInt(modelList.size());
+        log.info("INIT BaiduConfig currentModelIndex: {}{}", currentModelIndex, modelList.get(currentModelIndex));
     }
 
     // 获取当前使用的模型
     public String getCurrentModel() {
         return modelList.get(currentModelIndex);
+    }
+
+    public String getRandomModel() {
+        int randomIndex = (int) (Math.random() * modelList.size());//确保随机数在模型列表范围内
+        return modelList.get(randomIndex);
+    }
+
+    public String getRandomDifferentModel() {
+        int randomIndex = (int) (Math.random() * modelList.size());
+        while (randomIndex == currentModelIndex) {
+            randomIndex = (int) (Math.random() * modelList.size());
+        }
+        return modelList.get(randomIndex);
     }
 
     // 切换到下一个模型

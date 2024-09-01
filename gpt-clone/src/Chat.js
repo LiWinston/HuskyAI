@@ -7,6 +7,7 @@ import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
 import VscDarkPlus from "react-syntax-highlighter/src/styles/prism/vsc-dark-plus";
 import {getWindowFromNode} from "@testing-library/dom/dist/helpers";
+const CONVERSATION_SUMMARY_GENERATED = "#CVSG##CVSG##CVSG#";
 
 function Chat() {
     const [messages, setMessages] = useState([]);
@@ -106,8 +107,21 @@ function Chat() {
             setLoading(false);
 
             if (response.data.msg) {
-                setNotification(response.data.msg); // 设置通知消息
-                setTimeout(() => setNotification(null), 3500); // 5秒后自动隐藏通知
+                const msg = response.data.msg;
+                if (msg.includes(CONVERSATION_SUMMARY_GENERATED)) {
+                    const newTitle = msg.split(CONVERSATION_SUMMARY_GENERATED)[1];
+                    // 更新对话标题
+                    setConversations(prevConversations =>
+                        prevConversations.map(conv =>
+                            conv.id === selectedConversation ? {...conv, title: newTitle} : conv
+                        )
+                    );
+                    setNotification(response.data.msg.split(CONVERSATION_SUMMARY_GENERATED)[0] + ', Conversation summary generated, ' + newTitle);
+                    setTimeout(() => setNotification(null), 3500);
+                }else{
+                    setNotification(response.data.msg); // 设置通知消息
+                    setTimeout(() => setNotification(null), 2000);
+                }
             }
 
             if (!selectedConversation) {
