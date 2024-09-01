@@ -1,5 +1,6 @@
 .chat-interface {
     display: flex;
+
     height: 100vh;
     width: 100vw;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -116,9 +117,11 @@
 
 .input-container {
     display: flex;
+    align-items: flex-end;
     padding: 8px;
     background-color: rgba(245, 245, 247, 0.75);
     border-top: 1px solid #d2d2d7;
+
 }
 
 textarea {
@@ -131,7 +134,11 @@ textarea {
     resize: none;
     outline: none;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow 1s ease, height 1s ease; /* 添加高度过渡效果 */
+    max-width: calc(100% - 80px); /* 留出按钮的宽度 */
+    max-height: calc(90%); /* 限制文本框的最大高度 */
+    min-height: 42px; /* 设置文本框的最小高度 */
+    overflow-y: hidden; /* 确保文本框自动扩展时没有滚动条 */
 }
 
 textarea:focus {
@@ -139,8 +146,12 @@ textarea:focus {
 }
 
 button {
+    display: flex;  /* 使用 Flexbox 布局 */
+    align-self: flex-end;
+    justify-content: center;  /* 水平居中对齐内容 */
+    align-items: center;  /* 垂直居中对齐内容 */
     margin-left: 10px;
-    padding: 0 20px;
+    padding: 10px 20px;  /* 增加内边距，使按钮看起来更大 */
     background-color: #007aff;
     color: white;
     border: none;
@@ -149,6 +160,8 @@ button {
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    height: 42px;  /* Match the min-height of textarea */
+    box-sizing: border-box;  /* 使内边距和边框计入总高度 */
 }
 
 button:hover {
@@ -172,7 +185,24 @@ code {
     font-family: 'SF Mono', 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
     font-size: 14px;
 }
-
+.notification-banner {
+    align-self: center;
+    position: fixed;
+    bottom: 60px; /* 距离底部更远，避免遮挡输入框 */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #f0ad4e;
+    color: #fff;
+    padding: 10px 10px;
+    border-radius: 8px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+    z-index: 9999;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    min-width: 200px;
+    max-width: 80%; /* 使用相对宽度以适应窄屏幕 */
+}
 /* 移动端适配 */
 @media (max-width: 1079px) {
     .chat-interface {
@@ -183,12 +213,14 @@ code {
         width: 100%;
         height: auto;
         max-height: 30vh;
+        overflow-y: auto;
         border-right: none;
         border-bottom: 1px solid #d2d2d7;
+        padding: 10px;  /* 减小内边距，适应较小屏幕 */
     }
 
     .chat-container {
-        height: 70vh;
+        height: calc(100vh - 30vh); /* 动态调整聊天容器的高度 */
     }
 
     .message {
@@ -206,6 +238,49 @@ code {
     button {
         padding: 0 15px;
         font-size: 14px;
+    }
+
+    .notification-banner {
+        padding: 10px 20px; /* 减小边距 */
+        font-size: 16px; /* 减小字体大小 */
+        bottom: 15px; /* 调整底部间距 */
+        min-width: 150px; /* 减小最小宽度 */
+    }
+}
+@media (max-width: 768px) {
+    .notification-banner {
+        padding: 8px 16px;
+        font-size: 16px;
+        bottom: 70px; /* 避免在小屏幕上遮挡输入区域 */
+        min-width: 150px;
+        max-width: 85%; /* 使用相对宽度以适应窄屏幕 */
+    }
+
+    .input-container {
+        padding: 8px;
+        background-color: rgba(245, 245, 247, 0.9); /* 提高背景透明度 */
+    }
+
+    textarea {
+        font-size: 14px;
+        padding: 8px 12px;
+        margin-right: 5px; /* 确保输入框和按钮之间有足够空间 */
+    }
+
+    button {
+        padding: 8px 15px;
+        font-size: 14px;
+        margin-left: 5px; /* 确保按钮和输入框之间的空间 */
+    }
+}
+
+@media (max-width: 480px) {
+    .notification-banner {
+        padding: 6px 12px;
+        font-size: 12px;
+        bottom: 60px;
+        min-width: 120px;
+        max-width: 90%; /* 确保在最小屏幕上也能居中显示 */
     }
 }
 

@@ -1,10 +1,12 @@
 package com.AI.Budgerigar.chatbot.Services.impl;
 
+import com.AI.Budgerigar.chatbot.AIUtil.TokenLimiter;
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
+import com.AI.Budgerigar.chatbot.result.Result;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.model.chat.ChatResponse;
 import lombok.Getter;
@@ -31,6 +33,9 @@ public class BaiduChatServiceImpl implements ChatService {
     @Autowired
     private ExecutorService executorService;
 
+    @Autowired
+    private TokenLimiter tokenLimiter;
+
     public void setConversationId(String conversationId) {
         this.conversationId = conversationId;
         log.info("FE SET conversation ID to: " + conversationId);
@@ -53,6 +58,9 @@ public class BaiduChatServiceImpl implements ChatService {
     @Autowired
     private ChatSyncService chatSyncService;
 
+    @Autowired
+    TokenLimitType tokenLimitType;
+
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
     }
@@ -66,7 +74,7 @@ public class BaiduChatServiceImpl implements ChatService {
     }
 
     @Override
-    public String chat(String input) {
+    public Result<String> chat(String input) {
         try {
             chatSyncService.updateRedisFromMongo(conversationId);
 
@@ -77,8 +85,19 @@ public class BaiduChatServiceImpl implements ChatService {
             // 创建 ChatCompletion 请求对象
             var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getCurrentModel());
 
-            // 从 Redis 中获取完整的对话历史
-            List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
+            // 从 Redis 中获取对话历史
+            List<String[]> conversationHistory = null;
+            try{
+                conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId,1800);
+                log.info("自适应缩放到" + conversationHistory.size() + "条消息");
+                for (String[] entry : conversationHistory) {
+                    log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20, entry[2].length())));
+                }
+            }catch (Exception e){
+                log.error("Error occurred in {}: {}", TokenLimiter.class.getName(), e.getMessage(), e);
+                chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), "Query failed. Please try again.");
+                throw new RuntimeException("Error processing chat request", e);
+            }
 
             // 添加对话历史到请求对象中
             for (String[] entry : conversationHistory) {
@@ -106,7 +125,7 @@ public class BaiduChatServiceImpl implements ChatService {
                 });
             }
 
-            return result;
+            return Result.success(result, "Answer based on previous " + conversationHistory.size() + " messages Context~");
         } catch (Exception e) {
             log.error("Error occurred in {}: {}", BaiduChatServiceImpl.class.getName(), e.getMessage(), e);
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), "Query failed. Please try again.");

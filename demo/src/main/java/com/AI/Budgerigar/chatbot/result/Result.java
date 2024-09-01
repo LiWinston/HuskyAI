@@ -1,6 +1,8 @@
 package com.AI.Budgerigar.chatbot.result;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -10,6 +12,8 @@ import java.util.Map;
  * @param <T>
  */
 @Data
+@Getter
+@Setter
 public class Result<T> implements Serializable {
 
     private Integer code; //编码：1成功，0和其它数字为失败
@@ -26,6 +30,14 @@ public class Result<T> implements Serializable {
         Result<T> result = new Result<T>();
         result.data = object;
         result.code = 1;
+        return result;
+    }
+
+    public static <T> Result<T> success(T object, String msg) {
+        Result<T> result = new Result<T>();
+        result.data = object;
+        result.code = 1;
+        result.msg = msg;
         return result;
     }
 

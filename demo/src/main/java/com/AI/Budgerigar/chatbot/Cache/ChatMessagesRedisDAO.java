@@ -175,4 +175,46 @@ public class ChatMessagesRedisDAO {
             log.error("Failed to maintain history for {}", conversationId, e);
         }
     }
+
+    // 获取最近 N 条对话历史
+    public List<String[]> getLastNMessages(String conversationId, int n) {
+        String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
+        try {
+            List<String> entries = redisTemplate.opsForList().range(key, -n, -1); // 获取最后 N 条消息
+            if (entries == null) {
+                log.info("No history found for {}", conversationId);
+                return Arrays.asList();
+            } else {
+                return entries.stream()
+                        .map(entry -> entry.split("\\|", 3)) // 使用 ":" 分隔符拆分
+                        .map(parts -> new String[]{parts[0], parts[1], parts[2]}) // 返回带时间戳的消息
+                        .collect(Collectors.toList());
+            }
+        } catch (DataAccessException e) {
+            log.error("Failed to get last N messages for {}", conversationId, e);
+            return Arrays.asList();
+        }
+    }
+
+    // 获取指定范围内的对话历史,适用于渐进式加载或分页 - Unchecked
+    public List<String[]> getMessagesRange(String conversationId, int start, int end) {
+        String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
+        try {
+            List<String> entries = redisTemplate.opsForList().range(key, start, end);
+            if (entries == null) {
+                log.info("No history found for {}", conversationId);
+                return List.of();
+            } else {
+                return entries.stream()
+                        .map(entry -> entry.split("\\|", 3)) // 使用 ":" 分隔符拆分
+                        .map(parts -> new String[]{parts[0], parts[1], parts[2]}) // 返回带时间戳的消息
+                        .collect(Collectors.toList());
+            }
+        } catch (DataAccessException e) {
+            log.error("Failed to get messages in range for {}", conversationId, e);
+            return List.of();
+        }
+    }
+
+
 }
