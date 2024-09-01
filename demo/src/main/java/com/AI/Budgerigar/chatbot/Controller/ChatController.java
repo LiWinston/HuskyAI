@@ -57,6 +57,7 @@ public class ChatController {
     public Result<?> chat(@PathVariable String conversationId) {
         // 读取 ConversationId 并设置到 chatService 中: read ConversationId and set to chatService
         chatService.setConversationId(conversationId);
+        chatSyncService.updateHistoryFromRedis(conversationId);
         //get历史传给前端显示: get history to show in front end
         try{
             List<Message> messageList = chatSyncService.getHistory(conversationId);
