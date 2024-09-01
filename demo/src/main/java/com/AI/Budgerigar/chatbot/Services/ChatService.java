@@ -3,6 +3,12 @@ package com.AI.Budgerigar.chatbot.Services;
 import java.util.logging.Logger;
 
 public interface ChatService {
+
+    enum TokenLimitType {
+        Adaptive, Fixed
+    }
+
+
     Logger logger = Logger.getLogger(ChatService.class.getName());
     String chat(String prompt) throws Exception;
 

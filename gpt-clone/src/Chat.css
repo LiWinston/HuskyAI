@@ -79,6 +79,10 @@
     color: #1d1d1f;
 }
 
+.message.user, .message.bot {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); /* 确保所有消息都有边框阴影 */
+}
+
 .timestamp {
     font-size: 11px;
     margin-top: 1px;

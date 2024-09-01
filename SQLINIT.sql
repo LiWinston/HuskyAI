@@ -1,3 +1,8 @@
+-- DROP DATABASE IF EXISTS chatbot_db;
+-- CREATE DATABASE chatbot_db;
+\c chatbot_db;
+DROP TABLE IF EXISTS UserPw, Cid, UidCid;
+
 -- 创建用户表 UserPw
 CREATE TABLE UserPw (
                         uuid VARCHAR(36) PRIMARY KEY,
@@ -26,10 +31,12 @@ INSERT INTO UserPw (uuid, username, password) VALUES
                                                   ('2222', 'user2', 'password2');
 
 INSERT INTO Cid (conversationId, firstMessage) VALUES
-                                                   ('chat:history:default_baidu_conversation', 'YEEZY?'),
-                                                   ('cid-456', 'Hi, I need some assistance.');
+                                                   ('default_baidu_conversation', 'baidu chat'),
+                                                   ('cid-456', 'Hi, I need some assistance.'),
+                                                   ('default_openai_conversation', 'OpenAI不好使，谁有大能谁修吧: OpenAI is not working, whoever has the ability can fix it.');
 
 INSERT INTO UidCid (uuid, conversationId) VALUES
-                                              ('1111-1111-1111-1111', 'chat:history:default_baidu_conversation'),
-                                              ('1111-1111-1111-1111', 'cid-456'),
-                                              ('2222-2222-2222-2222', 'cid-456');
+                                              ('1111', 'default_baidu_conversation'),
+                                              ('1111', 'cid-456'),
+                                              ('1111', 'default_openai_conversation'),
+                                              ('2222', 'cid-456');
