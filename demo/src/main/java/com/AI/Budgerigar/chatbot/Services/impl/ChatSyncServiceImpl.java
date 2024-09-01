@@ -50,8 +50,23 @@ public class ChatSyncServiceImpl implements ChatSyncService {
         List<Message> redisMessages = chatMessagesRedisDAO.getConversationHistory(conversationId).stream()
                 .map(this::convertToMessage)
                 .toList();
+
+        if (redisMessages.isEmpty()) {
+            log.warn("缓存没东西——Cache is empty: {}", conversationId);
+            //用概率决定是否为Mongo维护历史
+            if (Math.random() < 0.15) {
+                log.info("MongoDB开始随机维护——MongoDB randomly maintains history: {}", conversationId);
+                chatMessagesMongoDAO.updateHistoryById(conversationId, redisMessages);
+            }
+        }
+
         List<Message> mongoMessages = chatMessagesMongoDAO.getConversationHistory(conversationId);
 
+        if (mongoMessages.isEmpty()) {
+            log.info("芒果没东西——MongoDB is empty: {}", conversationId);
+            chatMessagesMongoDAO.replaceHistoryById(conversationId, redisMessages);
+            return;
+        }
         // 使用Set来跟踪消息的唯一性，避免重复
         Set<String> uniqueMessagesSet = new HashSet<>();
         List<Message> newMessagesToPersist = new ArrayList<>();
