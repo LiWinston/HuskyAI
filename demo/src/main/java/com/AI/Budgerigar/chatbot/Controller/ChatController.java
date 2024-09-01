@@ -60,7 +60,8 @@ public class ChatController {
     @GetMapping("/{conversationId}")
     public Result<?> chat(@PathVariable String conversationId) {
         //先把当前对话缓存提交到DB: first submit current conversation cache to DB
-        executorService.submit(() -> chatSyncService.updateHistoryFromRedis(chatService.getConversationId()));
+//        executorService.submit(() -> chatSyncService.updateHistoryFromRedis(chatService.getConversationId()));
+        chatSyncService.updateHistoryFromRedis(chatService.getConversationId());
         // 读取 ConversationId 并设置到 chatService 中: read ConversationId and set to chatService
         chatService.setConversationId(conversationId);
         chatSyncService.updateHistoryFromRedis(conversationId);
