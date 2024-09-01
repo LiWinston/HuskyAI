@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,29 +77,37 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
 
     @Override
     public List<Message> getConversationHistory(String conversationId) {
-        try{
+        // Step 1: 尝试从MongoDB中获取会话记录
+        try {
             ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
+
+            // Step 2: 检查会话记录是否存在
             if (chatConversationDTO != null) {
                 List<String[]> messagesList = chatConversationDTO.getMessages();
 
-                // Check if messagesList is actually a List<String[]> and not List<String[][]>
+                // Step 3: 确认消息列表的结构和内容是否有效
                 if (messagesList != null && !messagesList.isEmpty() && messagesList.get(0) != null) {
-                    log.info("MongoDB_Get_History:Found " + messagesList.size() +" history - {}. Returning {} messages.", conversationId, messagesList.size());
+                    log.info("MongoDB_Get_History:Found {} history - {}. Returning {} messages.", messagesList.size(), conversationId, messagesList.size());
+
+                    // Step 4: 转换消息列表为Message对象列表并返回
                     return messagesList.stream()
                             .map(this::convertToMessage)
                             .collect(Collectors.toList());
                 } else {
+                    // 错误: 消息结构无效
                     log.error("Invalid message structure for conversation ID: " + conversationId);
-                    return List.of();
+                    return new ArrayList<>(); // 返回一个可变的空列表
                 }
             } else {
+                // 错误: 没有找到对应的会话记录
                 log.error("MongoDB_Get_History:No history - {}. Returning empty list.", conversationId);
-                return List.of();
+                return new ArrayList<>(); // 返回一个可变的空列表
             }
-        }catch (Exception e){
-            log.error(e.getMessage());
+        } catch (Exception e) {
+            // Step 5: 异常处理 - 捕获并记录错误信息
+            log.error("Error fetching conversation history for ID: " + conversationId + ", Error: " + e.getMessage(), e);
+            return new ArrayList<>(); // 返回一个可变的空列表以避免异常传播
         }
-        return List.of();
     }
 
     // 将 String[] 转换为 Message 对象的方法
