@@ -2,12 +2,15 @@ package com.AI.Budgerigar.chatbot.AIUtil;
 
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class TokenLimiter {
@@ -32,63 +35,48 @@ public class TokenLimiter {
         }
     }
 
-    // 自适应：根据 token 总量限制从后向前获取对话历史
     private List<String[]> getAdaptiveHistory(String conversationId, int maxTokens) {
         LinkedList<String[]> adaptiveHistory = new LinkedList<>();
         int tokenCount = 0;
-        int batchSize = 8; // 初始批量读取8条消息，可以根据需要调整
+        int batchSize = 20; // 增加初始批量读取数量，减少循环次数
 
         int finalMaxTokens = Math.min(maxTokenLimit, maxTokens);
         long messageCount = chatMessagesRedisDAO.getMessageCount(conversationId);
-        int startIndex = (int) messageCount - 1; // 从最后一条消息开始
-        int endIndex = startIndex;
-        // 从后向前逐步读取，直到满足条件或到达历史的开头
-        while (startIndex >= 0) {
+        int startIndex = (int) messageCount - 1;
 
-            startIndex = Math.max(startIndex - batchSize + 1, 0); // 向前读取batchSize条消息
-            List<String[]> batchMessages = chatMessagesRedisDAO.getMessagesRange(conversationId, startIndex, endIndex);
+        while (startIndex >= 0 && tokenCount < finalMaxTokens) {
+            int endIndex = Math.min(startIndex, (int)messageCount - 1);
+            int actualStartIndex = Math.max(0, endIndex - batchSize + 1);
+            List<String[]> batchMessages = chatMessagesRedisDAO.getMessagesRange(conversationId, actualStartIndex, endIndex);
 
-            // 如果 batchMessages 是空的，结束循环
             if (batchMessages.isEmpty()) {
                 break;
             }
 
-            // 逆序遍历消息
+            boolean reachedLimit = false;
             for (int i = batchMessages.size() - 1; i >= 0; i--) {
                 String[] message = batchMessages.get(i);
                 String content = message[2];
                 int messageTokens = estimateTokenCount(content);
 
-                // 检查是否会超出 token 限制，如果没有超出则添加
                 if (tokenCount + messageTokens <= finalMaxTokens) {
                     tokenCount += messageTokens;
-                    adaptiveHistory.addFirst(message); // 小批次内顺序遍历
+                    adaptiveHistory.addFirst(message);
                 } else {
-                    // 如果超出限制，检查是否允许读取更多
-                    if (adaptiveHistory.isEmpty()) {
-                        adaptiveHistory.addFirst(message); // 没有其他消息时允许添加单条超限消息
-                    }
-                    // 超出 token 限制，停止累加
+                    reachedLimit = true;
                     break;
                 }
             }
 
-            // 增加批次大小，以便下一轮读取更多消息
-            batchSize += 2;
-
-            // 检查是否已满足token数量条件或达到历史记录的开头
-            if (tokenCount >= finalMaxTokens || startIndex <= 0) {
+            if (reachedLimit) {
                 break;
             }
 
-            endIndex = startIndex - 1; // 更新 endIndex 以读取下一批消息
-            startIndex = startIndex - batchSize;  // 更新 startIndex 向前读取更多消息
+            startIndex = actualStartIndex - 1;
         }
 
-        // 确保历史记录以正确的顺序排列
-        adjustHistoryForAlternatingRoles(adaptiveHistory);
-
-        return adaptiveHistory;
+        // 调整历史记录以确保正确的顺序和角色交替
+        return adjustHistoryForAlternatingRoles(adaptiveHistory);
     }
 
 
@@ -111,34 +99,58 @@ public class TokenLimiter {
     }
 
     // 确保历史以"user"开始和结束，且用户和助手消息交替
-    private void adjustHistoryForAlternatingRoles(List<String[]> history) {
-        // 确保历史以"user"开始
-        while (!history.isEmpty() && !"user".equals(history.get(0)[0])) {
-            history.remove(0);
+    private List<String[]> adjustHistoryForAlternatingRoles(List<String[]> history) {
+        if (history.isEmpty()) {
+            return history;
         }
 
-        // 确保历史交替，且以"user"结束
-        for (int i = 0; i < history.size(); i++) {
-            String expectedRole = (i % 2 == 0) ? "user" : "assistant";
-            if (!expectedRole.equals(history.get(i)[0])) {
-                history.subList(i, history.size()).clear(); // 清理不符合顺序的部分
-                break;
+        LinkedList<String[]> adjustedHistory = new LinkedList<>();
+        String expectedRole = "user";
+
+        // 从最新的消息开始处理，确保以 user 消息结尾
+        for (int i = history.size() - 1; i >= 0; i--) {
+            String[] message = history.get(i);
+            if (message[0].equals(expectedRole)) {
+                adjustedHistory.addFirst(message);
+                expectedRole = expectedRole.equals("user") ? "assistant" : "user";
             }
         }
 
-        // 如果历史是偶数条，移除最后一条消息以确保为奇数条
-        if (history.size() % 2 == 0 && !history.isEmpty()) {
-            history.remove(history.size() - 1);
+        // 如果调整后的历史不是以 user 开始，则移除第一条消息
+        if (!adjustedHistory.isEmpty() && !"user".equals(adjustedHistory.getFirst()[0])) {
+            adjustedHistory.removeFirst();
         }
 
-        // 最终检查，如果经过调整后历史列表为空或不满足要求，直接返回空列表
-        if (history.isEmpty() || !"user".equals(history.get(0)[0]) || !"user".equals(history.get(history.size() - 1)[0])) {
-            history.clear();
+        // 确保消息数量为奇数
+        if (adjustedHistory.size() % 2 == 0 && !adjustedHistory.isEmpty()) {
+            adjustedHistory.removeFirst();
         }
+
+        return adjustedHistory;
+    }
+
+
+    private static Pattern TOKEN_PATTERN;
+    @PostConstruct
+    public void init() {
+        // 初始化 TOKEN_PATTERN
+        TOKEN_PATTERN = Pattern.compile("\\w+|\\p{Punct}|\\s+");
     }
 
     // 估算消息的token数量的辅助方法
-    private int estimateTokenCount(String content) {
-        return content.split("\\s+").length;
+    public int estimateTokenCount(String content) {
+        if (content == null || content.isEmpty()) {
+            return 0;
+        }
+
+        // 使用已经编译好的 TOKEN_PATTERN
+        Matcher matcher = TOKEN_PATTERN.matcher(content);
+
+        int tokenCount = 0;
+        while (matcher.find()) {
+            tokenCount++;
+        }
+
+        return tokenCount;
     }
 }

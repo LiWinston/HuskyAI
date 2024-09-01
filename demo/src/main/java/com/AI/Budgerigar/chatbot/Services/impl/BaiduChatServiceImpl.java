@@ -87,7 +87,7 @@ public class BaiduChatServiceImpl implements ChatService {
             // 从 Redis 中获取对话历史
             List<String[]> conversationHistory = null;
             try{
-                conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId,180);
+                conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId,1800);
                 log.info("自适应缩放到" + conversationHistory.size() + "条消息");
                 for (String[] entry : conversationHistory) {
                     log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20, entry[2].length())));
