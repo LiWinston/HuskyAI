@@ -17,11 +17,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF if not needed
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Apply CORS configuration
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()); // Allow all requests
+        http.csrf(csrf -> csrf.disable()) // Disable CSRF if not needed
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Apply
+                                                                               // CORS
+                                                                               // configuration
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()); // Allow all
+                                                                           // requests
 
         return http.build();
     }
@@ -29,8 +30,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*")); // Allow all origins or specify domains
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed HTTP methods
+        configuration.setAllowedOriginPatterns(List.of("*")); // Allow all origins or
+                                                              // specify domains
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed
+                                                                                             // HTTP
+                                                                                             // methods
         configuration.setAllowedHeaders(List.of("*")); // Allow all headers
         configuration.setAllowCredentials(true); // If cookies need to be included
 
@@ -38,4 +42,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration); // Apply to all endpoints
         return source;
     }
+
 }

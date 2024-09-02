@@ -33,7 +33,8 @@ public class ModelSwitchingAspect {
             try {
                 log.info("Using model: " + baiduConfig.getCurrentModel());
                 return joinPoint.proceed(); // 尝试执行原始方法
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 log.error("Error using model {}: {}", baiduConfig.getCurrentModel(), e.getMessage());
                 lastException = e;
                 baiduConfig.switchToNextModel(); // 切换到下一个模型
@@ -44,9 +45,11 @@ public class ModelSwitchingAspect {
         }
 
         // 如果所有尝试都失败，抛出最后一个异常
-        if (lastException != null) return Result.error(lastException.getMessage());
+        if (lastException != null)
+            return Result.error(lastException.getMessage());
         else {
             return "None of the models worked";
         }
     }
+
 }

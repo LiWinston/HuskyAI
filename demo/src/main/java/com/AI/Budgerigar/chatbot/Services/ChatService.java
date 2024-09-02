@@ -7,18 +7,21 @@ import java.util.logging.Logger;
 public interface ChatService {
 
     enum TokenLimitType {
+
         Adaptive, Fixed
+
     }
 
-
     Logger logger = Logger.getLogger(ChatService.class.getName());
+
     Result<String> chat(String prompt, String conversationId) throws Exception;
 
     // 默认方法来记录信息
-//    default void logInfo(String message) {
-//        String className = getCallingClassName();
-//        logger.info(className + " : " + message.substring(0, Math.min(40, message.length())));
-//    }
+    // default void logInfo(String message) {
+    // String className = getCallingClassName();
+    // logger.info(className + " : " + message.substring(0, Math.min(40,
+    // message.length())));
+    // }
 
     //
     default void logInfo(String message) {
@@ -65,6 +68,7 @@ public interface ChatService {
         return "Unknown";
     }
 
-//    void setConversationId(String conversationId);
-//    String getConversationId();
+    // void setConversationId(String conversationId);
+    // String getConversationId();
+
 }

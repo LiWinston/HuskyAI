@@ -29,47 +29,58 @@ import java.util.logging.Logger;
 public class BaiduChatServiceImpl implements ChatService {
 
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
+
     @Getter
-//    public String conversationId;
+    // public String conversationId;
     @Autowired
     DateTimeFormatter dateTimeFormatter;
+
     @Autowired
     TokenLimitType tokenLimitType;
+
     @Autowired
     private ExecutorService executorService;
+
     @Autowired
     private TokenLimiter tokenLimiter;
+
     @Autowired
     private Qianfan qianfan;
+
     @Autowired
     private BaiduConfig baiduConfig;
+
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
-//    // 使用 ThreadLocal 来存储 conversationId
-//    private static final ThreadLocal<String> conversationIdThreadLocal = ThreadLocal.withInitial(() -> "default_baidu_conversation");
+
+    // // 使用 ThreadLocal 来存储 conversationId
+    // private static final ThreadLocal<String> conversationIdThreadLocal =
+    // ThreadLocal.withInitial(() -> "default_baidu_conversation");
     @Autowired
     private ChatMessagesMongoDAO chatMessagesMongoDAO;
+
     @Autowired
     private ChatSyncService chatSyncService;
+
     @Autowired
     private ConversationMapper conversationMapper;
 
-//    public void setConversationId(String conversationId) {
-//        this.conversationId = conversationId;
-//        log.info("FE SET conversation ID to: " + conversationId);
-//    }
+    // public void setConversationId(String conversationId) {
+    // this.conversationId = conversationId;
+    // log.info("FE SET conversation ID to: " + conversationId);
+    // }
 
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
     }
 
-
-//    @PostConstruct
-//    public void init() {
-//        conversationId = ""; // This would typically be dynamic per session/user
-////        chatMessagesRedisDAO.addMessage(conversationId, "user", "Hi");
-////        chatMessagesRedisDAO.addMessage(conversationId, "assistant", "What can I do for U?");
-//    }
+    // @PostConstruct
+    // public void init() {
+    // conversationId = ""; // This would typically be dynamic per session/user
+    //// chatMessagesRedisDAO.addMessage(conversationId, "user", "Hi");
+    //// chatMessagesRedisDAO.addMessage(conversationId, "assistant", "What can I do for
+    // U?");
+    // }
 
     @Override
     public Result<String> chat(String input, String conversationId) {
@@ -78,28 +89,33 @@ public class BaiduChatServiceImpl implements ChatService {
 
             chatMessagesRedisDAO.maintainMessageHistory(conversationId);
             // 添加用户输入到 Redis 对话历史
-            chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(), StringEscapeUtils.escapeHtml4(input));
+            chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(),
+                    StringEscapeUtils.escapeHtml4(input));
 
             // 创建 ChatCompletion 请求对象
             var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getCurrentModel());
 
             // 从 Redis 中获取对话历史
             List<String[]> conversationHistory = null;
-            try{
-                conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId,1800);
+            try {
+                conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId, 1800);
                 log.info("自适应缩放到" + conversationHistory.size() + "条消息");
-//                for (String[] entry : conversationHistory) {
-//                    log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20, entry[2].length())));
-//                }
-            }catch (Exception e){
+                // for (String[] entry : conversationHistory) {
+                // log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20,
+                // entry[2].length())));
+                // }
+            }
+            catch (Exception e) {
                 log.error("Error occurred in {}: {}", TokenLimiter.class.getName(), e.getMessage(), e);
-                chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), "Query failed. Please try again.");
+                chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
+                        "Query failed. Please try again.");
                 throw new RuntimeException("Error processing chat request", e);
             }
 
             // 添加对话历史到请求对象中
             for (String[] entry : conversationHistory) {
-                chatCompletion.addMessage(entry[0], entry[2]); // entry[0] 是角色，entry[2] 是内容
+                chatCompletion.addMessage(entry[0], entry[2]); // entry[0] 是角色，entry[2]
+                                                               // 是内容
             }
 
             // 执行请求
@@ -108,7 +124,8 @@ public class BaiduChatServiceImpl implements ChatService {
             logInfo(" # " + baiduConfig.getCurrentModel() + "\n" + result.substring(0, Math.min(20, result.length())));
 
             // 将助手的响应添加到 Redis 对话历史
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), StringEscapeUtils.escapeHtml4(result));
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
+                    StringEscapeUtils.escapeHtml4(result));
 
             // Calculate the difference in conversation length
             long redisLength = chatMessagesRedisDAO.getMessageCount(conversationId);
@@ -123,10 +140,13 @@ public class BaiduChatServiceImpl implements ChatService {
                 });
             }
 
-            return Result.success(result, "Answer based on previous " + conversationHistory.size() + " messages Context~");
-        } catch (Exception e) {
+            return Result.success(result,
+                    "Answer based on previous " + conversationHistory.size() + " messages Context~");
+        }
+        catch (Exception e) {
             log.error("Error occurred in {}: {}", BaiduChatServiceImpl.class.getName(), e.getMessage(), e);
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), "Query failed. Please try again.");
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
+                    "Query failed. Please try again.");
             throw new RuntimeException("Error processing chat request", e);
         }
     }
@@ -137,11 +157,12 @@ public class BaiduChatServiceImpl implements ChatService {
         return chatMessagesMongoDAO.getConversationLengthById(conversationId);
     }
 
-//    @Transactional
+    // @Transactional
     public Result<String> generateAndSetConversationTitle(String conversationId) {
         try {
             // Step 1: Get the last 15 messages of the conversation
-            List<String[]> recentMessages = tokenLimiter.getFixedHistory(conversationId, (int) Math.min(15, chatMessagesRedisDAO.getMessageCount(conversationId)));
+            List<String[]> recentMessages = tokenLimiter.getFixedHistory(conversationId,
+                    (int) Math.min(15, chatMessagesRedisDAO.getMessageCount(conversationId)));
 
             if (recentMessages == null || recentMessages.isEmpty()) {
                 return Result.error(conversationId, "No messages found for the conversation.");
@@ -149,23 +170,32 @@ public class BaiduChatServiceImpl implements ChatService {
 
             // Step 2: Generate a summary using AI service
             var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getRandomModel());
-            recentMessages.add(new String[]{"assistant", getNowTimeStamp(), "Still to be answered"}); // Add a dummy entry to ensure the AI model has enough context
-            recentMessages.add(new String[]{"user", getNowTimeStamp(),
-                    "为此对话生成一个简洁且相关的标题，并匹配原始内容的语言，无论内容如何变化，都要提供标题。" +
-                            "稍微更侧重于最近的消息，如果主题发生过大变化，请根据更新后的主题来确定标题。" +
-                            "请仅回复标题内容，不需要任何寒暄、引入和前缀词，直接给出主谓、动宾或偏正，如果是英文标题则主谓、定语中心语。" +
-                            "更不要包含例如“最近消息：”这样的引入短语，若有多种可能的标题，请选择最简洁的一个。" });
-            //This is for indicating the details used to generate the title, Now fully tested so can be removed
-            //这是用于指示生成标题所使用的详细信息列表，现在已经完全测试，因此可以删除
+            recentMessages.add(new String[] { "assistant", getNowTimeStamp(), "Still to be answered" }); // Add
+                                                                                                         // a
+                                                                                                         // dummy
+                                                                                                         // entry
+                                                                                                         // to
+                                                                                                         // ensure
+                                                                                                         // the
+                                                                                                         // AI
+                                                                                                         // model
+                                                                                                         // has
+                                                                                                         // enough
+                                                                                                         // context
+            recentMessages.add(new String[] { "user", getNowTimeStamp(),
+                    "为此对话生成一个简洁且相关的标题，并匹配原始内容的语言，无论内容如何变化，都要提供标题。" + "稍微更侧重于最近的消息，如果主题发生过大变化，请根据更新后的主题来确定标题。"
+                            + "请仅回复标题内容，不需要任何寒暄、引入和前缀词，直接给出主谓、动宾或偏正，如果是英文标题则主谓、定语中心语。"
+                            + "更不要包含例如“最近消息：”这样的引入短语，若有多种可能的标题，请选择最简洁的一个。" });
+            // This is for indicating the details used to generate the title, Now fully
+            // tested so can be removed
+            // 这是用于指示生成标题所使用的详细信息列表，现在已经完全测试，因此可以删除
             recentMessages = tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
-//            StringBuilder s = new StringBuilder();
+            // StringBuilder s = new StringBuilder();
             for (String[] entry : recentMessages) {
                 chatCompletion.addMessage(entry[0], entry[2]);
-//                s.append(entry[2]).append(" ");
+                // s.append(entry[2]).append(" ");
             }
-//            log.info(String.valueOf(s));
-
-
+            // log.info(String.valueOf(s));
 
             String summary = chatCompletion.execute().getResult();
 
@@ -180,7 +210,8 @@ public class BaiduChatServiceImpl implements ChatService {
 
             return Result.success(summary);
 
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // Log the exception (use a logging framework)
             e.printStackTrace();
             return Result.error("An error occurred while generating and setting the conversation title.");

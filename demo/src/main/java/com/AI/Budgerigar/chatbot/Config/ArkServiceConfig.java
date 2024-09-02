@@ -11,8 +11,8 @@ import org.springframework.util.StringUtils;
 @Configuration
 public class ArkServiceConfig {
 
-    //default value useless, just avoid config not found leading to error launch
-//    @Value("${volc.ak}")
+    // default value useless, just avoid config not found leading to error launch
+    // @Value("${volc.ak}")
     @Value("${volc.ak}")
     private String ak;
 
@@ -27,22 +27,21 @@ public class ArkServiceConfig {
 
     @Lazy
     @Bean
-//    @ConditionalOnProperty(prefix = "volc", name = {"ak", "sk", "base-url", "region"})
+    // @ConditionalOnProperty(prefix = "volc", name = {"ak", "sk", "base-url", "region"})
     public ArkService arkService() {
         // Check if critical properties are provided
-        if (StringUtils.hasText(ak) && StringUtils.hasText(sk) && StringUtils.hasText(baseUrl) && StringUtils.hasText(region)) {
-            // All required properties are available, create and return ArkService instance
-            return ArkService.builder()
-                    .ak(ak)
-                    .sk(sk)
-                    .baseUrl(baseUrl)
-                    .region(region)
-                    .build();
-        } else {
+        if (StringUtils.hasText(ak) && StringUtils.hasText(sk) && StringUtils.hasText(baseUrl)
+                && StringUtils.hasText(region)) {
+            // All required properties are available, create and return ArkService
+            // instance
+            return ArkService.builder().ak(ak).sk(sk).baseUrl(baseUrl).region(region).build();
+        }
+        else {
             // Handle missing properties, e.g., log a warning or throw an exception
             throw new IllegalStateException("Missing required ArkService configuration properties");
             // Alternatively, you can return null or provide a default implementation
             // return null;
         }
     }
+
 }

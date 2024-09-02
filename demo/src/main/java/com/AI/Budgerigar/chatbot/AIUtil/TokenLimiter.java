@@ -32,7 +32,8 @@ public class TokenLimiter {
     public synchronized List<String[]> getAdaptiveConversationHistory(String conversationId, int maxTokens) {
         if (tokenLimitType == ChatService.TokenLimitType.Adaptive) {
             return getAdaptiveHistory(conversationId, maxTokens);
-        } else {
+        }
+        else {
             return getFixedHistory(conversationId);
         }
     }
@@ -47,9 +48,10 @@ public class TokenLimiter {
         int startIndex = (int) messageCount - 1;
 
         while (startIndex >= 0 && tokenCount < finalMaxTokens) {
-            int endIndex = min(startIndex, (int)messageCount - 1);
+            int endIndex = min(startIndex, (int) messageCount - 1);
             int actualStartIndex = Math.max(0, endIndex - batchSize + 1);
-            List<String[]> batchMessages = chatMessagesRedisDAO.getMessagesRange(conversationId, actualStartIndex, endIndex);
+            List<String[]> batchMessages = chatMessagesRedisDAO.getMessagesRange(conversationId, actualStartIndex,
+                    endIndex);
 
             if (batchMessages.isEmpty()) {
                 break;
@@ -64,7 +66,8 @@ public class TokenLimiter {
                 if (tokenCount + messageTokens <= finalMaxTokens) {
                     tokenCount += messageTokens;
                     adaptiveHistory.addFirst(message);
-                } else {
+                }
+                else {
                     reachedLimit = true;
                     break;
                 }
@@ -81,8 +84,6 @@ public class TokenLimiter {
         // 调整历史记录以确保正确的顺序和角色交替
         return adjustHistoryForAlternatingRoles(adaptiveHistory);
     }
-
-
 
     // 固定：根据消息条数限制获取对话历史
     public List<String[]> getFixedHistory(String conversationId) {
@@ -109,7 +110,8 @@ public class TokenLimiter {
             messageCount++;
         }
 
-        List<String[]> fixedHistory = chatMessagesRedisDAO.getLastNMessages(conversationId, min(maxMessageLimit, messageCount));
+        List<String[]> fixedHistory = chatMessagesRedisDAO.getLastNMessages(conversationId,
+                min(maxMessageLimit, messageCount));
 
         // 更严格的调整：确保交替顺序
         adjustHistoryForAlternatingRoles(fixedHistory);
@@ -148,8 +150,8 @@ public class TokenLimiter {
         return adjustedHistory;
     }
 
-
     private static Pattern TOKEN_PATTERN;
+
     @PostConstruct
     public void init() {
         // 初始化 TOKEN_PATTERN
@@ -172,4 +174,5 @@ public class TokenLimiter {
 
         return tokenCount;
     }
+
 }

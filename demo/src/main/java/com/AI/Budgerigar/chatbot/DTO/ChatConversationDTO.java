@@ -17,6 +17,7 @@ public class ChatConversationDTO {
 
     @Id
     private String conversationId;
+
     private List<String[]> messages;
 
     public ChatConversationDTO() {
@@ -39,8 +40,8 @@ public class ChatConversationDTO {
     // 添加一个接受 Message 类型列表的方法
     public void addMessages(List<Message> newMessages) {
         List<String[]> messageArrays = newMessages.stream()
-                .map(message -> new String[]{message.getRole(), message.getTimestamp(), message.getContent()})
-                .collect(Collectors.toList());
+            .map(message -> new String[] { message.getRole(), message.getTimestamp(), message.getContent() })
+            .collect(Collectors.toList());
         this.messages.addAll(messageArrays);
     }
 
@@ -48,4 +49,5 @@ public class ChatConversationDTO {
     public void addStringMessages(List<String[]> newMessages) {
         this.messages.addAll(newMessages);
     }
+
 }

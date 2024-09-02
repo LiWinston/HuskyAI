@@ -26,7 +26,7 @@ public class ChatSyncServiceImpl implements ChatSyncService {
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
 
-    //get历史传给前端显示，何尝不是一种同步捏
+    // get历史传给前端显示，何尝不是一种同步捏
     @Override
     public List<Message> getHistory(String conversationId) {
         return chatMessagesMongoDAO.getConversationHistory(conversationId);
@@ -34,10 +34,11 @@ public class ChatSyncServiceImpl implements ChatSyncService {
 
     // 更新历史记录，从 Redis 获取最新消息并更新到 MongoDB
     public void updateHistoryFromRedis(String conversationId, int numberOfEntries) {
-        List<Message> newEntries = chatMessagesRedisDAO.getConversationHistory(conversationId).stream()
-                .map(this::convertToMessage)
-                .skip(Math.max(0, chatMessagesRedisDAO.getConversationHistory(conversationId).size() - numberOfEntries))
-                .toList();
+        List<Message> newEntries = chatMessagesRedisDAO.getConversationHistory(conversationId)
+            .stream()
+            .map(this::convertToMessage)
+            .skip(Math.max(0, chatMessagesRedisDAO.getConversationHistory(conversationId).size() - numberOfEntries))
+            .toList();
         chatMessagesMongoDAO.updateHistoryById(conversationId, newEntries);
     }
 
@@ -47,13 +48,14 @@ public class ChatSyncServiceImpl implements ChatSyncService {
         log.info("Starting sync operation from Redis to MongoDB for conversation ID: {}", conversationId);
 
         // 获取 Redis 和 MongoDB 中的对话历史
-        List<Message> redisMessages = chatMessagesRedisDAO.getConversationHistory(conversationId).stream()
-                .map(this::convertToMessage)
-                .toList();
+        List<Message> redisMessages = chatMessagesRedisDAO.getConversationHistory(conversationId)
+            .stream()
+            .map(this::convertToMessage)
+            .toList();
 
         if (redisMessages.isEmpty()) {
             log.warn("缓存没东西——Cache is empty: {}", conversationId);
-            //用概率决定是否为Mongo维护历史
+            // 用概率决定是否为Mongo维护历史
             if (Math.random() < 0.15) {
                 log.info("MongoDB开始随机维护——MongoDB randomly maintains history: {}", conversationId);
                 chatMessagesMongoDAO.updateHistoryById(conversationId, redisMessages);
@@ -77,8 +79,9 @@ public class ChatSyncServiceImpl implements ChatSyncService {
             Message mongoMessage = mongoMessages.get(i);
             String messageKey = mongoMessage.getRole() + mongoMessage.getTimestamp() + mongoMessage.getContent();
             if (uniqueMessagesSet.contains(messageKey)) {
-                duplicateIndexesInMongo.add(i);  // 标记重复消息的索引
-            } else {
+                duplicateIndexesInMongo.add(i); // 标记重复消息的索引
+            }
+            else {
                 uniqueMessagesSet.add(messageKey);
             }
         }
@@ -86,8 +89,9 @@ public class ChatSyncServiceImpl implements ChatSyncService {
         // 合并Redis中的消息并确保唯一性
         for (int i = 0; i < redisMessages.size(); i += 2) {
             if (i + 1 >= redisMessages.size()) {
-                log.warn("Incomplete message pair found in Redis for conversation ID: {} at index: {}", conversationId, i);
-                break;  // 如果发现不完整的消息对儿，退出循环
+                log.warn("Incomplete message pair found in Redis for conversation ID: {} at index: {}", conversationId,
+                        i);
+                break; // 如果发现不完整的消息对儿，退出循环
             }
 
             Message userMessage = redisMessages.get(i);
@@ -96,25 +100,28 @@ public class ChatSyncServiceImpl implements ChatSyncService {
             // 确保消息是合法的时间递增顺序
             if (isValidMessagePair(userMessage, assistantMessage)) {
                 String userMessageKey = userMessage.getRole() + userMessage.getTimestamp() + userMessage.getContent();
-                String assistantMessageKey = assistantMessage.getRole() + assistantMessage.getTimestamp() + assistantMessage.getContent();
+                String assistantMessageKey = assistantMessage.getRole() + assistantMessage.getTimestamp()
+                        + assistantMessage.getContent();
 
                 if (!uniqueMessagesSet.contains(userMessageKey)) {
                     uniqueMessagesSet.add(userMessageKey);
-                    newMessagesToPersist.add(userMessage);  // 新消息加入
+                    newMessagesToPersist.add(userMessage); // 新消息加入
                 }
 
                 if (!uniqueMessagesSet.contains(assistantMessageKey)) {
                     uniqueMessagesSet.add(assistantMessageKey);
-                    newMessagesToPersist.add(assistantMessage);  // 新消息加入
+                    newMessagesToPersist.add(assistantMessage); // 新消息加入
                 }
-            } else {
+            }
+            else {
                 log.warn("Invalid message pair found for conversation ID: {} at Redis index: {}", conversationId, i);
             }
         }
 
         // 删除MongoDB中的重复消息，从后往前删除
         if (!duplicateIndexesInMongo.isEmpty()) {
-            log.info("Removing {} duplicate messages from MongoDB for conversation ID: {}", duplicateIndexesInMongo.size(), conversationId);
+            log.info("Removing {} duplicate messages from MongoDB for conversation ID: {}",
+                    duplicateIndexesInMongo.size(), conversationId);
             // 按照倒序删除重复的消息
             for (int i = duplicateIndexesInMongo.size() - 1; i >= 0; i--) {
                 int index = duplicateIndexesInMongo.get(i);
@@ -122,10 +129,10 @@ public class ChatSyncServiceImpl implements ChatSyncService {
             }
         }
 
-
         // 将新的合法消息加入MongoDB
         if (!newMessagesToPersist.isEmpty()) {
-            log.info("Persisting {} new message pairs to MongoDB for conversation ID: {}", newMessagesToPersist.size() / 2, conversationId);
+            log.info("Persisting {} new message pairs to MongoDB for conversation ID: {}",
+                    newMessagesToPersist.size() / 2, conversationId);
             mongoMessages.addAll(newMessagesToPersist);
         }
 
@@ -133,10 +140,11 @@ public class ChatSyncServiceImpl implements ChatSyncService {
         mongoMessages.sort((m1, m2) -> parseTimestamp(m1.getTimestamp()).compareTo(parseTimestamp(m2.getTimestamp())));
         log.info("Messages sorted : {}", conversationId);
 
-        try{
+        try {
             // 保存更新后的消息列表到MongoDB
             chatMessagesMongoDAO.replaceHistoryById(conversationId, mongoMessages);
-        }catch (Exception e){
+        }
+        catch (Exception e) {
             log.error("Error occurred while updating MongoDB for conversation ID: {}", conversationId, e);
             throw new RuntimeException("Error updating MongoDB in " + getClass(), e);
         }
@@ -145,18 +153,16 @@ public class ChatSyncServiceImpl implements ChatSyncService {
     private Instant parseTimestamp(String timestamp) {
         try {
             return Instant.parse(timestamp);
-        } catch (DateTimeParseException e) {
+        }
+        catch (DateTimeParseException e) {
             log.warn("Invalid timestamp format: {}", timestamp, e);
             return Instant.MIN; // 返回一个最小值以表示错误的时间戳
         }
     }
 
-
-
     // 辅助方法，用于检查消息对儿是否合法
     private boolean isValidMessagePair(Message userMessage, Message assistantMessage) {
-        return userMessage.getRole().equals("user")
-                && assistantMessage.getRole().equals("assistant")
+        return userMessage.getRole().equals("user") && assistantMessage.getRole().equals("assistant")
                 && Instant.parse(userMessage.getTimestamp()).isBefore(Instant.parse(assistantMessage.getTimestamp()));
     }
 
@@ -166,9 +172,10 @@ public class ChatSyncServiceImpl implements ChatSyncService {
         log.info("Starting sync operation from MongoDB to Redis for conversation ID: {}", conversationId);
 
         // 获取 Redis 和 MongoDB 中的对话历史
-        List<Message> redisMessages = chatMessagesRedisDAO.getConversationHistory(conversationId).stream()
-                .map(this::convertToMessage)
-                .toList();
+        List<Message> redisMessages = chatMessagesRedisDAO.getConversationHistory(conversationId)
+            .stream()
+            .map(this::convertToMessage)
+            .toList();
         List<Message> mongoMessages = chatMessagesMongoDAO.getConversationHistory(conversationId);
 
         log.info("Redis message count: {}, MongoDB message count: {}", redisMessages.size(), mongoMessages.size());
@@ -178,8 +185,8 @@ public class ChatSyncServiceImpl implements ChatSyncService {
 
         // 将合并后的消息写回 Redis
         chatMessagesRedisDAO.clearConversation(conversationId); // 清空现有 Redis 数据
-        mergedMessages.forEach(message -> chatMessagesRedisDAO.addMessage(
-                conversationId, message.getRole(), message.getTimestamp(), message.getContent()));
+        mergedMessages.forEach(message -> chatMessagesRedisDAO.addMessage(conversationId, message.getRole(),
+                message.getTimestamp(), message.getContent()));
 
         log.info("Sync operation from MongoDB to Redis completed for conversation ID: {}", conversationId);
     }
@@ -195,7 +202,8 @@ public class ChatSyncServiceImpl implements ChatSyncService {
         // 验证时间戳格式
         try {
             Instant.parse(timestamp);
-        } catch (DateTimeParseException e) {
+        }
+        catch (DateTimeParseException e) {
             log.error("Invalid timestamp format: {}", timestamp);
             throw new IllegalArgumentException("Invalid timestamp format", e);
         }
@@ -220,7 +228,8 @@ public class ChatSyncServiceImpl implements ChatSyncService {
             if (redisTimestamp.isBefore(mongoTimestamp)) {
                 mergedMessages.add(redisMessage);
                 redisIndex++;
-            } else {
+            }
+            else {
                 mergedMessages.add(mongoMessage);
                 mongoIndex++;
             }
@@ -238,4 +247,5 @@ public class ChatSyncServiceImpl implements ChatSyncService {
 
         return mergedMessages;
     }
+
 }

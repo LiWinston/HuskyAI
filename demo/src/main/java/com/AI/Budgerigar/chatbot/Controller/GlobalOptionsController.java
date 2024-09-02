@@ -12,4 +12,5 @@ public class GlobalOptionsController {
     public ResponseEntity<Void> handleOptionsRequest() {
         return ResponseEntity.ok().build();
     }
+
 }

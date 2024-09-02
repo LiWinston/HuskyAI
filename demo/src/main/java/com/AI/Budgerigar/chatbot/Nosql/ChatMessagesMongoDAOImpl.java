@@ -31,22 +31,27 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
             ProjectionOperation project = Aggregation.project().and("messages").size().as("messageCount");
             Aggregation aggregation = Aggregation.newAggregation(match, project);
 
-            AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, "chat_conversations", Document.class);
+            AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, "chat_conversations",
+                    Document.class);
             Document document = result.getUniqueMappedResult();
 
             if (document != null) {
                 return document.getInteger("messageCount", 0);
-            } else {
+            }
+            else {
                 return 0;
             }
 
-        } catch (Exception e) {
-            log.error("MongoDB_GET_LENGTH : Failed to get conversation length for conversation ID: {}", conversationId, e);
-            //用传统方法获取
+        }
+        catch (Exception e) {
+            log.error("MongoDB_GET_LENGTH : Failed to get conversation length for conversation ID: {}", conversationId,
+                    e);
+            // 用传统方法获取
             ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
             if (chatConversationDTO != null) {
                 return chatConversationDTO.getMessages().size();
-            } else {
+            }
+            else {
                 return 0;
             }
         }
@@ -54,26 +59,25 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
 
     @Override
     public void updateHistoryById(String conversationId, List<Message> newMessages) {
-        List<String[]> messageArrays = newMessages.stream()
-                .map(this::convertToArray)
-                .collect(Collectors.toList());
+        List<String[]> messageArrays = newMessages.stream().map(this::convertToArray).collect(Collectors.toList());
 
         try {
             ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
             if (chatConversationDTO != null) {
                 chatConversationDTO.addStringMessages(messageArrays); // 使用字符串数组
                 mongoTemplate.save(chatConversationDTO);
-            } else {
+            }
+            else {
                 ChatConversationDTO newChatConversationDTO = new ChatConversationDTO();
                 newChatConversationDTO.setMessages(messageArrays);
                 newChatConversationDTO.setConversationId(conversationId);
                 mongoTemplate.save(newChatConversationDTO);
             }
-        }catch (Exception e){
+        }
+        catch (Exception e) {
             log.error("Mongo_UPD_Simple : Failed to update (简单方法) for conversation ID: {}", conversationId, e);
         }
     }
-
 
     @Override
     public List<Message> getConversationHistory(String conversationId) {
@@ -87,25 +91,28 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
 
                 // Step 3: 确认消息列表的结构和内容是否有效
                 if (messagesList != null && !messagesList.isEmpty() && messagesList.get(0) != null) {
-                    log.info("MongoDB_Get_History:Found {} history - {}. Returning {} messages.", messagesList.size(), conversationId, messagesList.size());
+                    log.info("MongoDB_Get_History:Found {} history - {}. Returning {} messages.", messagesList.size(),
+                            conversationId, messagesList.size());
 
                     // Step 4: 转换消息列表为Message对象列表并返回
-                    return messagesList.stream()
-                            .map(this::convertToMessage)
-                            .collect(Collectors.toList());
-                } else {
+                    return messagesList.stream().map(this::convertToMessage).collect(Collectors.toList());
+                }
+                else {
                     // 错误: 消息结构无效
                     log.error("Invalid message structure for conversation ID: " + conversationId);
                     return new ArrayList<>(); // 返回一个可变的空列表
                 }
-            } else {
+            }
+            else {
                 // 错误: 没有找到对应的会话记录
                 log.error("MongoDB_Get_History:No history - {}. Returning empty list.", conversationId);
                 return new ArrayList<>(); // 返回一个可变的空列表
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // Step 5: 异常处理 - 捕获并记录错误信息
-            log.error("Error fetching conversation history for ID: " + conversationId + ", Error: " + e.getMessage(), e);
+            log.error("Error fetching conversation history for ID: " + conversationId + ", Error: " + e.getMessage(),
+                    e);
             return new ArrayList<>(); // 返回一个可变的空列表以避免异常传播
         }
     }
@@ -114,7 +121,8 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
     private Message convertToMessage(String[] messageArray) {
         if (messageArray.length == 3) {
             return new Message(messageArray[0], messageArray[1], messageArray[2]);
-        } else {
+        }
+        else {
             throw new IllegalArgumentException("Invalid message format. Expected [role, timestamp, content]");
         }
     }
@@ -122,18 +130,17 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
     @Override
     public void replaceHistoryById(String conversationId, List<Message> newMessages) {
         // 将 Message 对象列表转换为 String[] 的列表
-        List<String[]> messageArrays = newMessages.stream()
-                .map(this::convertToArray)
-                .collect(Collectors.toList());
+        List<String[]> messageArrays = newMessages.stream().map(this::convertToArray).collect(Collectors.toList());
 
         // 查找现有的 ChatConversationDTO
-        try{
+        try {
             ChatConversationDTO chatConversationDTO = mongoTemplate.findById(conversationId, ChatConversationDTO.class);
 
             if (chatConversationDTO != null) {
                 // 更新现有的消息列表
                 chatConversationDTO.setMessages(messageArrays);
-            } else {
+            }
+            else {
                 // 如果不存在，创建一个新的 ChatConversationDTO
                 chatConversationDTO = new ChatConversationDTO();
                 chatConversationDTO.setConversationId(conversationId);
@@ -143,7 +150,8 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
             // 保存更新后的 ChatConversationDTO
             mongoTemplate.save(chatConversationDTO);
             log.info("Replaced history for conversation ID: {} with {} messages.", conversationId, newMessages.size());
-        }catch (Exception e){
+        }
+        catch (Exception e) {
             log.error("Failed to replace history for conversation ID: {}", conversationId, e);
             throw e;
         }
@@ -151,7 +159,7 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
     }
 
     private String[] convertToArray(Message message) {
-        return new String[]{message.getRole(), message.getTimestamp(), message.getContent()};
+        return new String[] { message.getRole(), message.getTimestamp(), message.getContent() };
     }
 
 }

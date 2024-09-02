@@ -23,28 +23,32 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class OpenAIChatServiceImpl implements ChatService {
 
-
     private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     @Autowired
     DateTimeFormatter dateTimeFormatter;
+
     @Autowired
     private RestTemplate restTemplate;
+
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
+
     @Autowired
     private ChatMessagesMongoDAO chatMessagesMongoDAO;
+
     @Autowired
     private ChatSyncServiceImpl chatSyncService;
+
     @Value("${openai.model}")
     private String model;
+
     @Value("${openai.api.url}")
     private String apiUrl;
 
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
     }
-
 
     @Override
     public Result<String> chat(String prompt, String conversationId) {
@@ -65,7 +69,8 @@ public class OpenAIChatServiceImpl implements ChatService {
             // 调用 OpenAI API
             ChatResponseDTO chatResponseDTO = restTemplate.postForObject(apiUrl, chatRequestDTO, ChatResponseDTO.class);
 
-            if (chatResponseDTO == null || chatResponseDTO.getChoices() == null || chatResponseDTO.getChoices().isEmpty()) {
+            if (chatResponseDTO == null || chatResponseDTO.getChoices() == null
+                    || chatResponseDTO.getChoices().isEmpty()) {
                 throw new Exception("No response from API");
             }
 
@@ -74,13 +79,15 @@ public class OpenAIChatServiceImpl implements ChatService {
             log.info("Response from OpenAI: {}", responseContent);
 
             // 将助手的响应添加到 Redis 会话历史
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), StringEscapeUtils.escapeHtml4(responseContent));
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
+                    StringEscapeUtils.escapeHtml4(responseContent));
 
             // 计算 Redis 和 MongoDB 中会话长度的差异
             int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
             int mongoLength = getMongoConversationLength(conversationId);
             int diff = redisLength - mongoLength;
-            log.info("Redis length: {}, MongoDB length: {}, diff: {} FROM {}", redisLength, mongoLength, diff, OpenAIChatServiceImpl.class.getName());
+            log.info("Redis length: {}, MongoDB length: {}, diff: {} FROM {}", redisLength, mongoLength, diff,
+                    OpenAIChatServiceImpl.class.getName());
 
             // 如果差异超过阈值，则异步更新 MongoDB
             if (Math.abs(diff) > 5) {
@@ -88,9 +95,11 @@ public class OpenAIChatServiceImpl implements ChatService {
             }
 
             return Result.success(responseContent);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Error occurred in {}: {}", OpenAIChatServiceImpl.class.getName(), e.getMessage());
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), "Query failed. Please try again.");
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
+                    "Query failed. Please try again.");
             throw new RuntimeException("Error processing chat request", e);
         }
     }
@@ -100,4 +109,5 @@ public class OpenAIChatServiceImpl implements ChatService {
         // 假设 ChatMessagesMongoDAO 提供了获取会话长度的方法
         return chatMessagesMongoDAO.getConversationLengthById(conversationId);
     }
+
 }

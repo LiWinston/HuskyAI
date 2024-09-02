@@ -27,6 +27,7 @@ public class AppConfig {
     public ExecutorService executorService() {
         return Executors.newCachedThreadPool();
     }
+
     @Bean
     public ChatService.TokenLimitType tokenLimitType(Environment environment) {
         String tokenLimitTypeStr = environment.getProperty("chatbot.tokenLimitType");
@@ -53,7 +54,8 @@ public class AppConfig {
         }
 
         // As a fallback, use EnumUtils to perform a case-insensitive exact match
-        ChatService.TokenLimitType type = EnumUtils.getEnumIgnoreCase(ChatService.TokenLimitType.class, tokenLimitTypeStr);
+        ChatService.TokenLimitType type = EnumUtils.getEnumIgnoreCase(ChatService.TokenLimitType.class,
+                tokenLimitTypeStr);
         if (type != null) {
             return type;
         }
@@ -66,7 +68,8 @@ public class AppConfig {
     public ChatService openAIChatService() {
         try {
             return new OpenAIChatServiceImpl();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // 可以选择记录日志或进行其他处理
             e.printStackTrace();
             return null;
@@ -79,28 +82,30 @@ public class AppConfig {
         try {
             if (arkService == null) {
                 return openAIChatService();
-//                throw new IllegalStateException("ArkService is not available");
+                // throw new IllegalStateException("ArkService is not available");
             }
             return new DouBaoChatServiceImpl(arkService);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // 可以选择记录日志或进行其他处理
             e.printStackTrace();
             // 如果 ArkService 初始化失败，则返回 OpenAIChatService 实现类
-//            return openAIChatService();
+            // return openAIChatService();
         }
         return null;
     }
-
 
     @Bean
     @Qualifier("baidu")
     public ChatService BaiduChatService() {
         try {
             return new BaiduChatServiceImpl();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // 可以选择记录日志或进行其他处理
             e.printStackTrace();
             return null;
         }
     }
+
 }

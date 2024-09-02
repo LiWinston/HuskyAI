@@ -8,6 +8,9 @@ import java.util.List;
 
 @Mapper
 public interface UserMapper {
+
     UserPw getUserByUuid(@Param("uuid") String uuid);
+
     List<Conversation> getConversationsByUserUuid(@Param("uuid") String uuid);
+
 }

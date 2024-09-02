@@ -6,4 +6,5 @@ public interface ConversationService {
 
     //
     List<String> getAllConversations();
+
 }

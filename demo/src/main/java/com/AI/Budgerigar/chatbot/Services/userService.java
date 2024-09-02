@@ -6,7 +6,9 @@ import com.AI.Budgerigar.chatbot.result.Result;
 import java.util.List;
 
 public interface userService {
+
     Result<?> checkUserExistsByUuid(String uuid);
 
     List<Conversation> getConversations(String uuid);
+
 }

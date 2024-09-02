@@ -37,10 +37,14 @@ public class ChatGenerateSummaryAspect {
             // Asynchronously generate and set the conversation title
             CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() -> {
                 try {
-                    // Use reflection to find and call the generateAndSetConversationTitle method
-                    Method method = joinPoint.getTarget().getClass().getMethod("generateAndSetConversationTitle", String.class);
+                    // Use reflection to find and call the generateAndSetConversationTitle
+                    // method
+                    Method method = joinPoint.getTarget()
+                        .getClass()
+                        .getMethod("generateAndSetConversationTitle", String.class);
                     return (Result<String>) method.invoke(joinPoint.getTarget(), args[1].toString());
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     log.error("Error calling generateAndSetConversationTitle: ", e);
                     return Result.error("Error generating title");
                 }
@@ -52,7 +56,8 @@ public class ChatGenerateSummaryAspect {
             if (titleResult.getCode() == 1) {
                 // Modify the result to include the generated title
                 Result<String> originalResult = (Result<String>) result;
-                return Result.success(originalResult.getData(), originalResult.getMsg() + CONVERSATION_SUMMARY_GENRATED + titleResult.getData());
+                return Result.success(originalResult.getData(),
+                        originalResult.getMsg() + CONVERSATION_SUMMARY_GENRATED + titleResult.getData());
             }
         }
 
@@ -64,4 +69,5 @@ public class ChatGenerateSummaryAspect {
         // Example: 20% probability
         return RANDOM.nextInt(100) < 100;
     }
+
 }

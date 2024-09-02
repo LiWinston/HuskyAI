@@ -13,4 +13,5 @@ public class DateTimeConfig {
     public DateTimeFormatter dateTimeFormatter() {
         return DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC"));
     }
+
 }

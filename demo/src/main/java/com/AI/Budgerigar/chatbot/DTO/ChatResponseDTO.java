@@ -19,6 +19,9 @@ public class ChatResponseDTO {
     public static class Choice {
 
         private int index;
+
         private Message message;
+
     }
+
 }

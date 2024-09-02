@@ -10,4 +10,5 @@ public class HealthCheckController {
     public String healthCheck() {
         return "Service is running";
     }
+
 }

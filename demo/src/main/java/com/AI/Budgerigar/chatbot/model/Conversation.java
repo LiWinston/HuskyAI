@@ -8,6 +8,9 @@ import java.io.Serializable;
 
 @Data
 public class Conversation implements Serializable {
+
     private String conversationId;
+
     private String firstMessage;
+
 }

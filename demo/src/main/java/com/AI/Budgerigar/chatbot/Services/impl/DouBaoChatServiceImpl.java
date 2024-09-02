@@ -73,27 +73,24 @@ public class DouBaoChatServiceImpl implements ChatService {
         chatMessagesRedisDAO.maintainMessageHistory(conversationId);
 
         // Add user prompt to Redis conversation history
-        chatMessagesRedisDAO.addMessage(conversationId, "user",getNowTimeStamp(), prompt);
+        chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(), prompt);
 
         // Retrieve full conversation history from Redis
         List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
 
         // Build ChatMessage list from conversation history
         List<ChatMessage> messages = new java.util.ArrayList<>(conversationHistory.stream()
-                .map(entry -> ChatMessage.builder()
-                        .role(entry[0].equals("user") ? ChatMessageRole.USER : ChatMessageRole.ASSISTANT)
-                        .content(entry[1])
-                        .build())
-                .toList());
+            .map(entry -> ChatMessage.builder()
+                .role(entry[0].equals("user") ? ChatMessageRole.USER : ChatMessageRole.ASSISTANT)
+                .content(entry[1])
+                .build())
+            .toList());
 
         // Add the current prompt as the latest message
         messages.add(ChatMessage.builder().role(ChatMessageRole.USER).content(prompt).build());
 
         // Create ChatCompletionRequest with full conversation history
-        ChatCompletionRequest request = ChatCompletionRequest.builder()
-                .model(model)
-                .messages(messages)
-                .build();
+        ChatCompletionRequest request = ChatCompletionRequest.builder().model(model).messages(messages).build();
 
         // Invoke API
         ChatCompletionResult result = arkService.createChatCompletion(request);
@@ -103,7 +100,7 @@ public class DouBaoChatServiceImpl implements ChatService {
 
             logInfo(responseContent);
             // Add assistant response to Redis conversation history
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant",getNowTimeStamp(), responseContent);
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), responseContent);
 
             // Calculate the difference in conversation length
             int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
@@ -118,7 +115,8 @@ public class DouBaoChatServiceImpl implements ChatService {
             }
 
             return Result.success(responseContent);
-        } else {
+        }
+        else {
             throw new Exception("No response from API");
         }
     }
@@ -128,4 +126,5 @@ public class DouBaoChatServiceImpl implements ChatService {
         // Assuming ChatMessagesMongoDAO has a method to get the conversation length
         return chatMessagesMongoDAO.getConversationLengthById(conversationId);
     }
+
 }

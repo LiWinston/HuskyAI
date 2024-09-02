@@ -31,6 +31,7 @@ public class BaiduConfig {
     private String models; // 读取所有模型的配置，以逗号分隔
 
     private List<String> modelList = new ArrayList<>();
+
     private int currentModelIndex = 0;
 
     @Bean
@@ -55,7 +56,7 @@ public class BaiduConfig {
     }
 
     public String getRandomModel() {
-        int randomIndex = (int) (Math.random() * modelList.size());//确保随机数在模型列表范围内
+        int randomIndex = (int) (Math.random() * modelList.size());// 确保随机数在模型列表范围内
         return modelList.get(randomIndex);
     }
 
@@ -71,4 +72,5 @@ public class BaiduConfig {
     public void switchToNextModel() {
         currentModelIndex = (currentModelIndex + 1) % modelList.size();
     }
+
 }

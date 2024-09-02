@@ -164,6 +164,14 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/io.spring.javaformat/spring-javaformat-maven-plugin -->
+        <dependency>
+            <groupId>io.spring.javaformat</groupId>
+            <artifactId>spring-javaformat-maven-plugin</artifactId>
+            <version>0.0.43</version>
+        </dependency>
+
+
 
     </dependencies>
 <!--    <dependencyManagement>-->
@@ -191,6 +199,21 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>io.spring.javaformat</groupId>
+                <artifactId>spring-javaformat-maven-plugin</artifactId>
+                <version>0.0.43</version>
+                <executions>
+                    <execution>
+                        <phase>compile </phase>
+                        <inherited>true</inherited>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
