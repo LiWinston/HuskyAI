@@ -5,7 +5,7 @@ import reportWebVitals from './reportWebVitals';
 import axios from 'axios';
 import logo from './logo.svg';
 import {BrowserRouter, Route, Routes, useNavigate} from "react-router-dom";
-import Chat from "./Chat"; // Make sure to import your logo file / 确保导入你的logo文件
+import Chat from "./components/Chat"; // Make sure to import your logo file / 确保导入你的logo文件
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
