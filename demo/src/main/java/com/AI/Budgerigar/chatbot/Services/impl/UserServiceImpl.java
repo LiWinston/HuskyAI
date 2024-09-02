@@ -4,6 +4,7 @@ import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.mapper.UserMapper;
 import com.AI.Budgerigar.chatbot.model.Conversation;
 import com.AI.Budgerigar.chatbot.model.UserPw;
+import com.AI.Budgerigar.chatbot.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,9 +36,18 @@ public class UserServiceImpl implements userService {
 //    }
 
     @Override
-    public boolean checkUserExists(String uuid) {
-        UserPw user = userMapper.getUserByUuid(uuid);
-        return user != null;
+    public Result<Boolean> checkUserExistsByUuid(String uuid) {
+        try{
+            UserPw user = userMapper.getUserByUuid(uuid);
+            if(user == null){
+                return Result.error("User not found");
+            }
+            return Result.success(true, "UserName: " + user.getUsername());
+        }catch (Exception e){
+            return Result.error(e.getMessage());
+        }
+//        UserPw user = userMapper.getUserByUuid(uuid);
+
     }
 
     @Override

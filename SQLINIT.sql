@@ -1,5 +1,5 @@
 -- DROP DATABASE IF EXISTS chatbot_db;
--- CREATE DATABASE chatbot_db;
+CREATE DATABASE chatbot_db;
 \c chatbot_db;
 DROP TABLE IF EXISTS UserPw, Cid, UidCid;
 

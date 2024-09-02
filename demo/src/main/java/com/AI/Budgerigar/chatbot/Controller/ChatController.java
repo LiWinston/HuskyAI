@@ -40,9 +40,9 @@ public class ChatController {
     public Result<?> getConversationList(@RequestParam String uuid) {
         try {
             // 使用 userService 查询用户是否存在
-            boolean userExists = userService.checkUserExists(uuid);
-            if (!userExists) {
-                return Result.error("User not found");
+            var userExists = userService.checkUserExistsByUuid(uuid);
+            if (userExists.getCode() == 0) {
+                return Result.error(userExists.getMsg());
             }
 
             // 获取用户的对话列表及消息节选
