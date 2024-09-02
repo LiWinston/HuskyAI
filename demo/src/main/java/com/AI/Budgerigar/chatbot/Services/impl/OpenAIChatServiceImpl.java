@@ -6,8 +6,6 @@ import com.AI.Budgerigar.chatbot.DTO.ChatResponseDTO;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.result.Result;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -28,10 +25,6 @@ public class OpenAIChatServiceImpl implements ChatService {
 
 
     private final ExecutorService executorService = Executors.newCachedThreadPool();
-
-    @Setter
-    @Getter
-    public String conversationId;
 
     @Autowired
     DateTimeFormatter dateTimeFormatter;
@@ -52,13 +45,9 @@ public class OpenAIChatServiceImpl implements ChatService {
         return Instant.now().toString().formatted(dateTimeFormatter);
     }
 
-    @PostConstruct
-    public void init() {
-        conversationId = "default_openai_conversation";
-    }
 
     @Override
-    public Result<String> chat(String prompt) {
+    public Result<String> chat(String prompt, String conversationId) {
         try {
             chatSyncService.updateRedisFromMongo(conversationId);
 

@@ -61,9 +61,9 @@ public class ChatController {
     public Result<?> chat(@PathVariable String conversationId) {
         //先把当前对话缓存提交到DB: first submit current conversation cache to DB
 //        executorService.submit(() -> chatSyncService.updateHistoryFromRedis(chatService.getConversationId()));
-        chatSyncService.updateHistoryFromRedis(chatService.getConversationId());
+        chatSyncService.updateHistoryFromRedis(conversationId);
         // 读取 ConversationId 并设置到 chatService 中: read ConversationId and set to chatService
-        chatService.setConversationId(conversationId);
+//        chatService.setConversationId(conversationId);
         chatSyncService.updateHistoryFromRedis(conversationId);
         //get历史传给前端显示: get history to show in front end
         try{
@@ -80,7 +80,7 @@ public class ChatController {
     public Result<?> chatPost(@RequestBody Map<String, String> body) {
         try {
             // 调用 chatService 的 chat 方法并返回结果 : Use chatService to handle the request
-            Result<String> response = chatService.chat(body.get("prompt"));
+            Result<String> response = chatService.chat(body.get("prompt"), body.get("conversationId"));
             return Result.success(response.getData(), response.getMsg());
         } catch (Exception e) {
             // Catch any exception and return an error response

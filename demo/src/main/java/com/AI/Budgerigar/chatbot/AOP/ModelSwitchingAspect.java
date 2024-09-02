@@ -27,6 +27,7 @@ public class ModelSwitchingAspect {
         log.info("ModelSwitchingAspect.aroundChatMethod()");
         int maxRetries = baiduConfig.getModelList().size();
         Throwable lastException = null;
+        Object[] args = joinPoint.getArgs();
 
         for (int i = 0; i < maxRetries; i++) {
             try {
@@ -37,7 +38,7 @@ public class ModelSwitchingAspect {
                 lastException = e;
                 baiduConfig.switchToNextModel(); // 切换到下一个模型
                 ChatService impl = (ChatService) joinPoint.getTarget();
-                String conversationId = impl.getConversationId();
+                String conversationId = args[1].toString();
                 chatMessagesRedisDAO.maintainMessageHistory(conversationId);
             }
         }

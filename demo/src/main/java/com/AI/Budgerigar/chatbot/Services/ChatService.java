@@ -12,7 +12,7 @@ public interface ChatService {
 
 
     Logger logger = Logger.getLogger(ChatService.class.getName());
-    Result<String> chat(String prompt) throws Exception;
+    Result<String> chat(String prompt, String conversationId) throws Exception;
 
     // 默认方法来记录信息
 //    default void logInfo(String message) {
@@ -65,6 +65,6 @@ public interface ChatService {
         return "Unknown";
     }
 
-    void setConversationId(String conversationId);
-    String getConversationId();
+//    void setConversationId(String conversationId);
+//    String getConversationId();
 }

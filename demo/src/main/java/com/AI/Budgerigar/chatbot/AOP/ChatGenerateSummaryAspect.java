@@ -28,6 +28,7 @@ public class ChatGenerateSummaryAspect {
     @Around("execution(* com.AI.Budgerigar.chatbot.Services.impl.BaiduChatServiceImpl.chat(..))")
     public Object aroundChat(ProceedingJoinPoint joinPoint) throws Throwable {
         Object result;
+        Object[] args = joinPoint.getArgs();
 
         log.info("ChatGenerateSummaryAspect.aroundChat()");
 
@@ -38,7 +39,7 @@ public class ChatGenerateSummaryAspect {
         if (shouldGenerateTitle()) {
             // Asynchronously generate and set the conversation title
             CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() ->
-                    baiduChatService.generateAndSetConversationTitle(baiduChatService.getConversationId())
+                    baiduChatService.generateAndSetConversationTitle(args[1].toString())
             );
 
             // Wait for the title generation to complete

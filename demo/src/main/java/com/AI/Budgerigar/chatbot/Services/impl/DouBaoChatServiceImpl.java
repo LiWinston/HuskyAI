@@ -67,7 +67,7 @@ public class DouBaoChatServiceImpl implements ChatService {
 
     @SneakyThrows
     @Override
-    public Result<String> chat(String prompt) {
+    public Result<String> chat(String prompt, String conversationId) {
         chatSyncService.updateRedisFromMongo(conversationId);
 
         chatMessagesRedisDAO.maintainMessageHistory(conversationId);

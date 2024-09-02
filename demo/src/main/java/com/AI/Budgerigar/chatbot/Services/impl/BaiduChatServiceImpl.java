@@ -6,7 +6,7 @@ import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
-import com.AI.Budgerigar.chatbot.mapper.CidMapper;
+import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.baidubce.qianfan.Qianfan;
 import com.baidubce.qianfan.model.chat.ChatResponse;
@@ -16,9 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -32,7 +30,7 @@ public class BaiduChatServiceImpl implements ChatService {
 
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
     @Getter
-    public String conversationId;
+//    public String conversationId;
     @Autowired
     DateTimeFormatter dateTimeFormatter;
     @Autowired
@@ -54,27 +52,27 @@ public class BaiduChatServiceImpl implements ChatService {
     @Autowired
     private ChatSyncService chatSyncService;
     @Autowired
-    private CidMapper cidMapper;
+    private ConversationMapper conversationMapper;
 
-    public void setConversationId(String conversationId) {
-        this.conversationId = conversationId;
-        log.info("FE SET conversation ID to: " + conversationId);
-    }
+//    public void setConversationId(String conversationId) {
+//        this.conversationId = conversationId;
+//        log.info("FE SET conversation ID to: " + conversationId);
+//    }
 
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
     }
 
 
-    @PostConstruct
-    public void init() {
-        conversationId = "default_baidu_conversation"; // This would typically be dynamic per session/user
-//        chatMessagesRedisDAO.addMessage(conversationId, "user", "Hi");
-//        chatMessagesRedisDAO.addMessage(conversationId, "assistant", "What can I do for U?");
-    }
+//    @PostConstruct
+//    public void init() {
+//        conversationId = ""; // This would typically be dynamic per session/user
+////        chatMessagesRedisDAO.addMessage(conversationId, "user", "Hi");
+////        chatMessagesRedisDAO.addMessage(conversationId, "assistant", "What can I do for U?");
+//    }
 
     @Override
-    public Result<String> chat(String input) {
+    public Result<String> chat(String input, String conversationId) {
         try {
             chatSyncService.updateRedisFromMongo(conversationId);
 
@@ -154,9 +152,14 @@ public class BaiduChatServiceImpl implements ChatService {
             recentMessages.add(new String[]{"assistant", getNowTimeStamp(), "Still to be answered"}); // Add a dummy entry to ensure the AI model has enough context
             recentMessages.add(new String[]{"user", getNowTimeStamp(),"为此对话生成一个简洁且相关的标题，并匹配原始内容的语言，无论内容如何变化，都要提供标题。稍微更侧重于最近的消息，如果主题发生变化，请根据更新后的主题来确定标题。你的回应应只包含标题，不需要额外的问候、介绍或后缀。"});
             recentMessages = tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
+            StringBuilder s = new StringBuilder();
             for (String[] entry : recentMessages) {
                 chatCompletion.addMessage(entry[0], entry[2]);
+                s.append(entry[2]).append(" ");
             }
+            log.info(String.valueOf(s));
+
+
 
             String summary = chatCompletion.execute().getResult();
 
@@ -167,7 +170,7 @@ public class BaiduChatServiceImpl implements ChatService {
             log.info("Generated title: " + summary);
 
             // Step 3: Update the 'firstmessage' field in the database
-            cidMapper.setMessageForShort(conversationId, summary);
+            conversationMapper.setMessageForShort(conversationId, summary);
 
             return Result.success(summary);
 
