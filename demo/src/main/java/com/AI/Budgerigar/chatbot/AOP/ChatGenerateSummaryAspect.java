@@ -1,15 +1,14 @@
 package com.AI.Budgerigar.chatbot.AOP;
 
-import com.AI.Budgerigar.chatbot.Services.impl.BaiduChatServiceImpl;
 import com.AI.Budgerigar.chatbot.result.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Method;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
@@ -20,8 +19,6 @@ import static com.AI.Budgerigar.chatbot.Constant.ApplicationConstant.CONVERSATIO
 public class ChatGenerateSummaryAspect {
 
     private static final Logger log = LoggerFactory.getLogger(ChatGenerateSummaryAspect.class);
-    @Autowired
-    private BaiduChatServiceImpl baiduChatService;
 
     private static final Random RANDOM = new Random();
 
@@ -38,9 +35,16 @@ public class ChatGenerateSummaryAspect {
         // Simulate a check after the first Redis.addMessage call
         if (shouldGenerateTitle()) {
             // Asynchronously generate and set the conversation title
-            CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() ->
-                    baiduChatService.generateAndSetConversationTitle(args[1].toString())
-            );
+            CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    // Use reflection to find and call the generateAndSetConversationTitle method
+                    Method method = joinPoint.getTarget().getClass().getMethod("generateAndSetConversationTitle", String.class);
+                    return (Result<String>) method.invoke(joinPoint.getTarget(), args[1].toString());
+                } catch (Exception e) {
+                    log.error("Error calling generateAndSetConversationTitle: ", e);
+                    return Result.error("Error generating title");
+                }
+            });
 
             // Wait for the title generation to complete
             Result<String> titleResult = future.get();
