@@ -7,6 +7,7 @@ import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
 import VscDarkPlus from "react-syntax-highlighter/src/styles/prism/vsc-dark-plus";
 import {getWindowFromNode} from "@testing-library/dom/dist/helpers";
+
 const CONVERSATION_SUMMARY_GENERATED = "#CVSG##CVSG##CVSG#";
 
 function Chat() {
@@ -85,7 +86,7 @@ function Chat() {
     const sendMessage = async () => {
         if (input.trim() === '') return;
 
-        const timestamp = new Date().toLocaleTimeString();
+        const timestamp = new Date();
         const newMessage = {sender: 'user', text: input, timestamp};
 
         setMessages(prevMessages => [...prevMessages, newMessage]);
@@ -101,7 +102,7 @@ function Chat() {
                 prompt: input, conversationId: selectedConversation
             });
             const sanitizedResponse = DOMPurify.sanitize(response.data.data);
-            const botMessage = {sender: 'bot', text: sanitizedResponse, timestamp: new Date().toLocaleTimeString()};
+            const botMessage = {sender: 'bot', text: sanitizedResponse, timestamp: new Date()};
 
             setMessages(prevMessages => [...prevMessages, botMessage]);
             setLoading(false);
@@ -111,14 +112,13 @@ function Chat() {
                 if (msg.includes(CONVERSATION_SUMMARY_GENERATED)) {
                     const newTitle = msg.split(CONVERSATION_SUMMARY_GENERATED)[1];
                     // 更新对话标题
-                    setConversations(prevConversations =>
-                        prevConversations.map(conv =>
-                            conv.id === selectedConversation ? {...conv, title: newTitle} : conv
-                        )
-                    );
+                    setConversations(prevConversations => prevConversations.map(conv => conv.id === selectedConversation ? {
+                        ...conv,
+                        title: newTitle
+                    } : conv));
                     setNotification(response.data.msg.split(CONVERSATION_SUMMARY_GENERATED)[0] + ', Conversation summary generated, ' + newTitle);
                     setTimeout(() => setNotification(null), 3500);
-                }else{
+                } else {
                     setNotification(response.data.msg); // 设置通知消息
                     setTimeout(() => setNotification(null), 2000);
                 }
@@ -142,55 +142,66 @@ function Chat() {
         }
     }, [messages]);
 
-    return (
-        <div className="chat-interface">
-            <div className="conversation-list">
-                <h3>Conversations</h3>
-                {Array.isArray(conversations) && conversations.map((conv) => (<div
-                        key={conv.id}
-                        className={`conversation-item ${selectedConversation === conv.id ? 'selected' : ''}`}
-                        onClick={() => loadConversation(conv.id)}
+    return (<div className="chat-interface">
+        <div className="conversation-list">
+            <h3>Conversations</h3>
+            {Array.isArray(conversations) && conversations.map((conv) => (<div
+                key={conv.id}
+                className={`conversation-item ${selectedConversation === conv.id ? 'selected' : ''}`}
+                onClick={() => loadConversation(conv.id)}
+            >
+                {conv.title}
+            </div>))}
+        </div>
+        <div className="chat-container">
+            <div className="chat-window" ref={chatWindowRef}>
+                <AnimatePresence>
+                    {messages.map((msg, index) => (<motion.div
+                        key={index}
+                        className={`message-container ${msg.sender}`}
+                        initial={{opacity: 0, y: 20}}
+                        animate={{opacity: 1, y: 0}}
+                        exit={{opacity: 0, y: -20}}
+                        transition={{duration: 0.3}}
                     >
-                        {conv.title}
-                    </div>))}
-            </div>
-            <div className="chat-container">
-                <div className="chat-window" ref={chatWindowRef}>
-                    <AnimatePresence>
-                        {messages.map((msg, index) => (<motion.div
-                                key={index}
-                                className={`message-container ${msg.sender}`}
-                                initial={{opacity: 0, y: 20}}
-                                animate={{opacity: 1, y: 0}}
-                                exit={{opacity: 0, y: -20}}
-                                transition={{duration: 0.3}}
-                            >
-                                <div className={`message ${msg.sender}`}>
-                                    <ReactMarkdown
-                                        children={DOMPurify.sanitize(msg.text)}
-                                        components={{
-                                            code({node, inline, className, children, ...props}) {
-                                                const match = /language-(\w+)/.exec(className || '');
-                                                // const detectedLanguage = detectLanguage(String(children));
-                                                return !inline ? (<SyntaxHighlighter
-                                                        style={VscDarkPlus}
-                                                        language={match ? match[1] : 'plaintext'}
-                                                        PreTag="div"
-                                                        children={String(children).replace(/\n$/, '')}
-                                                        {...props}
-                                                    />) : (<code className={className} {...props}>
-                                                        {children}
-                                                    </code>);
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <div className={`timestamp ${msg.sender}-timestamp`}>{msg.timestamp}</div>
-                            </motion.div>))}
-                    </AnimatePresence>
-                </div>
+                        <div className={`message ${msg.sender}`}>
+                            <ReactMarkdown
+                                children={DOMPurify.sanitize(msg.text)}
+                                components={{
+                                    code({node, inline, className, children, ...props}) {
+                                        const match = /language-(\w+)/.exec(className || '');
+                                        // const detectedLanguage = detectLanguage(String(children));
+                                        return !inline ? (<SyntaxHighlighter
+                                            style={VscDarkPlus}
+                                            language={match ? match[1] : 'plaintext'}
+                                            PreTag="div"
+                                            children={String(children).replace(/\n$/, '')}
+                                            {...props}
+                                        />) : (<code className={className} {...props}>
+                                            {children}
+                                        </code>);
+                                    }
+                                }}
+                            />
+                        </div>
+                        <div className={`timestamp ${msg.sender}-timestamp`}>
+                            {new Date(msg.timestamp).toLocaleString(navigator.language, {
+                                year: 'numeric',
+                                month: navigator.language.startsWith('zh') ? 'long' : 'short', // 如果是中文则使用完整的月份名称，否则使用缩写
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: 'numeric',
+                                second: 'numeric',
+                                // 对中文采用年/月/日的顺序，对其他语言采用日/月/年的顺序
+                                dayPeriod: 'short',
+                            })}
+                        </div>
 
-                <div className="input-container">
+                    </motion.div>))}
+                </AnimatePresence>
+            </div>
+
+            <div className="input-container">
                     <textarea
                         ref={textareaRef}
                         value={input}
@@ -200,31 +211,29 @@ function Chat() {
                                 e.preventDefault();
                                 sendMessage();
                             }
-                        }}                        placeholder="Type your message..."
+                        }} placeholder="Type your message..."
                         disabled={loading}
                         // rows={rows} // 根据输入内容动态调整行数
-                        style={{ height: textareaHeight }} // 动态调整高度
+                        style={{height: textareaHeight}} // 动态调整高度
                     />
-                    <button onClick={sendMessage} disabled={loading}>
-                        {loading ? 'Sending...' : 'Send'}
-                    </button>
-                </div>
+                <button onClick={sendMessage} disabled={loading}>
+                    {loading ? 'Sending...' : 'Send'}
+                </button>
             </div>
-            {/* 浮动弹幕通知 */}
-            <AnimatePresence>
-                {notification && (
-                    <motion.div
-                        className="notification-banner"
-                        initial={{ opacity: 0, y: 50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 50 }}
-                        transition={{ duration: 0.5 }}
-                    >{notification}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+        </div>
+        {/* 浮动弹幕通知 */}
+        <AnimatePresence>
+            {notification && (<motion.div
+                    className="notification-banner"
+                    initial={{opacity: 0, y: 50}}
+                    animate={{opacity: 1, y: 0}}
+                    exit={{opacity: 0, y: 50}}
+                    transition={{duration: 0.5}}
+                >{notification}
+                </motion.div>)}
+        </AnimatePresence>
 
-        </div>);
+    </div>);
 }
 
 function detectLanguage(code) {
@@ -232,139 +241,94 @@ function detectLanguage(code) {
     // code = code.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
 
     const languageRules = [{
-        name: 'javascript',
-        rules: [{pattern: /\b(const|let|var)\s+\w+\s*=/, score: 2}, {
-            pattern: /function\s+\w+\s*\(.*\)\s*{/,
-            score: 2
+        name: 'javascript', rules: [{pattern: /\b(const|let|var)\s+\w+\s*=/, score: 2}, {
+            pattern: /function\s+\w+\s*\(.*\)\s*{/, score: 2
         }, {pattern: /=>\s*{/, score: 2}, {
-            pattern: /console\.(log|error|warn|info)\(/,
-            score: 2
+            pattern: /console\.(log|error|warn|info)\(/, score: 2
         }, {pattern: /document\.getElementById\(/, score: 3}, {
-            pattern: /\}\s*else\s*{/,
-            score: 1
+            pattern: /\}\s*else\s*{/, score: 1
         }, {pattern: /new Promise\(/, score: 3}, {pattern: /async\s+function/, score: 3}, {
-            pattern: /\bawait\b/,
-            score: 3
+            pattern: /\bawait\b/, score: 3
         }, {
-            pattern: /import\s+.*\s+from\s+['"]/,
-            score: 3
+            pattern: /import\s+.*\s+from\s+['"]/, score: 3
         }, {
-            pattern: /export\s+(default\s+)?(function|class|const|let|var)/,
-            score: 3
+            pattern: /export\s+(default\s+)?(function|class|const|let|var)/, score: 3
         }, {pattern: /\.[0-9]+e[+-]?[0-9]+/, score: 1}]
     }, {
-        name: 'python',
-        rules: [{pattern: /def\s+\w+\s*\(.*\):\s*$/, score: 2}, {
-            pattern: /class\s+\w+(\(\w+\))?:\s*$/,
-            score: 2
+        name: 'python', rules: [{pattern: /def\s+\w+\s*\(.*\):\s*$/, score: 2}, {
+            pattern: /class\s+\w+(\(\w+\))?:\s*$/, score: 2
         }, {pattern: /import\s+\w+(\s+as\s+\w+)?/, score: 2}, {
-            pattern: /from\s+\w+\s+import\s+/,
-            score: 2
+            pattern: /from\s+\w+\s+import\s+/, score: 2
         }, {pattern: /print\s*\(/, score: 1}, {
-            pattern: /if\s+__name__\s*==\s*('|")__main__\1:/,
-            score: 3
+            pattern: /if\s+__name__\s*==\s*('|")__main__\1:/, score: 3
         }, {pattern: /^\s*@\w+/, score: 2}, {pattern: /\bfor\s+\w+\s+in\s+/, score: 2}, {
-            pattern: /\bwith\s+.*\s+as\s+/,
-            score: 3
+            pattern: /\bwith\s+.*\s+as\s+/, score: 3
         }, {pattern: /\blambda\s+.*:/, score: 3}, {pattern: /:\s*$/, score: 1}, {pattern: /\s{4}/, score: 1}]
     }, {
-        name: 'java',
-        rules: [{
-            pattern: /public\s+(static\s+)?(final\s+)?(class|interface|enum)\s+\w+/,
-            score: 3
+        name: 'java', rules: [{
+            pattern: /public\s+(static\s+)?(final\s+)?(class|interface|enum)\s+\w+/, score: 3
         }, {pattern: /public\s+static\s+void\s+main\s*\(String\s*\[\]\s*args\)/, score: 5}, {
-            pattern: /@Override/,
-            score: 2
+            pattern: /@Override/, score: 2
         }, {pattern: /System\.out\.println\(/, score: 2}, {
-            pattern: /import\s+java\./,
-            score: 2
+            pattern: /import\s+java\./, score: 2
         }, {pattern: /new\s+\w+(\s*<.*>)?\s*\(/, score: 1}, {
-            pattern: /\b(public|private|protected)\s+/,
-            score: 1
+            pattern: /\b(public|private|protected)\s+/, score: 1
         }, {pattern: /\b(final|static)\s+/, score: 1}, {
-            pattern: /\b(try|catch|finally)\s*{/,
-            score: 2
+            pattern: /\b(try|catch|finally)\s*{/, score: 2
         }, {pattern: /\bthrows\s+\w+/, score: 2}, {
-            pattern: /\bextends\s+\w+/,
-            score: 2
+            pattern: /\bextends\s+\w+/, score: 2
         }, {pattern: /\bimplements\s+\w+/, score: 2}]
     }, {
-        name: 'cpp',
-        rules: [{pattern: /#include\s*<[\w.]+>/, score: 3}, {
-            pattern: /std::\w+/,
-            score: 2
+        name: 'cpp', rules: [{pattern: /#include\s*<[\w.]+>/, score: 3}, {
+            pattern: /std::\w+/, score: 2
         }, {pattern: /int\s+main\s*\(\s*(int|void)/, score: 4}, {
-            pattern: /\b(class|struct)\s+\w+/,
-            score: 2
+            pattern: /\b(class|struct)\s+\w+/, score: 2
         }, {pattern: /\b(public|private|protected):/, score: 2}, {
-            pattern: /\b(const|virtual|friend|typename)\b/,
-            score: 2
+            pattern: /\b(const|virtual|friend|typename)\b/, score: 2
         }, {pattern: /\b(new|delete)\b/, score: 2}, {
-            pattern: /\b(template|namespace)\b/,
-            score: 3
+            pattern: /\b(template|namespace)\b/, score: 3
         }, {pattern: /\bcout\s*<</, score: 2}, {pattern: /\bcin\s*>>/, score: 2}, {pattern: /::\s*\w+/, score: 2}]
     }, {
-        name: 'csharp',
-        rules: [{pattern: /using\s+System;/, score: 3}, {pattern: /namespace\s+\w+/, score: 2}, {
-            pattern: /class\s+\w+/,
-            score: 2
+        name: 'csharp', rules: [{pattern: /using\s+System;/, score: 3}, {pattern: /namespace\s+\w+/, score: 2}, {
+            pattern: /class\s+\w+/, score: 2
         }, {pattern: /Console\.WriteLine\(/, score: 2}, {
-            pattern: /public\s+(static\s+)?void\s+Main\s*\(/,
-            score: 4
+            pattern: /public\s+(static\s+)?void\s+Main\s*\(/, score: 4
         }, {
-            pattern: /\b(public|private|protected|internal)\s+/,
-            score: 1
+            pattern: /\b(public|private|protected|internal)\s+/, score: 1
         }, {pattern: /\b(var|string|int|bool)\s+\w+\s*=/, score: 2}, {
-            pattern: /\busing\s*\(/,
-            score: 2
+            pattern: /\busing\s*\(/, score: 2
         }, {pattern: /\basync\s+Task/, score: 3}, {
-            pattern: /\bawait\s+/,
-            score: 3
+            pattern: /\bawait\s+/, score: 3
         }, {pattern: /\b(List|Dictionary)<.*>/, score: 2}]
     }, {
-        name: 'php',
-        rules: [{pattern: /<\?php/, score: 5}, {pattern: /\$\w+/, score: 2}, {
-            pattern: /echo\s+/,
-            score: 2
+        name: 'php', rules: [{pattern: /<\?php/, score: 5}, {pattern: /\$\w+/, score: 2}, {
+            pattern: /echo\s+/, score: 2
         }, {pattern: /function\s+\w+\s*\(/, score: 2}, {
-            pattern: /\b(public|private|protected)\s+function/,
-            score: 3
+            pattern: /\b(public|private|protected)\s+function/, score: 3
         }, {pattern: /\bclass\s+\w+/, score: 2}, {pattern: /\bnamespace\s+\w+/, score: 3}, {
-            pattern: /\buse\s+\w+/,
-            score: 2
+            pattern: /\buse\s+\w+/, score: 2
         }, {pattern: /\b(include|require)(_once)?\s*\(/, score: 2}, {
-            pattern: /\b(foreach|as)\b/,
-            score: 2
+            pattern: /\b(foreach|as)\b/, score: 2
         }, {pattern: /\b->\w+/, score: 2}]
     }, {
-        name: 'ruby',
-        rules: [{pattern: /def\s+\w+/, score: 2}, {pattern: /class\s+\w+/, score: 2}, {
-            pattern: /module\s+\w+/,
-            score: 2
+        name: 'ruby', rules: [{pattern: /def\s+\w+/, score: 2}, {pattern: /class\s+\w+/, score: 2}, {
+            pattern: /module\s+\w+/, score: 2
         }, {pattern: /\battr_(reader|writer|accessor)\b/, score: 3}, {
-            pattern: /\bputs\b/,
-            score: 1
+            pattern: /\bputs\b/, score: 1
         }, {pattern: /\b(if|unless|while|until)\b/, score: 1}, {
-            pattern: /\bdo\s*\|.*\|/,
-            score: 2
+            pattern: /\bdo\s*\|.*\|/, score: 2
         }, {pattern: /\bend\b/, score: 1}, {
-            pattern: /\b(require|include)\b/,
-            score: 2
+            pattern: /\b(require|include)\b/, score: 2
         }, {pattern: /\b(true|false|nil)\b/, score: 1}, {pattern: /:\w+/, score: 2}]
     }, {
-        name: 'go',
-        rules: [{pattern: /package\s+main/, score: 3}, {
-            pattern: /func\s+main\(\)/,
-            score: 4
+        name: 'go', rules: [{pattern: /package\s+main/, score: 3}, {
+            pattern: /func\s+main\(\)/, score: 4
         }, {pattern: /import\s+\([\s\S]*?\)/, score: 3}, {
-            pattern: /func\s+\(\w+\s+\*?\w+\)\s+\w+/,
-            score: 3
+            pattern: /func\s+\(\w+\s+\*?\w+\)\s+\w+/, score: 3
         }, {pattern: /fmt\.(Print|Println|Printf)\(/, score: 2}, {
-            pattern: /\bvar\s+\w+\s+\w+/,
-            score: 2
+            pattern: /\bvar\s+\w+\s+\w+/, score: 2
         }, {pattern: /\b:=\b/, score: 2}, {pattern: /\bgo\s+func\b/, score: 3}, {
-            pattern: /\bchan\b/,
-            score: 2
+            pattern: /\bchan\b/, score: 2
         }, {pattern: /\bdefer\b/, score: 2}, {pattern: /\binterface\{\}/, score: 2}]
     }];
 

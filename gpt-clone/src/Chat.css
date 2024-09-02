@@ -54,7 +54,7 @@
 .message {
     max-width: 95%;
     width: fit-content;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     padding: 5px 20px;
     border-radius: 18px;
     line-height: 1.4;
@@ -62,7 +62,7 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
-    max-height: 600px;
+    max-height: 100vh; /* 设置为一页半的高度 */
     overflow-y: auto;
 }
 
@@ -87,6 +87,7 @@
 .timestamp {
     font-size: 11px;
     margin-top: 1px;
+    margin-bottom: 5px; /* 增加底部外边距，避免时间戳侵入下一条消息 */
     opacity: 0.9;
 }
 
@@ -212,12 +213,22 @@ code {
     .conversation-list {
         width: 100%;
         height: auto;
-        max-height: 30vh;
+        max-height: 10vh;
         overflow-y: auto;
         border-right: none;
         border-bottom: 1px solid #d2d2d7;
-        padding: 10px;  /* 减小内边距，适应较小屏幕 */
+        padding: 5px;  /* 减小内边距，适应较小屏幕 */
     }
+
+    .conversation-item {
+        padding: 5px;
+        font-size: 10px;
+        margin-bottom: 2px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
 
     .chat-container {
         height: calc(100vh - 30vh); /* 动态调整聊天容器的高度 */
@@ -225,6 +236,7 @@ code {
 
     .message {
         max-width: 100%;
+        max-height: 200vh; /* 超过2页的消息 */
     }
 
     .input-container {
@@ -256,21 +268,29 @@ code {
         max-width: 85%; /* 使用相对宽度以适应窄屏幕 */
     }
 
+    .conversation-list h3 {
+        display: none;
+    }
+
     .input-container {
-        padding: 8px;
+        padding: 6px;
+        max-height: 25vh; /* 限制输入区域的最大高度 */
         background-color: rgba(245, 245, 247, 0.9); /* 提高背景透明度 */
     }
 
     textarea {
+        align-self: start;
         font-size: 14px;
-        padding: 8px 12px;
-        margin-right: 5px; /* 确保输入框和按钮之间有足够空间 */
+        padding: 3px 9px;
+        margin-right: 1px; /* 确保输入框和按钮之间有足够空间 */
     }
 
     button {
-        padding: 8px 15px;
-        font-size: 14px;
-        margin-left: 5px; /* 确保按钮和输入框之间的空间 */
+        align-self: center;
+        scale: 0.9; /* 缩小按钮 */
+        padding: 32px 10px;
+        font-size: 10px;
+        margin-left: 8px; /* 确保按钮和输入框之间的空间 */
     }
 }
 
