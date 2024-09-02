@@ -105,7 +105,7 @@ public class BaiduChatServiceImpl implements ChatService {
             // 执行请求
             ChatResponse response = chatCompletion.execute();
             String result = response.getResult();
-            logInfo(" # " + baiduConfig.getCurrentModel() + "\n" + result);
+            logInfo(" # " + baiduConfig.getCurrentModel() + "\n" + result.substring(0, Math.min(20, result.length())));
 
             // 将助手的响应添加到 Redis 对话历史
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), StringEscapeUtils.escapeHtml4(result));
@@ -154,14 +154,16 @@ public class BaiduChatServiceImpl implements ChatService {
                     "为此对话生成一个简洁且相关的标题，并匹配原始内容的语言，无论内容如何变化，都要提供标题。" +
                             "稍微更侧重于最近的消息，如果主题发生过大变化，请根据更新后的主题来确定标题。" +
                             "请仅回复标题内容，不需要任何寒暄、引入和前缀词，直接给出主谓、动宾或偏正，如果是英文标题则主谓、定语中心语。" +
-                            "更不要包含例如“最近消息：”这样的引入短语"});
+                            "更不要包含例如“最近消息：”这样的引入短语，若有多种可能的标题，请选择最简洁的一个。" });
+            //This is for indicating the details used to generate the title, Now fully tested so can be removed
+            //这是用于指示生成标题所使用的详细信息列表，现在已经完全测试，因此可以删除
             recentMessages = tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
-            StringBuilder s = new StringBuilder();
+//            StringBuilder s = new StringBuilder();
             for (String[] entry : recentMessages) {
                 chatCompletion.addMessage(entry[0], entry[2]);
-                s.append(entry[2]).append(" ");
+//                s.append(entry[2]).append(" ");
             }
-            log.info(String.valueOf(s));
+//            log.info(String.valueOf(s));
 
 
 
