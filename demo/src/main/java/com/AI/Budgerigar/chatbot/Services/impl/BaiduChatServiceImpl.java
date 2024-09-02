@@ -150,7 +150,11 @@ public class BaiduChatServiceImpl implements ChatService {
             // Step 2: Generate a summary using AI service
             var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getRandomModel());
             recentMessages.add(new String[]{"assistant", getNowTimeStamp(), "Still to be answered"}); // Add a dummy entry to ensure the AI model has enough context
-            recentMessages.add(new String[]{"user", getNowTimeStamp(),"为此对话生成一个简洁且相关的标题，并匹配原始内容的语言，无论内容如何变化，都要提供标题。稍微更侧重于最近的消息，如果主题发生变化，请根据更新后的主题来确定标题。你的回应应只包含标题，不需要额外的问候、介绍或后缀。"});
+            recentMessages.add(new String[]{"user", getNowTimeStamp(),
+                    "为此对话生成一个简洁且相关的标题，并匹配原始内容的语言，无论内容如何变化，都要提供标题。" +
+                            "稍微更侧重于最近的消息，如果主题发生过大变化，请根据更新后的主题来确定标题。" +
+                            "请仅回复标题内容，不需要任何寒暄、引入和前缀词，直接给出主谓、动宾或偏正，如果是英文标题则主谓、定语中心语。" +
+                            "更不要包含例如“最近消息：”这样的引入短语"});
             recentMessages = tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
             StringBuilder s = new StringBuilder();
             for (String[] entry : recentMessages) {
