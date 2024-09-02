@@ -273,24 +273,48 @@ code {
     }
 
     .input-container {
+        display: flex;
+        align-items: center; /* 垂直居中对齐 */
         padding: 6px;
-        max-height: 25vh; /* 限制输入区域的最大高度 */
-        background-color: rgba(245, 245, 247, 0.9); /* 提高背景透明度 */
+        background-color: rgba(245, 245, 247, 0.75);
+        border-top: 1px solid #d2d2d7;
     }
 
     textarea {
-        align-self: start;
-        font-size: 14px;
-        padding: 3px 9px;
-        margin-right: 1px; /* 确保输入框和按钮之间有足够空间 */
+        flex: 1;
+        border: none;
+        background-color: #ffffff;
+        border-radius: 20px;
+        padding: 12px 16px;
+        font-size: 16px;
+        resize: none;
+        outline: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 1s ease, height 1s ease;
+        max-width: calc(100% - 80px);
+        max-height: calc(90%);
+        min-height: 42px;
+        overflow-y: hidden;
     }
 
     button {
-        align-self: center;
-        scale: 0.9; /* 缩小按钮 */
-        padding: 32px 10px;
-        font-size: 10px;
-        margin-left: 8px; /* 确保按钮和输入框之间的空间 */
+        display: flex;
+        align-self: center; /* 垂直居中 */
+        justify-content: center;
+        align-items: center;
+        margin-left: 10px;
+        padding: 0 10px;  /* 减小按钮的内边距 */
+        background-color: #007aff;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        height: 60px;  /* 增加高度 */
+        width: 30px;   /* 减小宽度 */
+        box-sizing: border-box;
     }
 }
 
@@ -302,6 +326,12 @@ code {
         min-width: 120px;
         max-width: 90%; /* 确保在最小屏幕上也能居中显示 */
     }
+
+    textarea {
+        min-height: 28px; /* 更小屏幕上进一步缩小最小高度 */
+        padding: 6px 10px; /* 减小内边距 */
+    }
+
 }
 
 /* 更大的屏幕 */
