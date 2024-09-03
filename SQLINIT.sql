@@ -1,5 +1,5 @@
 -- DROP DATABASE IF EXISTS chatbot_db;
-CREATE DATABASE chatbot_db;
+-- CREATE DATABASE chatbot_db; /*this should be done in your local PGAdmin, For UI -> create under Servers/PostgresSQL 16 */
 \c chatbot_db;
 DROP TABLE IF EXISTS UserPw, Cid, UidCid;
 
@@ -31,10 +31,10 @@ INSERT INTO UserPw (uuid, username, password) VALUES
                                                   ('2222', 'user2', 'password2');
 
 INSERT INTO Cid (conversationId, firstMessage) VALUES
-                                                    ('default1_1', 'none'),
-                                                    ('default1_2', 'none'),
-                                                    ('default2_1', 'none'),
-                                                    ('default2_2', 'none');
+                                                   ('default1_1', 'none'),
+                                                   ('default1_2', 'none'),
+                                                   ('default2_1', 'none'),
+                                                   ('default2_2', 'none');
 
 INSERT INTO UidCid (uuid, conversationId) VALUES
                                               ('1111', 'default1_1'),
