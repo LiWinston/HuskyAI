@@ -111,6 +111,32 @@
     color: #3d3d3f;
 }
 
+.day-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+}
+
+.divider-line {
+    flex: 1;
+    height: 1px;
+    background-color: #ccc;
+    margin: 0 10px;
+}
+
+.divider-text {
+    padding: 0 10px;
+    color: #888;
+    font-size: 12px;
+}
+
+
+
+
 /* 添加滚动条样式 */
 .message::-webkit-scrollbar {
     width: 6px;

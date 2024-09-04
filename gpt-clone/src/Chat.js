@@ -161,50 +161,60 @@ function Chat() {
                         const currentDate = new Date();
                         const isRecent = (currentDate - messageDate) < (24 * 60 * 60 * 1000); // 判断是否为最近一天的消息
 
+                        // 判断是否是一天内的第一条消息
+                        const isFirstRecentMessage = isRecent && (index === 0 || (new Date(messages[index - 1].timestamp) < (currentDate - 24 * 60 * 60 * 1000)));
                         return (
-                            <motion.div
-                                key={index}
-                                className={`message-container ${msg.sender} ${isRecent ? 'recent-message' : ''}`}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <div className={`message ${msg.sender}`}>
-                                    <ReactMarkdown
-                                        children={DOMPurify.sanitize(msg.text)}
-                                        components={{
-                                            code({ node, inline, className, children, ...props }) {
-                                                const match = /language-(\w+)/.exec(className || '');
-                                                return !inline ? (
-                                                    <SyntaxHighlighter
-                                                        style={VscDarkPlus}
-                                                        language={match ? match[1] : 'plaintext'}
-                                                        PreTag="div"
-                                                        children={String(children).replace(/\n$/, '')}
-                                                        {...props}
-                                                    />
-                                                ) : (
-                                                    <code className={className} {...props}>
-                                                        {children}
-                                                    </code>
-                                                );
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <div className={`timestamp ${msg.sender}-timestamp`}>
-                                    {new Date(msg.timestamp).toLocaleString(navigator.language, {
-                                        year: 'numeric',
-                                        month: navigator.language.startsWith('zh') ? 'long' : 'short',
-                                        day: 'numeric',
-                                        hour: 'numeric',
-                                        minute: 'numeric',
-                                        second: 'numeric',
-                                        dayPeriod: 'short',
-                                    })}
-                                </div>
-                            </motion.div>
+                            <React.Fragment key={index}>
+                                {isFirstRecentMessage && (
+                                    <div className="day-divider">
+                                        <div className="divider-line"></div>
+                                        <div className="divider-text">Messages within the last day</div>
+                                        <div className="divider-line"></div>
+                                    </div>
+                                )}
+                                <motion.div
+                                    className={`message-container ${msg.sender} ${isRecent ? 'recent-message' : ''}`}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <div className={`message ${msg.sender}`}>
+                                        <ReactMarkdown
+                                            children={DOMPurify.sanitize(msg.text)}
+                                            components={{
+                                                code({ node, inline, className, children, ...props }) {
+                                                    const match = /language-(\w+)/.exec(className || '');
+                                                    return !inline ? (
+                                                        <SyntaxHighlighter
+                                                            style={VscDarkPlus}
+                                                            language={match ? match[1] : 'plaintext'}
+                                                            PreTag="div"
+                                                            children={String(children).replace(/\n$/, '')}
+                                                            {...props}
+                                                        />
+                                                    ) : (
+                                                        <code className={className} {...props}>
+                                                            {children}
+                                                        </code>
+                                                    );
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                    <div className={`timestamp ${msg.sender}-timestamp`}>
+                                        {new Date(msg.timestamp).toLocaleString(navigator.language, {
+                                            year: 'numeric',
+                                            month: navigator.language.startsWith('zh') ? 'long' : 'short',
+                                            day: 'numeric',
+                                            hour: 'numeric',
+                                            minute: 'numeric',
+                                            second: 'numeric',
+                                            dayPeriod: 'short',
+                                        })}
+                                    </div>
+                                </motion.div>
+                            </React.Fragment>
                         );
                     })}
 
