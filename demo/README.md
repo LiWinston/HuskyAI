@@ -44,7 +44,7 @@ https://platform.openai.com/settings/profile?tab=api-keys
 
 
 
-## Tip
+# Tip
 - sometimes people do force push, which leads to the local branch out of sync with the remote branch. To fix this, you can run the following commands:
   ```bash
   git fetch origin
@@ -52,6 +52,19 @@ https://platform.openai.com/settings/profile?tab=api-keys
   ```
   This will reset your local branch to the remote branch's state. Be careful with this command as it will discard all your local changes.
   (After all, force push is not recommended as a good practice)
+
+## Set up local redis
+docker way:
+```
+docker pull redis
+docker run -d -p 6379:6379 --name redis redis
+```
+wsl way(windows):
+```
+brew install redis
+redis-server
+brew services start redis
+```
 
 
 ## useful Remote redis CLI:
