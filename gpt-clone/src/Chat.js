@@ -21,6 +21,7 @@ function Chat() {
     const chatWindowRef = useRef(null);
     const [textareaHeight, setTextareaHeight] = useState('auto');
     const textareaRef = useRef(null);
+    const [displayedTitle, setDisplayedTitle] = useState({});
 
     const handleInputChange = (event) => {
         const text = event.target.value;
@@ -87,7 +88,7 @@ function Chat() {
         if (input.trim() === '') return;
 
         const timestamp = new Date();
-        const newMessage = {sender: 'user', text: input, timestamp};
+        const newMessage = { sender: 'user', text: input, timestamp };
 
         setMessages(prevMessages => [...prevMessages, newMessage]);
         setInput('');
@@ -102,7 +103,7 @@ function Chat() {
                 prompt: input, conversationId: selectedConversation
             });
             const sanitizedResponse = DOMPurify.sanitize(response.data.data);
-            const assistantMessage = {sender: 'assistant', text: sanitizedResponse, timestamp: new Date()};
+            const assistantMessage = { sender: 'assistant', text: sanitizedResponse, timestamp: new Date() };
 
             setMessages(prevMessages => [...prevMessages, assistantMessage]);
             setLoading(false);
@@ -111,15 +112,12 @@ function Chat() {
                 const msg = response.data.msg;
                 if (msg.includes(CONVERSATION_SUMMARY_GENERATED)) {
                     const newTitle = msg.split(CONVERSATION_SUMMARY_GENERATED)[1];
-                    // 更新对话标题
-                    setConversations(prevConversations => prevConversations.map(conv => conv.id === selectedConversation ? {
-                        ...conv,
-                        title: newTitle
-                    } : conv));
+                    // 使用打字机效果更新对话标题
+                    animateTitleUpdate(selectedConversation, newTitle);
                     setNotification(response.data.msg.split(CONVERSATION_SUMMARY_GENERATED)[0] + ', Conversation summary generated, ' + newTitle);
                     setTimeout(() => setNotification(null), 3500);
                 } else {
-                    setNotification(response.data.msg); // 设置通知消息
+                    setNotification(response.data.msg);
                     setTimeout(() => setNotification(null), 2000);
                 }
             }
@@ -134,6 +132,19 @@ function Chat() {
         }
     };
 
+    const animateTitleUpdate = (conversationId, newTitle) => {
+        let currentTitle = '';
+        setDisplayedTitle(prev => ({ ...prev, [conversationId]: '' }));
+
+        newTitle.split('').forEach((char, index) => {
+            setTimeout(() => {
+                currentTitle += char;
+                setDisplayedTitle(prev => ({ ...prev, [conversationId]: currentTitle }));
+            }, index * 100); // 每个字符间隔100毫秒
+        });
+    };
+
+
     useEffect(() => {
         if (chatWindowRef.current) {
             chatWindowRef.current.scrollTo({
@@ -145,13 +156,15 @@ function Chat() {
     return (<div className="chat-interface">
         <div className="conversation-list">
             <h3>Conversations</h3>
-            {Array.isArray(conversations) && conversations.map((conv) => (<div
-                key={conv.id}
-                className={`conversation-item ${selectedConversation === conv.id ? 'selected' : ''}`}
-                onClick={() => loadConversation(conv.id)}
-            >
-                {conv.title}
-            </div>))}
+            {Array.isArray(conversations) && conversations.map((conv) => (
+                <div
+                    key={conv.id}
+                    className={`conversation-item ${selectedConversation === conv.id ? 'selected' : ''}`}
+                    onClick={() => loadConversation(conv.id)}
+                >
+                    {displayedTitle[conv.id] || conv.title}
+                </div>
+            ))}
         </div>
         <div className="chat-container">
             <div className="chat-window" ref={chatWindowRef}>
@@ -174,16 +187,16 @@ function Chat() {
                                 )}
                                 <motion.div
                                     className={`message-container ${msg.sender} ${isRecent ? 'recent-message' : ''}`}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    transition={{ duration: 0.3 }}
+                                    initial={{opacity: 0, y: 20}}
+                                    animate={{opacity: 1, y: 0}}
+                                    exit={{opacity: 0, y: -20}}
+                                    transition={{duration: 0.3}}
                                 >
                                     <div className={`message ${msg.sender}`}>
                                         <ReactMarkdown
                                             children={DOMPurify.sanitize(msg.text)}
                                             components={{
-                                                code({ node, inline, className, children, ...props }) {
+                                                code({node, inline, className, children, ...props}) {
                                                     const match = /language-(\w+)/.exec(className || '');
                                                     return !inline ? (
                                                         <SyntaxHighlighter
@@ -244,13 +257,13 @@ function Chat() {
         {/* 浮动弹幕通知 */}
         <AnimatePresence>
             {notification && (<motion.div
-                    className="notification-banner"
-                    initial={{opacity: 0, y: 50}}
-                    animate={{opacity: 1, y: 0}}
-                    exit={{opacity: 0, y: 50}}
-                    transition={{duration: 0.5}}
-                >{notification}
-                </motion.div>)}
+                className="notification-banner"
+                initial={{opacity: 0, y: 50}}
+                animate={{opacity: 1, y: 0}}
+                exit={{opacity: 0, y: 50}}
+                transition={{duration: 0.5}}
+            >{notification}
+            </motion.div>)}
         </AnimatePresence>
 
     </div>);

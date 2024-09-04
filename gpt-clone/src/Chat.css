@@ -135,6 +135,17 @@
 }
 
 
+.conversation-item span {
+    display: inline-block;
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
 
 
 /* 添加滚动条样式 */
