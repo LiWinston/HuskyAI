@@ -39,6 +39,8 @@
 }
 
 .chat-container {
+    max-width: 100%;
+    overflow-x: hidden;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -74,15 +76,22 @@
     text-align: left;
 }
 
-.message.bot {
+.message.assistant {
     align-self: flex-start;
-    background-color: #f2f2f7;
+    background-color: #f5f5f7;
     color: #1d1d1f;
+    margin-right: auto;
+    text-align: left;
 }
 
-.message.user, .message.bot {
+.message.user, .message.assistant {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); /* 确保所有消息都有边框阴影 */
 }
+
+.recent-message .message {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4); /* 更深的阴影效果 */
+}
+
 
 .timestamp {
     font-size: 11px;
@@ -186,6 +195,13 @@ code {
     font-family: 'SF Mono', 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
     font-size: 14px;
 }
+
+.message, pre, code {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-all;
+}
+
 .notification-banner {
     align-self: center;
     position: fixed;

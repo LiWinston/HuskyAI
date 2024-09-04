@@ -102,9 +102,9 @@ function Chat() {
                 prompt: input, conversationId: selectedConversation
             });
             const sanitizedResponse = DOMPurify.sanitize(response.data.data);
-            const botMessage = {sender: 'bot', text: sanitizedResponse, timestamp: new Date()};
+            const assistantMessage = {sender: 'assistant', text: sanitizedResponse, timestamp: new Date()};
 
-            setMessages(prevMessages => [...prevMessages, botMessage]);
+            setMessages(prevMessages => [...prevMessages, assistantMessage]);
             setLoading(false);
 
             if (response.data.msg) {
@@ -156,48 +156,58 @@ function Chat() {
         <div className="chat-container">
             <div className="chat-window" ref={chatWindowRef}>
                 <AnimatePresence>
-                    {messages.map((msg, index) => (<motion.div
-                        key={index}
-                        className={`message-container ${msg.sender}`}
-                        initial={{opacity: 0, y: 20}}
-                        animate={{opacity: 1, y: 0}}
-                        exit={{opacity: 0, y: -20}}
-                        transition={{duration: 0.3}}
-                    >
-                        <div className={`message ${msg.sender}`}>
-                            <ReactMarkdown
-                                children={DOMPurify.sanitize(msg.text)}
-                                components={{
-                                    code({node, inline, className, children, ...props}) {
-                                        const match = /language-(\w+)/.exec(className || '');
-                                        // const detectedLanguage = detectLanguage(String(children));
-                                        return !inline ? (<SyntaxHighlighter
-                                            style={VscDarkPlus}
-                                            language={match ? match[1] : 'plaintext'}
-                                            PreTag="div"
-                                            children={String(children).replace(/\n$/, '')}
-                                            {...props}
-                                        />) : (<code className={className} {...props}>
-                                            {children}
-                                        </code>);
-                                    }
-                                }}
-                            />
-                        </div>
-                        <div className={`timestamp ${msg.sender}-timestamp`}>
-                            {new Date(msg.timestamp).toLocaleString(navigator.language, {
-                                year: 'numeric',
-                                month: navigator.language.startsWith('zh') ? 'long' : 'short', // 如果是中文则使用完整的月份名称，否则使用缩写
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                second: 'numeric',
-                                // 对中文采用年/月/日的顺序，对其他语言采用日/月/年的顺序
-                                dayPeriod: 'short',
-                            })}
-                        </div>
+                    {messages.map((msg, index) => {
+                        const messageDate = new Date(msg.timestamp);
+                        const currentDate = new Date();
+                        const isRecent = (currentDate - messageDate) < (24 * 60 * 60 * 1000); // 判断是否为最近一天的消息
 
-                    </motion.div>))}
+                        return (
+                            <motion.div
+                                key={index}
+                                className={`message-container ${msg.sender} ${isRecent ? 'recent-message' : ''}`}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <div className={`message ${msg.sender}`}>
+                                    <ReactMarkdown
+                                        children={DOMPurify.sanitize(msg.text)}
+                                        components={{
+                                            code({ node, inline, className, children, ...props }) {
+                                                const match = /language-(\w+)/.exec(className || '');
+                                                return !inline ? (
+                                                    <SyntaxHighlighter
+                                                        style={VscDarkPlus}
+                                                        language={match ? match[1] : 'plaintext'}
+                                                        PreTag="div"
+                                                        children={String(children).replace(/\n$/, '')}
+                                                        {...props}
+                                                    />
+                                                ) : (
+                                                    <code className={className} {...props}>
+                                                        {children}
+                                                    </code>
+                                                );
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div className={`timestamp ${msg.sender}-timestamp`}>
+                                    {new Date(msg.timestamp).toLocaleString(navigator.language, {
+                                        year: 'numeric',
+                                        month: navigator.language.startsWith('zh') ? 'long' : 'short',
+                                        day: 'numeric',
+                                        hour: 'numeric',
+                                        minute: 'numeric',
+                                        second: 'numeric',
+                                        dayPeriod: 'short',
+                                    })}
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+
                 </AnimatePresence>
             </div>
 
