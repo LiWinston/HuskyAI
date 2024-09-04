@@ -67,7 +67,7 @@ public class ChatGenerateSummaryAspect {
     // Method to determine if title generation should occur
     private boolean shouldGenerateTitle() {
         // Example: 20% probability
-        return RANDOM.nextInt(100) < 100;
+        return RANDOM.nextInt(100) < 80;
     }
 
 }

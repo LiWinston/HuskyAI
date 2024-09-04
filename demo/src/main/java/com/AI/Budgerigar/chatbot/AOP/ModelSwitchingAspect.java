@@ -31,7 +31,7 @@ public class ModelSwitchingAspect {
 
         for (int i = 0; i < maxRetries; i++) {
             try {
-                log.info("Using model: " + baiduConfig.getCurrentModel());
+                log.info("Using model: " + baiduConfig.getCurrentChatBuilder());
                 return joinPoint.proceed(); // 尝试执行原始方法
             }
             catch (Exception e) {

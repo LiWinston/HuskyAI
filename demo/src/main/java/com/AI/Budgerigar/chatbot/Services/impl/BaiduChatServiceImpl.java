@@ -8,7 +8,7 @@ import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
-import com.baidubce.qianfan.Qianfan;
+import com.baidubce.qianfan.core.builder.ChatBuilder;
 import com.baidubce.qianfan.model.chat.ChatResponse;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
@@ -45,9 +46,6 @@ public class BaiduChatServiceImpl implements ChatService {
     private TokenLimiter tokenLimiter;
 
     @Autowired
-    private Qianfan qianfan;
-
-    @Autowired
     private BaiduConfig baiduConfig;
 
     @Autowired
@@ -65,6 +63,8 @@ public class BaiduChatServiceImpl implements ChatService {
     @Autowired
     private ConversationMapper conversationMapper;
 
+    private List<ChatBuilder> chatBuilders = new ArrayList<>();
+
     // public void setConversationId(String conversationId) {
     // this.conversationId = conversationId;
     // log.info("FE SET conversation ID to: " + conversationId);
@@ -73,14 +73,6 @@ public class BaiduChatServiceImpl implements ChatService {
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
     }
-
-    // @PostConstruct
-    // public void init() {
-    // conversationId = ""; // This would typically be dynamic per session/user
-    //// chatMessagesRedisDAO.addMessage(conversationId, "user", "Hi");
-    //// chatMessagesRedisDAO.addMessage(conversationId, "assistant", "What can I do for
-    // U?");
-    // }
 
     @Override
     public Result<String> chat(String input, String conversationId) {
@@ -93,7 +85,7 @@ public class BaiduChatServiceImpl implements ChatService {
                     StringEscapeUtils.escapeHtml4(input));
 
             // 创建 ChatCompletion 请求对象
-            var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getCurrentModel());
+            ChatBuilder chatCompletion = baiduConfig.getRandomChatBuilder();
 
             // 从 Redis 中获取对话历史
             List<String[]> conversationHistory = null;
@@ -169,20 +161,20 @@ public class BaiduChatServiceImpl implements ChatService {
             }
 
             // Step 2: Generate a summary using AI service
-            var chatCompletion = qianfan.chatCompletion().model(baiduConfig.getRandomModel());
-            recentMessages.add(new String[] { "assistant", getNowTimeStamp(), "Still to be answered" }); // Add
-                                                                                                         // a
-                                                                                                         // dummy
-                                                                                                         // entry
-                                                                                                         // to
-                                                                                                         // ensure
-                                                                                                         // the
-                                                                                                         // AI
-                                                                                                         // model
-                                                                                                         // has
-                                                                                                         // enough
-                                                                                                         // context
-            recentMessages.add(new String[] { "user", getNowTimeStamp(),
+            ChatBuilder chatCompletion = baiduConfig.getRandomChatBuilder();
+            recentMessages.add(new String[] { "assistant", null, "Still to be answered" }); // Add
+                                                                                            // a
+                                                                                            // dummy
+                                                                                            // entry
+                                                                                            // to
+                                                                                            // ensure
+                                                                                            // the
+                                                                                            // AI
+                                                                                            // model
+                                                                                            // has
+                                                                                            // enough
+                                                                                            // context
+            recentMessages.add(new String[] { "user", null,
                     "为此对话生成一个简洁且相关的标题，并匹配原始内容的语言，无论内容如何变化，都要提供标题。" + "稍微更侧重于最近的消息，如果主题发生过大变化，请根据更新后的主题来确定标题。"
                             + "请仅回复标题内容，不需要任何寒暄、引入和前缀词，直接给出主谓、动宾或偏正，如果是英文标题则主谓、定语中心语。"
                             + "更不要包含例如“最近消息：”这样的引入短语，若有多种可能的标题，请选择最简洁的一个。" });
@@ -202,8 +194,21 @@ public class BaiduChatServiceImpl implements ChatService {
             if (summary == null || summary.isEmpty()) {
                 return Result.error(conversationId, "Failed to generate a title.");
             }
-
             log.info("Generated title: " + summary);
+
+            // recentMessages.add(new String[] { "user", null, "Show me the concluded
+            // title of this conversation." });
+            chatCompletion.addAssistantMessage(summary);
+            chatCompletion.addUserMessage("Tittle can not contain any greeting, introduction, or prefix words, "
+                    + "just Show the core content. Of course, if you think there's no need to change the title, you can remain your original reply."
+                    + "Also dont add any dummy phrases before the title, just give the subject. ");
+            // recentMessages =
+            // tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
+            // chatCompletion = baiduConfig.getRandomChatBuilder();
+
+            summary = chatCompletion.execute().getResult();
+
+            log.info("Refined title: " + summary);
 
             // Step 3: Update the 'firstmessage' field in the database
             conversationMapper.setMessageForShort(conversationId, summary);

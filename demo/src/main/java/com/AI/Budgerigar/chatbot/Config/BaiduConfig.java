@@ -1,10 +1,12 @@
 package com.AI.Budgerigar.chatbot.Config;
 
 import com.baidubce.qianfan.Qianfan;
+import com.baidubce.qianfan.core.builder.ChatBuilder;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +36,11 @@ public class BaiduConfig {
 
     private int currentModelIndex = 0;
 
+    @Autowired
+    private Qianfan qianfan;
+
+    private ChatBuilder currentChatBuilder;
+
     @Bean
     @Qualifier("qianfan")
     public Qianfan qianfan() {
@@ -55,12 +62,12 @@ public class BaiduConfig {
         return modelList.get(currentModelIndex);
     }
 
-    public String getRandomModel() {
+    private String getRandomModel() {
         int randomIndex = (int) (Math.random() * modelList.size());// 确保随机数在模型列表范围内
         return modelList.get(randomIndex);
     }
 
-    public String getRandomDifferentModel() {
+    private String getRandomDifferentModel() {
         int randomIndex = (int) (Math.random() * modelList.size());
         while (randomIndex == currentModelIndex) {
             randomIndex = (int) (Math.random() * modelList.size());
@@ -71,6 +78,24 @@ public class BaiduConfig {
     // 切换到下一个模型
     public void switchToNextModel() {
         currentModelIndex = (currentModelIndex + 1) % modelList.size();
+        currentChatBuilder = qianfan.chatCompletion().model(getCurrentModel());
+    }
+
+    public ChatBuilder getCurrentChatBuilder() {
+        return currentChatBuilder == null ? qianfan.chatCompletion().model(getCurrentModel()) : currentChatBuilder;
+    }
+
+    public ChatBuilder getRandomChatBuilder() {
+        return qianfan.chatCompletion().model(getRandomModel());
+    }
+
+    public ChatBuilder getRandomDifferentChatBuilder() {
+        return qianfan.chatCompletion().model(getRandomDifferentModel());
+    }
+
+    public ChatBuilder switchModel() {
+        switchToNextModel();
+        return getCurrentChatBuilder();
     }
 
 }
