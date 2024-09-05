@@ -263,6 +263,10 @@ code {
         flex-direction: column;
     }
 
+    .conversation-list h3 {
+        display: none;
+    }
+
     .conversation-list {
         width: 100%;
         height: auto;
@@ -319,10 +323,6 @@ code {
         bottom: 70px; /* 避免在小屏幕上遮挡输入区域 */
         min-width: 150px;
         max-width: 85%; /* 使用相对宽度以适应窄屏幕 */
-    }
-
-    .conversation-list h3 {
-        display: none;
     }
 
     .input-container {

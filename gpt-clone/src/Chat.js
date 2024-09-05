@@ -69,20 +69,40 @@ function Chat() {
 
     const loadConversation = async (conversationId) => {
         try {
+            const uuid = localStorage.getItem('userUUID');
             console.log('Loading conversation:', conversationId);
-            const response = await axios.get(`${window.API_BASE_URL}/chat/${conversationId}`);
+            const response = await axios.get(`${window.API_BASE_URL}/chat/${uuid}/${conversationId}`);
 
-            // 直接使用返回的消息对象
-            const loadedMessages = response.data.data.map(msg => ({
-                sender: msg.role, text: msg.content, timestamp: msg.timestamp
-            }));
+            // 如果 response.data.data 为空，则处理为空的情况
+            const loadedMessages = response.data.data.length ? response.data.data.map(msg => ({
+                sender: msg.role,
+                text: msg.content,
+                timestamp: msg.timestamp
+            })) : [];
 
             setMessages(loadedMessages);
             setSelectedConversation(conversationId);
+
+            // 如果没有消息，添加一条默认提示消息
+            if (loadedMessages.length === 0) {
+                setMessages([{
+                    sender: 'system',
+                    text: 'No messages yet in this conversation. Start the conversation now!',
+                    timestamp: new Date()
+                }]);
+            }
+
         } catch (error) {
             console.error('Error loading conversation:', error);
+            // 如果加载出错，仍然显示错误提示
+            setMessages([{
+                sender: 'system',
+                text: 'Failed to load conversation. Please try again later.',
+                timestamp: new Date()
+            }]);
         }
     };
+
 
     const sendMessage = async () => {
         if (input.trim() === '') return;
@@ -99,7 +119,14 @@ function Chat() {
         setLoading(true);
 
         try {
-            const response = await axios.post(`${window.API_BASE_URL}/chat`, {
+            let cid = selectedConversation;
+            if (!cid) {
+                // 如果没有选择对话，则创建一个新对话, generate a new conversation ID
+                cid = new Date().getTime().toString();
+                setSelectedConversation(cid);
+                await axios.get(`${window.API_BASE_URL}/chat/${localStorage.getItem('userUUID')}/${cid}`);
+            }
+            const response = await axios.post(`${window.API_BASE_URL}/chat/${localStorage.getItem('userUUID')}/${cid}`, {
                 prompt: input, conversationId: selectedConversation
             });
             const sanitizedResponse = DOMPurify.sanitize(response.data.data);

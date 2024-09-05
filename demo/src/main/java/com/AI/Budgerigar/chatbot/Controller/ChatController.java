@@ -4,8 +4,10 @@ import com.AI.Budgerigar.chatbot.AIUtil.Message;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
 import com.AI.Budgerigar.chatbot.Services.userService;
+import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.model.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/chat")
+@Slf4j
 public class ChatController {
 
     @Autowired
@@ -32,6 +35,8 @@ public class ChatController {
 
     @Autowired
     private ExecutorService executorService;// 线程池 thread pool
+    @Autowired
+    private ConversationMapper conversationMapper;
 
     // 获取DB中所有对话清单，以备用户选取.每个对话清单包含对话ID和对话节选
     // get all conversation list from DB for user to choose.
@@ -58,8 +63,16 @@ public class ChatController {
     // 用get传输ConversationId，表达获取历史记录之义
     // use get to transfer ConversationId, express the meaning of getting history
     // restfully
-    @GetMapping("/{conversationId}")
-    public Result<?> chat(@PathVariable String conversationId) {
+    @GetMapping("/{uuid}/{conversationId}")
+    public Result<?> chat(@PathVariable String uuid,@PathVariable String conversationId) {
+        if(!conversationMapper.checkConversationExistsByUuid(uuid, conversationId)){
+            log.info("conversationId not exists, create new conversationId");
+            try {
+                conversationMapper.createConversationForUuid(uuid, conversationId);
+            } catch (Exception e) {
+                return Result.error(e.getMessage());
+            }
+        }
         // 先把当前对话缓存提交到DB: first submit current conversation cache to DB
         // executorService.submit(() ->
         // chatSyncService.updateHistoryFromRedis(chatService.getConversationId()));
@@ -78,15 +91,14 @@ public class ChatController {
         }
     }
 
-    @PostMapping()
-    public Result<?> chatPost(@RequestBody Map<String, String> body) {
+    @PostMapping("/{uuid}/{conversationId}")
+    public Result<?> chatPost(@PathVariable String uuid, @PathVariable String conversationId, @RequestBody Map<String, String> body) {
         try {
-            // 调用 chatService 的 chat 方法并返回结果 : Use chatService to handle the request
-            Result<String> response = chatService.chat(body.get("prompt"), body.get("conversationId"));
+            // 使用 chatService 的 chat 方法并返回结果
+            Result<String> response = chatService.chat(body.get("prompt"), conversationId);
             return Result.success(response.getData(), response.getMsg());
-        }
-        catch (Exception e) {
-            // Catch any exception and return an error response
+        } catch (Exception e) {
+            // 捕获任何异常并返回错误响应
             return Result.error(e.getMessage());
         }
     }
