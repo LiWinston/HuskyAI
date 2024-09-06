@@ -35,6 +35,7 @@ public class ChatController {
 
     @Autowired
     private ExecutorService executorService;// 线程池 thread pool
+
     @Autowired
     private ConversationMapper conversationMapper;
 
@@ -64,12 +65,13 @@ public class ChatController {
     // use get to transfer ConversationId, express the meaning of getting history
     // restfully
     @GetMapping("/{uuid}/{conversationId}")
-    public Result<?> chat(@PathVariable String uuid,@PathVariable String conversationId) {
-        if(!conversationMapper.checkConversationExistsByUuid(uuid, conversationId)){
+    public Result<?> chat(@PathVariable String uuid, @PathVariable String conversationId) {
+        if (!conversationMapper.checkConversationExistsByUuid(uuid, conversationId)) {
             log.info("conversationId not exists, create new conversationId");
             try {
                 conversationMapper.createConversationForUuid(uuid, conversationId);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 return Result.error(e.getMessage());
             }
         }
@@ -92,12 +94,14 @@ public class ChatController {
     }
 
     @PostMapping("/{uuid}/{conversationId}")
-    public Result<?> chatPost(@PathVariable String uuid, @PathVariable String conversationId, @RequestBody Map<String, String> body) {
+    public Result<?> chatPost(@PathVariable String uuid, @PathVariable String conversationId,
+            @RequestBody Map<String, String> body) {
         try {
             // 使用 chatService 的 chat 方法并返回结果
             Result<String> response = chatService.chat(body.get("prompt"), conversationId);
             return Result.success(response.getData(), response.getMsg());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             // 捕获任何异常并返回错误响应
             return Result.error(e.getMessage());
         }

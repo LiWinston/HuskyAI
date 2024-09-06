@@ -14,6 +14,7 @@
         FROM cid c
                  INNER JOIN uidcid uc ON c.conversationId = uc.conversationId
         WHERE uc.uuid = #{uuid}
+        ORDER BY c.lastMessageAt DESC
     </select>
 
 </mapper>

@@ -195,20 +195,23 @@ public class BaiduChatServiceImpl implements ChatService {
                 return Result.error(conversationId, "Failed to generate a title.");
             }
             log.info("Generated title: " + summary);
-//
-//            // recentMessages.add(new String[] { "user", null, "Show me the concluded
-//            // title of this conversation." });
-//            chatCompletion.addAssistantMessage(summary);
-//            chatCompletion.addUserMessage("Tittle can not contain any greeting, introduction, or prefix words, "
-//                    + "just Show the core content. Of course, if you think there's no need to change the title, you can remain your original reply."
-//                    + "Also dont add any dummy phrases before the title, just give the subject. ");
-//            // recentMessages =
-//            // tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
-//            // chatCompletion = baiduConfig.getRandomChatBuilder();
-//
-//            summary = chatCompletion.execute().getResult();
-//
-//            log.info("Refined title: " + summary);
+            //
+            // // recentMessages.add(new String[] { "user", null, "Show me the concluded
+            // // title of this conversation." });
+            // chatCompletion.addAssistantMessage(summary);
+            // chatCompletion.addUserMessage("Tittle can not contain any greeting,
+            // introduction, or prefix words, "
+            // + "just Show the core content. Of course, if you think there's no need to
+            // change the title, you can remain your original reply."
+            // + "Also dont add any dummy phrases before the title, just give the subject.
+            // ");
+            // // recentMessages =
+            // // tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
+            // // chatCompletion = baiduConfig.getRandomChatBuilder();
+            //
+            // summary = chatCompletion.execute().getResult();
+            //
+            // log.info("Refined title: " + summary);
 
             // Step 3: Update the 'firstmessage' field in the database
             conversationMapper.setMessageForShort(conversationId, summary);

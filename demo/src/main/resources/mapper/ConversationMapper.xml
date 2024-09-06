@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.AI.Budgerigar.chatbot.mapper.ConversationMapper">
+
     <insert id="createConversationForUuid">
-        INSERT INTO cid (conversationId, firstMessage)
-        VALUES (#{conversationId}, #{conversationId});
+        INSERT INTO cid (conversationId, firstMessage, createdAt, lastMessageAt)
+        VALUES (#{conversationId}, #{conversationId}, NOW(), NOW());
 
         INSERT INTO uidcid (uuid, conversationId)
         VALUES (#{uuid}, #{conversationId});
     </insert>
-
 
     <select id="getSummaryByCid" parameterType="string" resultType="String">
         SELECT firstMessage
@@ -18,20 +18,21 @@
 
     <update id="setMessageForShort">
         UPDATE cid
-        SET firstMessage = #{summary}
-        WHERE cid.conversationid = #{cid}
+        SET firstMessage = #{summary}, lastMessageAt = NOW()
+        WHERE conversationId = #{cid}
     </update>
 
     <select id="getConversationsByUserUuid" resultType="com.AI.Budgerigar.chatbot.model.Conversation">
-        SELECT *
+        SELECT c.conversationId, c.firstMessage, c.createdAt AT TIME ZONE 'UTC' AS createdAt, c.lastMessageAt AT TIME ZONE 'UTC' AS lastMessageAt
         FROM cid c
                  INNER JOIN uidcid uc ON c.conversationId = uc.conversationId
         WHERE uc.uuid = #{uuid}
     </select>
+
     <select id="checkConversationExistsByUuid" resultType="java.lang.Boolean">
-        SELECT EXISTS(SELECT 1
-                      FROM cid c
-                      WHERE c.conversationId = #{conversationId})
+        SELECT EXISTS(
+            SELECT 1 FROM cid c WHERE c.conversationId = #{conversationId}
+        )
     </select>
 
 </mapper>
