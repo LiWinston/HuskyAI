@@ -103,7 +103,12 @@ function Chat() {
         }
     };
 
-
+    // 将输入指针重新定位到输入框
+    useEffect(() => {
+        if (!loading && textareaRef.current) {
+            textareaRef.current.focus(); // 只有在非loading状态时聚焦
+        }
+    }, [loading]); // 监测 loading 状态
     const sendMessage = async () => {
         if (input.trim() === '') return;
 
