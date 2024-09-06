@@ -13,4 +13,8 @@ public interface UserMapper {
 
     List<Conversation> getConversationsByUserUuid(@Param("uuid") String uuid);
 
+    int registerUser(@Param("uuid") String uuid, @Param("username") String username, @Param("password") String password);
+
+    UserPw getUserByUsername(@Param("username") String username);
+
 }
