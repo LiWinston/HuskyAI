@@ -42,11 +42,11 @@ async function detectEnvironment(updateStatus, setError, finishDetection) {
             window.API_BASE_URL = url.replace('/health', ''); // Set base URL to the root of the service / 设置基础URL为服务的根路径
             isLocalServiceAvailable = true;
             updateStatus(`Connected to local service: ${url}`);
-            await new Promise(resolve => setTimeout(resolve, 300)); // Display status message / 显示状态消息
+            await new Promise(resolve => setTimeout(resolve, 50)); // Display status message / 显示状态消息
             break;
         } catch (error) {
             updateStatus(`Failed to connect to local service: ${url}`);
-            await new Promise(resolve => setTimeout(resolve, 300)); // Display status message / 显示状态消息
+            await new Promise(resolve => setTimeout(resolve, 100)); // Display status message / 显示状态消息
         }
     }
 
@@ -58,7 +58,7 @@ async function detectEnvironment(updateStatus, setError, finishDetection) {
             window.API_BASE_URL = REMOTE_URL.replace('/health', '/api');
 
             updateStatus('Connected to remote server');
-            await new Promise(resolve => setTimeout(resolve, 300)); // Display status message / 显示状态消息
+            await new Promise(resolve => setTimeout(resolve, 100)); // Display status message / 显示状态消息
         } catch (error) {
             // If remote service is unavailable or blocked by CORS policy / 如果远程服务不可用或被CORS策略阻止
             setError('Failed to connect');

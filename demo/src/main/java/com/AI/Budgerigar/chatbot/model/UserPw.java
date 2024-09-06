@@ -13,6 +13,6 @@ public class UserPw implements Serializable {
 
     private String password;
 
-    // getters and setters
+    private String role;
 
 }

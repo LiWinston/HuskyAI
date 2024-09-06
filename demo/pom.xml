@@ -171,6 +171,12 @@
             <version>0.0.43</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>0.12.3</version>
+        </dependency>
+
 
 
     </dependencies>
