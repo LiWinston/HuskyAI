@@ -1,18 +1,21 @@
 package com.AI.Budgerigar.chatbot.security;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
-import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
-import java.security.Key;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.stereotype.Component;
+
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtTokenUtil {
 
-    private final String secretKey = "your_secret_key"; // 请确保长度足够长，通常至少为 256 位
+    private final String secretKey = RandomStringUtils.randomAlphanumeric(256);
     private final long expirationTime = 604800000; // 7 天
     private final Key key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
@@ -28,7 +31,7 @@ public class JwtTokenUtil {
 
     // 从 JWT 中获取 UUID
     public String getUuidFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
+        Claims claims = Jwts.parser()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
@@ -40,7 +43,7 @@ public class JwtTokenUtil {
     // 验证 JWT 是否有效
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parser().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;

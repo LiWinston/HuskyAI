@@ -200,7 +200,7 @@ textarea:focus {
     box-shadow: 0 2px 6px rgba(31, 46, 51, 0.29);
 }
 
-button {
+.chat-container button {
     display: flex;  /* 使用 Flexbox 布局 */
     align-self: flex-end;
     justify-content: center;  /* 水平居中对齐内容 */
@@ -219,12 +219,12 @@ button {
     box-sizing: border-box;  /* 使内边距和边框计入总高度 */
 }
 
-button:hover {
+.chat-container button:hover {
     background-color: #0056b3;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-button:disabled {
+.chat-container  button:disabled {
     background-color: #b3d7ff;
     cursor: not-allowed;
 }

@@ -35,19 +35,19 @@ CREATE TABLE UidCid (
                         FOREIGN KEY (conversationId) REFERENCES Cid(conversationId) ON DELETE CASCADE
 );
 
--- 初始化插入一些测试数据
-INSERT INTO UserPw (uuid, username, password, role) VALUES
-                                                  ('1111', 'user1', 'password1', 'ADMIN'),
-                                                  ('2222', 'user2', 'password2', 'USER');
+-- -- 初始化插入一些测试数据
+-- INSERT INTO UserPw (uuid, username, password, role) VALUES
+--                                                   ('1111', 'user1', 'password1', 'ADMIN'),
+--                                                   ('2222', 'user2', 'password2', 'USER');
 
-INSERT INTO Cid (conversationId, firstMessage, createdAt, lastMessageAt) VALUES
-                                                                             ('default1_1', 'none', NOW(), NOW()),
-                                                                             ('default1_2', 'none', NOW(), NOW()),
-                                                                             ('default2_1', 'none', NOW(), NOW()),
-                                                                             ('default2_2', 'none', NOW(), NOW());
-
-INSERT INTO UidCid (uuid, conversationId) VALUES
-                                              ('1111', 'default1_1'),
-                                              ('1111', 'default1_2'),
-                                              ('2222', 'default2_1'),
-                                              ('2222', 'default2_2');
+-- INSERT INTO Cid (conversationId, firstMessage, createdAt, lastMessageAt) VALUES
+--                                                                              ('default1_1', 'none', NOW(), NOW()),
+--                                                                              ('default1_2', 'none', NOW(), NOW()),
+--                                                                              ('default2_1', 'none', NOW(), NOW()),
+--                                                                              ('default2_2', 'none', NOW(), NOW());
+--
+-- INSERT INTO UidCid (uuid, conversationId) VALUES
+--                                               ('1111', 'default1_1'),
+--                                               ('1111', 'default1_2'),
+--                                               ('2222', 'default2_1'),
+--                                               ('2222', 'default2_2');

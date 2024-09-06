@@ -59,7 +59,7 @@ function Chat() {
                 params: {uuid: localStorage.getItem('userUUID')}
             });
             setConversations(response.data.data.map(conv => ({
-                id: conv.conversationId, title: conv.firstMessage
+                id: conv.conversationId, title: conv.firstMessage, timestampCreat: conv.createdAt, timestampLast: conv.lastMessageAt
             })));
         } catch (error) {
             console.error('Error fetching conversations:', error);
