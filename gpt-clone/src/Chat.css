@@ -124,14 +124,18 @@
 .divider-line {
     flex: 1;
     height: 1px;
-    background-color: #ccc;
+    /*background-color: #ccc;*/
     margin: 0 10px;
+/*    虚短的分割线*/
+    background-image: linear-gradient(to right, #ccc, #f5f5f7, #ccc);
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
 }
 
 .divider-text {
     padding: 0 10px;
     color: #888;
-    font-size: 12px;
+    font-size: 16px;
 }
 
 

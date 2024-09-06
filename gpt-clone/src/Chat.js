@@ -150,7 +150,7 @@ function Chat() {
             }
 
             if (!selectedConversation) {
-                setSelectedConversation(response.data.data.conversationId);
+                // setSelectedConversation(response.data.data.conversationId);
                 fetchConversations();
             }
         } catch (error) {
