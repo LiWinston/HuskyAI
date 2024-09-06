@@ -50,7 +50,7 @@ function Chat() {
     }, [input]);
 
     useEffect(() => {
-        fetchConversations().then(r => console.log('Conversations fetched:', r));
+        fetchConversations();
     }, []);
 
     const fetchConversations = async () => {
@@ -154,10 +154,10 @@ function Chat() {
                 }
             }
 
-            if (!selectedConversation) {
+
                 // setSelectedConversation(response.data.data.conversationId);
                 fetchConversations();
-            }
+
         } catch (error) {
             console.error('Error sending message:', error);
             setLoading(false);
