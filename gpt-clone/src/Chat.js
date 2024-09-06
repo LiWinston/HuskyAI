@@ -7,6 +7,7 @@ import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
 import VscDarkPlus from "react-syntax-highlighter/src/styles/prism/vsc-dark-plus";
 import {getWindowFromNode} from "@testing-library/dom/dist/helpers";
+import { FaPlus } from 'react-icons/fa'; // 引入加号图标
 
 const CONVERSATION_SUMMARY_GENERATED = "#CVSG##CVSG##CVSG#";
 
@@ -103,6 +104,30 @@ function Chat() {
         }
     };
 
+    // 新增函数用于创建新对话
+    const createNewConversation = async () => {
+        try {
+            const uuid = localStorage.getItem('userUUID');
+            const newConversationId = new Date().getTime().toString(); // 生成新对话ID
+            const newConversation = {
+                id: newConversationId,
+                title: "New Conversation",
+                timestampCreat: new Date(),
+                timestampLast: new Date(),
+            };
+            setConversations([newConversation, ...conversations]);
+            setSelectedConversation(newConversationId);
+            setMessages([{
+                sender: 'system',
+                text: 'This is a new conversation. Start by sending a message!',
+                timestamp: new Date(),
+            }]);
+            await axios.get(`${window.API_BASE_URL}/chat/${uuid}/${newConversationId}`); // 模拟API调用
+        } catch (error) {
+            console.error("Failed to create new conversation", error);
+        }
+    };
+
     // 将输入指针重新定位到输入框
     useEffect(() => {
         if (!loading && textareaRef.current) {
@@ -187,7 +212,13 @@ function Chat() {
 
     return (<div className="chat-interface">
         <div className="conversation-list">
-            <h3>Conversations</h3>
+            {/*<h3>Conversations</h3>*/}
+            <div className="conversation-header">
+                <h3>Conversations</h3>
+                <button className="new-conversation-btn" onClick={createNewConversation}>
+                    <FaPlus/>
+                </button>
+            </div>
             {Array.isArray(conversations) && conversations.map((conv) => (
                 <div
                     key={conv.id}

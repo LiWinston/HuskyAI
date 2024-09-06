@@ -266,6 +266,35 @@ code {
     min-width: 200px;
     max-width: 80%; /* 使用相对宽度以适应窄屏幕 */
 }
+
+
+.conversation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.new-conversation-btn {
+    background-color: #007aff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    width: 40px;  /* 固定宽度，防止缩放时变形 */
+    height: 40px; /* 固定高度，保持圆形比例 */
+}
+
+.new-conversation-btn:hover {
+    background-color: #0056b3;
+}
+
+
+
 /* 移动端适配 */
 @media (max-width: 1079px) {
     .chat-interface {
@@ -305,6 +334,7 @@ code {
         max-height: 200vh; /* 超过2页的消息 */
     }
 
+
     .input-container {
         padding: 10px;
     }
@@ -324,6 +354,8 @@ code {
         bottom: 15px; /* 调整底部间距 */
         min-width: 150px; /* 减小最小宽度 */
     }
+
+
 }
 @media (max-width: 768px) {
     .notification-banner {
@@ -377,6 +409,13 @@ code {
         height: 60px;  /* 增加高度 */
         width: 30px;   /* 减小宽度 */
         box-sizing: border-box;
+    }
+
+    .new-conversation-btn {
+        width: 13px;
+        height: 13px;
+    /*    确保加号正确跟随缩放*/
+        padding: 4px;
     }
 }
 
