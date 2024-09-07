@@ -8,10 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/user")
@@ -26,6 +25,9 @@ public class UserController {
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
+    private static final int MAX_SUGGESTIONS = 3;
+    private static final LevenshteinDistance levenshteinDistance = new LevenshteinDistance();
+
     // 用户注册
     @PostMapping("/register")
     public Result<?> register(@RequestBody Map<String, String> userDetails) {
@@ -36,7 +38,7 @@ public class UserController {
             if (userMapper.getUserByUsername(username) != null) {
                 return Result.error("Username already exists.");
             }
-            String uuid = java.util.UUID.randomUUID().toString();
+            String uuid = UUID.randomUUID().toString();
             String encodedPassword = passwordEncoder.encode(password);
             userMapper.registerUser(uuid, username, encodedPassword);
             return Result.success(null, "User registered successfully.");
@@ -46,6 +48,7 @@ public class UserController {
         }
     }
 
+    // 用户登录
     @PostMapping("/login")
     public Result<?> login(@RequestBody Map<String, String> userDetails) {
         String username = userDetails.get("username");
@@ -55,23 +58,22 @@ public class UserController {
             UserPw user = userMapper.getUserByUsername(username);
             if (user == null) {
                 return Result.error("User does not exist.");
-            }else if(!passwordEncoder.matches(password, user.getPassword())){
+            } else if (!passwordEncoder.matches(password, user.getPassword())) {
                 return Result.error("Incorrect password.");
             }
-            String uuid = user.getUuid();
             String token = jwtTokenUtil.generateToken(user.getUuid());
-            return Result.success(uuid, token);
+            return Result.success(user.getUuid(), token);
         } catch (Exception e) {
             log.error("Login failed.", e);
             return Result.error("Login failed.");
         }
     }
 
+    // 检查用户名可用性
     @GetMapping("/register/checkUsername")
     public Result<?> checkUsername(@RequestParam String username) {
         try {
             if (userMapper.getUserByUsername(username) != null) {
-                // 假设 userMapper 有方法返回最接近的替代用户名
                 List<String> suggestions = generateUsernameSuggestions(username);
                 return Result.error(suggestions, "Username already exists.");
             }
@@ -82,12 +84,52 @@ public class UserController {
         }
     }
 
+    // 生成基于 Levenshtein 距离的最小改动用户名建议
     private List<String> generateUsernameSuggestions(String username) {
-        // 实现生成最接近用户名的算法
-        List<String> suggestions = new ArrayList<>();
-        suggestions.add(username + "123");
-        suggestions.add(username + "_official");
-        suggestions.add(username + "_01");
-        return suggestions;
+        List<String> candidates = new ArrayList<>();
+
+        // Step 1: Generate various candidates
+        candidates.add(username.toLowerCase());
+        candidates.add(username.toUpperCase());
+        candidates.add(capitalizeFirstLetter(username));
+
+        if (!username.contains("_")) {
+            candidates.add(insertUnderscore(username, 1));
+            candidates.add(insertUnderscore(username, username.length() / 2));
+        }
+
+        candidates.add(username + "1");
+        candidates.add(username + "_01");
+        candidates.add(username + "123");
+
+        // Step 2: Ensure suggestions are unique in database
+        List<String> validCandidates = new ArrayList<>();
+        for (String candidate : candidates) {
+            if (userMapper.getUserByUsername(candidate) == null) {
+                validCandidates.add(candidate);
+            }
+        }
+
+        // Step 3: Sort based on Levenshtein Distance
+        validCandidates.sort(Comparator.comparingInt(c -> levenshteinDistance.apply(username, c)));
+
+        // Step 4: Return top N suggestions
+        return validCandidates.subList(0, Math.min(MAX_SUGGESTIONS, validCandidates.size()));
+    }
+
+    // Capitalize first letter
+    private String capitalizeFirstLetter(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
+    }
+
+    // Insert underscore at a specific position
+    private String insertUnderscore(String input, int position) {
+        if (position < 0 || position > input.length()) {
+            return input;
+        }
+        return new StringBuilder(input).insert(position, "_").toString();
     }
 }
