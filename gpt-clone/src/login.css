@@ -1,27 +1,93 @@
-/* 修改 .auth-container 的样式 */
+/* Container styles */
 .auth-container {
     background-color: #ffffff;
-    padding: 10px;
+    padding: 30px;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-
     width: 320px;
-    text-align: center;
+    max-width: 350px;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
-/* 通用输入框样式 */
-.auth-container input {
-    width: 90%; /* 确保输入框宽度相同 */
-    padding: 10px;
+/* Form element styles */
+.auth-container form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* Input styles */
+.auth-container input,
+.password-container {
+    width: 100%;
     margin-bottom: 15px;
+    box-sizing: border-box;
+}
+
+.auth-container input,
+.password-container input {
+    padding: 12px;
     border: 1px solid #ccc;
     border-radius: 10px;
     font-size: 16px;
-    box-sizing: border-box; /* 确保 padding 不影响宽度 */
 }
 
+/* Password container styles */
+/* Password container styles */
+.password-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.password-container input {
+    width: 100%;
+    padding: 12px;
+    padding-right: 40px; /* Make room for the toggle button */
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.password-container .toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-75%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5em;
+    padding: 5px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+}
+
+/* 鼠标悬停时小猴图标变色 */
+.password-container .toggle-password:hover {
+    color: #000;
+}
+
+/* Ensure other inputs match the password input's appearance */
+.auth-container input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+/* Button styles */
 .auth-container .auth-button {
-    width: 90%;
+    width: 100%;
     padding: 12px;
     border: none;
     border-radius: 10px;
@@ -30,54 +96,18 @@
     font-size: 16px;
     cursor: pointer;
     transition: background 0.3s ease;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .auth-container .auth-button:hover {
     background: linear-gradient(135deg, #5477f5, #73a5ff);
 }
 
-/* 针对错误消息的样式 */
+/* Error message styles */
 .auth-container .error-message {
     color: red;
-}
-
-/* 密码容器 */
-.password-container {
-    position: relative;
-    width: calc(100% - 20px); /* 确保密码容器宽度与输入框一致 */
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-}
-
-/* 密码输入框 */
-.password-container input {
-    width: 100%;
-    padding-right: 40px; /* 为小猴图标预留空间 */
-    margin-bottom: 0; /* 清除 margin-bottom 确保上下对齐 */
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    font-size: 16px;
-    box-sizing: border-box;
-}
-
-/* 密码切换按钮：小猴图标 */
-.password-container .toggle-password {
-    position: absolute;
-    right: 10px;
-    top: 50%; /* 保证垂直居中 */
-    transform: translateY(-50%); /* 垂直居中调整 */
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.5em; /* 使用相对单位来适应缩放 */
-    padding: 5px;
-    color: #333;
-}
-
-.password-container .toggle-password:hover {
-    color: #000;
+    margin-top: 10px;
+    text-align: center;
 }
 
 
