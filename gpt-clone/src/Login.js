@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './login.css';
@@ -23,7 +23,7 @@ function Login() {
                     setSuggestions(result.data); // 设置替代用户名
                     setShowSuggestionPopup(true); // 显示气泡提示
                 }
-                setCheckDone(true); // 确保只检查一次
+                // setCheckDone(true); // 若想只检查一次用户名，取消注释 if you want to check username only once after blur, uncomment this line
             } catch (error) {
                 console.error('Username check failed', error);
             }
@@ -31,15 +31,29 @@ function Login() {
     };
 
     const [animationTarget, setAnimationTarget] = useState(null); // 存储当前点击的替代用户名
+    const usernameInputRef = useRef(null); // 引用用户名输入框
     const handleSuggestionClick = (suggestion, index) => {
-        setAnimationTarget(index); // 标记当前点击的用户名
+        const usernameRect = usernameInputRef.current.getBoundingClientRect();
+        const suggestionElement = document.getElementsByClassName('suggestion-item')[index];
+        const suggestionRect = suggestionElement.getBoundingClientRect();
+
+        // 计算飞行动画的相对位移
+        const flyToLeft = usernameRect.left - suggestionRect.left;
+        const flyToTop = usernameRect.top - suggestionRect.top;
+
+        // 动态设置飞行动画的终点
+        suggestionElement.style.setProperty('--fly-to-left', `${flyToLeft}px`);
+        suggestionElement.style.setProperty('--fly-to-top', `${flyToTop}px`);
+
+        setAnimationTarget(index);
         setTimeout(() => {
-            setUsername(suggestion); // 替换用户名
-            setShowSuggestionPopup(false); // 关闭气泡提示
-            setCheckDone(false); // 重置检查状态
-            setAnimationTarget(null); // 动画结束后清除标记
-        }, 1500); // 500ms 与 CSS 动画时长保持一致
+            setUsername(suggestion);
+            setShowSuggestionPopup(false);
+            setCheckDone(false);
+            setAnimationTarget(null);
+        }, 350);
     };
+
 
     const handleLogin = async () => {
         try {
@@ -91,6 +105,7 @@ function Login() {
             <form onSubmit={handleSubmit}>
                 <div className="username-container">
                     <input
+                        ref={usernameInputRef} // 绑定输入框的引用
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -100,6 +115,9 @@ function Login() {
                     />
                     {showSuggestionPopup && (
                         <div className="suggestion-popup">
+                            <span className="close-button"
+                                  onClick={() => setShowSuggestionPopup(false)}>&times;
+                            </span>
                             <p>Username already exists. Try:</p>
                             {suggestions.map((suggestion, index) => (
                                 <div

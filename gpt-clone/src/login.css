@@ -10,6 +10,12 @@
     box-sizing: border-box;
 }
 
+.username-container {
+    position: relative; /* 确保气泡提示相对于这个容器定位 */
+    width: 100%;
+    margin-bottom: 15px;
+}
+
 /* Form element styles */
 .auth-container form {
     display: flex;
@@ -113,7 +119,6 @@
 
 
 
-/* 气泡提示样式 */
 .suggestion-popup {
     position: absolute;
     background-color: white;
@@ -130,29 +135,43 @@
     padding: 5px;
     cursor: pointer;
     font-size: 14px;
+    position: relative;  /* 添加这一行 */
 }
 
 .suggestion-item:hover {
     background-color: #f0f0f0;
 }
 
-/* 飞行动画 */
 @keyframes flyToInput {
     0% {
-        transform: scale(1) translateY(0);
+        transform: translate(0, 0);
         opacity: 1;
     }
     100% {
-        transform: scale(0.1) translateY(-50px);
+        transform: translate(var(--fly-to-left), var(--fly-to-top));
         opacity: 0;
     }
 }
 
 .suggestion-item.clicked {
-    animation: flyToInput 1.5s ease-in-out forwards;
+    animation: flyToInput 0.35s ease-in-out forwards;
+    position: absolute;
+    z-index: 20;  /* 确保动画过程中在其他元素之上 */
 }
 
+/* 新增的关闭按钮样式 */
+.close-button {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    color: #888;
+}
 
+.close-button:hover {
+    color: #333;
+}
 
 .uuid-input-parent {
     display: flex;
