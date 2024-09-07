@@ -162,7 +162,7 @@
 }
 
 .suggestion-item.clicked {
-    animation: flyToInput 0.35s ease-in-out forwards;
+    animation: flyToInput 0.25s ease-in-out forwards;
     position: absolute;
     z-index: 20;  /* 确保动画过程中在其他元素之上 */
 }
