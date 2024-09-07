@@ -7,12 +7,12 @@ function Login() {
     const [isLogin, setIsLogin] = useState(true);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false); // 用于控制密码显示/隐藏
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
 
     const handleLogin = async () => {
         try {
-            // 移除前端哈希加密，直接发送明文密码，确保 HTTPS 加密
             const response = await axios.post(`${window.API_BASE_URL}/user/login`, { username, password });
             const result = response.data;
 
@@ -32,7 +32,6 @@ function Login() {
 
     const handleRegister = async () => {
         try {
-            // 移除前端哈希加密，直接发送明文密码，确保 HTTPS 加密
             const response = await axios.post(`${window.API_BASE_URL}/user/register`, { username, password });
             const result = response.data;
 
@@ -46,7 +45,6 @@ function Login() {
             setErrorMessage('Registration failed due to network error. Please try again.');
         }
     };
-
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -68,16 +66,25 @@ function Login() {
                     placeholder="Username"
                     required
                 />
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    required
-                />
-                <button type="submit">{isLogin ? 'Login' : 'Register'}</button>
+                <div className="password-container">
+                    <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Password"
+                        required
+                    />
+                    <button
+                        type="button"
+                        className="toggle-password"
+                        onClick={() => setShowPassword(!showPassword)}
+                    >
+                        {showPassword ? '🙈' : '👁️'}
+                    </button>
+                </div>
+                <button type="submit" className="auth-button">{isLogin ? 'Login' : 'Register'}</button>
             </form>
-            <button onClick={() => setIsLogin(!isLogin)}>
+            <button onClick={() => setIsLogin(!isLogin)} className="auth-button">
                 {isLogin ? 'Switch to Register' : 'Switch to Login'}
             </button>
             {errorMessage && <p className="error-message">{errorMessage}</p>}
