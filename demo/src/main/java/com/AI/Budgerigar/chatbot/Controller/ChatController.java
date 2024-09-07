@@ -112,4 +112,17 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping("/{uuid}/{conversationId}")
+    public Result<?> deleteConversation(@PathVariable String uuid, @PathVariable String conversationId) {
+        try {
+            // 使用 userService 的 deleteConversation 方法并返回结果
+            return chatSyncService.deleteConversation(uuid, conversationId);
+
+        }
+        catch (Exception e) {
+            // 捕获任何异常并返回错误响应
+            return Result.error(e.getMessage());
+        }
+    }
+
 }

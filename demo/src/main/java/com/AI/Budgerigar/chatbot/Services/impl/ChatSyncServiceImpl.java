@@ -4,6 +4,8 @@ import com.AI.Budgerigar.chatbot.AIUtil.Message;
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAOImpl;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
+import com.AI.Budgerigar.chatbot.mapper.UserMapper;
+import com.AI.Budgerigar.chatbot.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,9 @@ public class ChatSyncServiceImpl implements ChatSyncService {
 
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
+
+    @Autowired
+    private UserMapper userMapper;
 
     // get历史传给前端显示，何尝不是一种同步捏
     @Override
@@ -147,6 +152,43 @@ public class ChatSyncServiceImpl implements ChatSyncService {
         catch (Exception e) {
             log.error("Error occurred while updating MongoDB for conversation ID: {}", conversationId, e);
             throw new RuntimeException("Error updating MongoDB in " + getClass(), e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public Result<?> deleteConversation(String uuid, String conversationId) {
+        try {
+            // 1. MongoDB 删除操作
+            boolean mongoDeleted = chatMessagesMongoDAO.deleteConversationById(conversationId);
+            if (!mongoDeleted) {
+                log.error("Failed to delete conversation in MongoDB for conversation ID: {}", conversationId);
+                return Result.error("MongoDB delete operation failed");
+            }
+
+            // 2. Redis 缓存清理
+            Boolean redisCleared = chatMessagesRedisDAO.clearConversation(conversationId);
+            if (!redisCleared) {
+                log.error("Failed to clear conversation in Redis for conversation ID: {}", conversationId);
+                return Result.error("Redis clear operation failed");
+            }
+
+            // 3. SQL 删除操作
+            int rowsAffected = userMapper.deleteConversationByUuidCid(uuid, conversationId);
+            if (rowsAffected == 0) {
+                log.error("Failed to delete conversation in MySQL for UUID: {}, conversation ID: {}", uuid, conversationId);
+                return Result.error("MySQL delete operation failed");
+            }else{
+                log.info("SQL delete operation success for UUID: {}, conversation ID: {}", uuid, conversationId);
+            }
+
+            // 4. 所有操作成功，返回成功结果
+            return Result.success(null, "Conversation deleted successfully");
+        }
+        catch (Exception e) {
+            // 捕获并记录异常
+            log.error("Error occurred while deleting conversation ID: {} for UUID: {}", conversationId, uuid, e);
+            return Result.error("Error occurred while deleting conversation");
         }
     }
 

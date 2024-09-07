@@ -2,6 +2,23 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.AI.Budgerigar.chatbot.mapper.UserMapper">
+    <delete id="deleteConversationByUuidCid">
+        DELETE FROM cid
+        WHERE conversationId = #{conversationId}
+          AND EXISTS (
+            SELECT 1 FROM uidcid
+            WHERE uuid = #{uuid}
+              AND conversationId = #{conversationId}
+        );
+
+        DELETE FROM uidcid
+        WHERE uuid = #{uuid}
+          AND conversationId = #{conversationId}
+          AND NOT EXISTS (
+            SELECT 1 FROM uidcid
+            WHERE conversationId = #{conversationId}
+        );
+    </delete>
 
     <select id="getUserByUuid" resultType="com.AI.Budgerigar.chatbot.model.UserPw">
         SELECT uuid, username, password, role
@@ -10,7 +27,10 @@
     </select>
 
     <select id="getConversationsByUserUuid" resultType="com.AI.Budgerigar.chatbot.model.Conversation">
-        SELECT c.conversationId, c.firstMessage, c.createdAt AT TIME ZONE 'UTC' AS createdAt, c.lastMessageAt AT TIME ZONE 'UTC' AS lastMessageAt
+        SELECT c.conversationId,
+               c.firstMessage,
+               c.createdAt AT TIME ZONE 'UTC'     AS createdAt,
+               c.lastMessageAt AT TIME ZONE 'UTC' AS lastMessageAt
         FROM cid c
                  INNER JOIN uidcid uc ON c.conversationId = uc.conversationId
         WHERE uc.uuid = #{uuid}

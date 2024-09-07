@@ -14,4 +14,5 @@ public interface ChatMessagesMongoDAO {
 
     void replaceHistoryById(String conversationId, List<Message> newMessages);
 
+    Boolean deleteConversationById(String conversationId);
 }

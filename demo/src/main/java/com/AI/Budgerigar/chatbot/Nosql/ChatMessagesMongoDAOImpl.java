@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -156,6 +157,19 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
             throw e;
         }
 
+    }
+
+    @Override
+    public Boolean deleteConversationById(String conversationId) {
+        try {
+            mongoTemplate.remove(new Query(Criteria.where("_id").is(conversationId)), ChatConversationDTO.class);
+            log.info("Mongo Deleted conversation with ID: {}", conversationId);
+            return true;
+        }
+        catch (Exception e) {
+            log.error("Failed to delete conversation with ID: {}", conversationId, e);
+            return false;
+        }
     }
 
     private String[] convertToArray(Message message) {

@@ -23,4 +23,5 @@ public interface UserMapper {
             @Result(property = "password", column = "password"), @Result(property = "role", column = "role") })
     UserPw getUserByUsername(@Param("username") String username);
 
+    int deleteConversationByUuidCid(String uuid, String conversationId);
 }

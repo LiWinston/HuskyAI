@@ -7,7 +7,8 @@ import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
 import VscDarkPlus from "react-syntax-highlighter/src/styles/prism/vsc-dark-plus";
 import {getWindowFromNode} from "@testing-library/dom/dist/helpers";
-import { FaPlus } from 'react-icons/fa'; // 引入加号图标
+import { FaPlus } from 'react-icons/fa';
+import ConversationItem from "./ConversationItem"; // 引入加号图标
 
 const CONVERSATION_SUMMARY_GENERATED = "#CVSG##CVSG##CVSG#";
 
@@ -220,13 +221,16 @@ function Chat() {
                 </button>
             </div>
             {Array.isArray(conversations) && conversations.map((conv) => (
-                <div
-                    key={conv.id}
-                    className={`conversation-item ${selectedConversation === conv.id ? 'selected' : ''}`}
-                    onClick={() => loadConversation(conv.id)}
-                >
-                    {displayedTitle[conv.id] || conv.title}
-                </div>
+                <ConversationItem
+                    key={conv.id}  // 每个对话的唯一 ID
+                    conversation={conv}  // 传递对话数据
+                    loadConversation={loadConversation}  // 传递加载对话的函数
+                    fetchConversations={fetchConversations}  // 传递刷新对话列表的函数
+                    selectedConversation={selectedConversation}  // 传递当前选中的对话 ID
+                    setSelectedConversation={setSelectedConversation}  // 传递设置对话状态的函数
+                    setMessages={setMessages}  // 传递设置消息状态的函数
+                    setNotification={setNotification}  // 传递设置通知状态的函数
+                />
             ))}
         </div>
         <div className="chat-container">

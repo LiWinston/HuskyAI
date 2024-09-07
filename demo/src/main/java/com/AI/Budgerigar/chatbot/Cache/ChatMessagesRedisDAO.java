@@ -89,14 +89,16 @@ public class ChatMessagesRedisDAO {
     }
 
     // 清除整个对话历史
-    public void clearConversation(String conversationId) {
+    public Boolean clearConversation(String conversationId) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         try {
             redisTemplate.delete(key);
-            log.info("Cleared conversation history for {}", conversationId);
+            log.info("Redis Cleared conversation history for conversationId: {}", conversationId);
+            return true; // 操作成功，返回true
         }
         catch (DataAccessException e) {
-            log.error("Failed to clear conversation history for {}", conversationId, e);
+            log.error("Failed to clear conversation history for conversationId: {}", conversationId, e);
+            return false; // 操作失败，返回false
         }
     }
 
