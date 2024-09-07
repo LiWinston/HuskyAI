@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { FaEllipsisV } from 'react-icons/fa';  // 选项图标
-import './Chat.css';  // 假设样式定义在此文件中
+import { FaEllipsisV } from 'react-icons/fa';
+import './Chat.css';
 
 const ConversationItem = ({
                               conversation,
                               loadConversation,
                               fetchConversations,
+                              selectedConversation, // 新增的 prop，用于检测当前选中的对话
                               setSelectedConversation,
                               setMessages,
                               setNotification
@@ -17,39 +18,36 @@ const ConversationItem = ({
         const uuid = localStorage.getItem('userUUID');
         try {
             await axios.delete(`${window.API_BASE_URL}/chat/${uuid}/${conversation.id}`);
-            fetchConversations(); // 重新获取对话列表
-
-            // 清空当前对话显示，并弹出通知框
+            fetchConversations();
             setSelectedConversation(null);
             setMessages([]);
             setNotification("Conversation deleted successfully");
-
-            // 设置通知框显示时间，2秒后自动消失
             setTimeout(() => setNotification(null), 2000);
         } catch (error) {
             console.error('Failed to delete conversation', error);
         }
     };
 
+    const toggleOptionsMenu = (e) => {
+        e.stopPropagation(); // 防止点击事件传播到父元素
+        setShowOptions(prev => !prev);
+    };
 
     return (
         <div
-            className="conversation-item"
-            onMouseEnter={() => setShowOptions(true)}
-            onMouseLeave={() => setShowOptions(false)}
+            className={`conversation-item ${selectedConversation === conversation.id ? 'selected' : ''}`}  // 根据是否选中设置样式
+            onClick={() => setSelectedConversation(conversation.id)}  // 点击选中对话并更新选中状态
         >
-            <div onClick={() => loadConversation(conversation.id)}>
+            <div className="conversation-content" onClick={() => loadConversation(conversation.id)}>
                 {conversation.title}
             </div>
+            <FaEllipsisV className="options-icon" onClick={toggleOptionsMenu} />
             {showOptions && (
-                <div className="conversation-options">
-                    <FaEllipsisV className="options-icon" />
-                    <div className="options-menu">
-                        <ul>
-                            <li onClick={handleDelete}>Delete</li>
-                            <li> Share</li>
-                        </ul>
-                    </div>
+                <div className="options-menu" onClick={(e) => e.stopPropagation()}>
+                    <ul>
+                        <li onClick={handleDelete}>Delete</li>
+                        <li>Share</li>
+                    </ul>
                 </div>
             )}
         </div>
