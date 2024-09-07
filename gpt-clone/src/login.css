@@ -9,16 +9,17 @@
 }
 
 .auth-container input {
-    width: 100%;
+    width: 90%; /* 从 100% 减小到 90% */
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #ccc;
     border-radius: 10px;
     font-size: 16px;
+    box-sizing: border-box; /* 确保 padding 不影响宽度 */
 }
 
 .auth-container button {
-    width: 100%;
+    width: 90%; /* 保证按钮与输入框同样宽度 */
     padding: 12px;
     border: none;
     border-radius: 10px;

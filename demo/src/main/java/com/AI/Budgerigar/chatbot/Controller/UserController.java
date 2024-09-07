@@ -4,6 +4,7 @@ import com.AI.Budgerigar.chatbot.mapper.UserMapper;
 import com.AI.Budgerigar.chatbot.model.UserPw;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.AI.Budgerigar.chatbot.security.JwtTokenUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
+@Slf4j
 public class UserController {
 
     @Autowired
@@ -40,6 +42,7 @@ public class UserController {
             userMapper.registerUser(uuid, username, encodedPassword);
             return Result.success(null, "User registered successfully.");
         } catch (Exception e) {
+            log.error("User registration failed.", e);
             return Result.error("User registration failed.");
         }
     }
@@ -60,6 +63,7 @@ public class UserController {
             String token = jwtTokenUtil.generateToken(user.getUuid());
             return Result.success(uuid, token);
         } catch (Exception e) {
+            log.error("Login failed.", e);
             return Result.error("Login failed.");
         }
     }
