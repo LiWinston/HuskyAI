@@ -176,9 +176,11 @@ public class ChatSyncServiceImpl implements ChatSyncService {
             // 3. SQL 删除操作
             int rowsAffected = userMapper.deleteConversationByUuidCid(uuid, conversationId);
             if (rowsAffected == 0) {
-                log.error("Failed to delete conversation in MySQL for UUID: {}, conversation ID: {}", uuid, conversationId);
+                log.error("Failed to delete conversation in MySQL for UUID: {}, conversation ID: {}", uuid,
+                        conversationId);
                 return Result.error("MySQL delete operation failed");
-            }else{
+            }
+            else {
                 log.info("SQL delete operation success for UUID: {}, conversation ID: {}", uuid, conversationId);
             }
 

@@ -24,4 +24,5 @@ public interface UserMapper {
     UserPw getUserByUsername(@Param("username") String username);
 
     int deleteConversationByUuidCid(String uuid, String conversationId);
+
 }

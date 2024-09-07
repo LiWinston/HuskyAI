@@ -57,10 +57,37 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     padding: 10px;
     z-index: 100;
+    opacity: 0; /* 初始状态为隐藏 */
+    visibility: hidden; /* 避免占据布局空间 */
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 使用 cubic-bezier 代替 ease-in-out */
 }
 
-.conversation-item:hover .options-menu {
-    /*display: none; !* 禁用悬停时显示菜单的效果 *!*/
+.options-menu.show {
+    opacity: 1; /* 当菜单显示时，设置为完全不透明 */
+    visibility: visible; /* 确保显示 */
+}
+/*.conversation-item:hover .options-menu {*/
+/*    !*display: none; !* 禁用悬停时显示菜单的效果 *!*!*/
+/*}*/
+
+.options-icon {
+    display: none; /* 默认情况下隐藏 */
+    cursor: pointer;
+    width: 14px; /* 固定宽度 */
+    height: 14px; /* 固定高度 */
+    align-items: center;
+    justify-content: center; /* 居中对齐 */
+    margin-left: 10px; /* 留出一些间距 */
+    color: rgba(29, 29, 31, 0.53); /* 初始颜色 */
+    flex-shrink: 0; /* 确保按钮不缩小 */
+    transition: color 0.18s ease; /*加动态变色*/
+}
+.conversation-item:hover .options-icon {
+    display: flex; /* 当鼠标悬停在 .conversation-item 上时显示图标 */
+}
+
+.options-icon:hover {
+    color: #1d1d1f; /* 黑色图标 */
 }
 
 /* 强制菜单的文字为黑色 */

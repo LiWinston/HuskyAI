@@ -100,7 +100,7 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
                 }
                 else {
                     // 错误: 消息结构无效
-                    log.error("Invalid message structure for conversation ID: " + conversationId);
+                    log.error("MongoDB_Get_History:Invalid history - {}. Returning empty list.", conversationId);
                     return new ArrayList<>(); // 返回一个可变的空列表
                 }
             }

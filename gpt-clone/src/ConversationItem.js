@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaEllipsisV } from 'react-icons/fa';
 import './Chat.css';
@@ -7,12 +7,27 @@ const ConversationItem = ({
                               conversation,
                               loadConversation,
                               fetchConversations,
-                              selectedConversation, // 新增的 prop，用于检测当前选中的对话
+                              selectedConversation, // 当前选中的对话
                               setSelectedConversation,
                               setMessages,
                               setNotification
                           }) => {
     const [showOptions, setShowOptions] = useState(false);
+
+    // 监听全局点击事件以关闭菜单
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!e.target.closest('.options-menu') && !e.target.closest('.options-icon')) {
+                setShowOptions(false);
+            }
+        };
+        window.addEventListener('click', handleClickOutside);
+
+        // 清理事件监听器
+        return () => {
+            window.removeEventListener('click', handleClickOutside);
+        };
+    }, []);
 
     const handleDelete = async () => {
         const uuid = localStorage.getItem('userUUID');
@@ -29,27 +44,28 @@ const ConversationItem = ({
     };
 
     const toggleOptionsMenu = (e) => {
-        e.stopPropagation(); // 防止点击事件传播到父元素
+        e.stopPropagation(); // 防止事件传播到父元素
         setShowOptions(prev => !prev);
     };
 
     return (
         <div
-            className={`conversation-item ${selectedConversation === conversation.id ? 'selected' : ''}`}  // 根据是否选中设置样式
-            onClick={() => setSelectedConversation(conversation.id)}  // 点击选中对话并更新选中状态
+            className={`conversation-item ${selectedConversation === conversation.id ? 'selected' : ''}`}
+            onClick={() => {
+                setSelectedConversation(conversation.id);
+                loadConversation(conversation.id);
+            }}  // 将 onClick 绑定到整个对话项
         >
-            <div className="conversation-content" onClick={() => loadConversation(conversation.id)}>
+            <div className="conversation-content">
                 {conversation.title}
             </div>
-            <FaEllipsisV className="options-icon" onClick={toggleOptionsMenu} />
-            {showOptions && (
-                <div className="options-menu" onClick={(e) => e.stopPropagation()}>
-                    <ul>
-                        <li onClick={handleDelete}>Delete</li>
-                        <li>Share</li>
-                    </ul>
-                </div>
-            )}
+            <FaEllipsisV className="options-icon" onClick={toggleOptionsMenu}/> {/* 阻止点击事件传播 */}
+            <div className={`options-menu ${showOptions ? 'show' : ''}`} onClick={(e) => e.stopPropagation()}>
+                <ul>
+                    <li onClick={handleDelete}>Delete</li>
+                    <li>Share</li>
+                </ul>
+            </div>
         </div>
     );
 };
