@@ -25,6 +25,7 @@ function Login() {
                     setSuggestions(result.data); // 设置替代用户名
                     setShowSuggestionPopup(true); // 显示气泡提示
                 }
+                setCheckDone(true); // if you want to check username only once after blur, uncomment this line and use "if (!isLogin && !checkDone) {"
             } catch (error) {
                 console.error('Username check failed', error);
             } finally {
@@ -127,11 +128,8 @@ function Login() {
                             {suggestions.map((suggestion, index) => (
                                 <div
                                     key={index}
-                                    className="suggestion-item"
-                                    onClick={() => {
-                                        setUsername(suggestion);
-                                        setShowSuggestionPopup(false);
-                                    }}
+                                    className={`suggestion-item ${animationTarget === index ? 'clicked' : ''}`}
+                                    onClick={() => handleSuggestionClick(suggestion, index)}
                                 >
                                     {suggestion}
                                 </div>
