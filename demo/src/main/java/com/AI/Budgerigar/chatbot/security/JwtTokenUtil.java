@@ -16,26 +16,24 @@ import java.util.Date;
 public class JwtTokenUtil {
 
     private final String secretKey = RandomStringUtils.randomAlphanumeric(256);
+
     private final long expirationTime = 604800000; // 7 天
+
     private final Key key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
     // 生成 JWT
     public String generateToken(String uuid) {
         return Jwts.builder()
-                .setSubject(uuid)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-                .signWith(key, SignatureAlgorithm.HS512)
-                .compact();
+            .setSubject(uuid)
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+            .signWith(key, SignatureAlgorithm.HS512)
+            .compact();
     }
 
     // 从 JWT 中获取 UUID
     public String getUuidFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        Claims claims = Jwts.parser().setSigningKey(key).build().parseClaimsJws(token).getBody();
 
         return claims.getSubject();
     }
@@ -45,8 +43,10 @@ public class JwtTokenUtil {
         try {
             Jwts.parser().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (JwtException | IllegalArgumentException e) {
+        }
+        catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
+
 }

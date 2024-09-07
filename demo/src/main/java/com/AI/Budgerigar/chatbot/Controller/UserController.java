@@ -26,6 +26,7 @@ public class UserController {
     private JwtTokenUtil jwtTokenUtil;
 
     private static final int MAX_SUGGESTIONS = 3;
+
     private static final LevenshteinDistance levenshteinDistance = new LevenshteinDistance();
 
     // 用户注册
@@ -42,7 +43,8 @@ public class UserController {
             String encodedPassword = passwordEncoder.encode(password);
             userMapper.registerUser(uuid, username, encodedPassword);
             return Result.success(null, "User registered successfully.");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("User registration failed.", e);
             return Result.error("User registration failed.");
         }
@@ -58,12 +60,14 @@ public class UserController {
             UserPw user = userMapper.getUserByUsername(username);
             if (user == null) {
                 return Result.error("User does not exist.");
-            } else if (!passwordEncoder.matches(password, user.getPassword())) {
+            }
+            else if (!passwordEncoder.matches(password, user.getPassword())) {
                 return Result.error("Incorrect password.");
             }
             String token = jwtTokenUtil.generateToken(user.getUuid());
             return Result.success(user.getUuid(), token);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Login failed.", e);
             return Result.error("Login failed.");
         }
@@ -78,7 +82,8 @@ public class UserController {
                 return Result.error(suggestions, "Username already exists.");
             }
             return Result.success(null, "Username is available.");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Username check failed.", e);
             return Result.error("Username check failed.");
         }
@@ -132,4 +137,5 @@ public class UserController {
         }
         return new StringBuilder(input).insert(position, "_").toString();
     }
+
 }

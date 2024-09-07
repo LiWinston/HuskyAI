@@ -12,10 +12,19 @@ function Login() {
     const [suggestions, setSuggestions] = useState([]); // 存储替代用户名
     const [showSuggestionPopup, setShowSuggestionPopup] = useState(false); // 控制气泡提示的显示
     const [checkDone, setCheckDone] = useState(false); // 确保只检查一次用户名
+    const [isCheckingUsername, setIsCheckingUsername] = useState(false); // 用户名检查状态
     const navigate = useNavigate();
 
     const handleUsernameBlur = async () => {
-        if (!isLogin && !checkDone) {
+        function isBlank(username) {
+            return /^\s*$/.test(username);
+        }
+
+        if (!isLogin) {
+            if(username === '' || username === null || isBlank(username)) {
+                return;
+            }
+            setIsCheckingUsername(true); // 开始检查，显示加载图标
             try {
                 const response = await axios.get(`${window.API_BASE_URL}/user/register/checkUsername`, { params: { username } });
                 const result = response.data;
@@ -23,13 +32,13 @@ function Login() {
                     setSuggestions(result.data); // 设置替代用户名
                     setShowSuggestionPopup(true); // 显示气泡提示
                 }
-                // setCheckDone(true); // 若想只检查一次用户名，取消注释 if you want to check username only once after blur, uncomment this line
             } catch (error) {
                 console.error('Username check failed', error);
+            } finally {
+                setIsCheckingUsername(false); // 检查完成，隐藏加载图标
             }
         }
     };
-
     const [animationTarget, setAnimationTarget] = useState(null); // 存储当前点击的替代用户名
     const usernameInputRef = useRef(null); // 引用用户名输入框
     const handleSuggestionClick = (suggestion, index) => {
@@ -113,6 +122,9 @@ function Login() {
                         placeholder="Username"
                         required
                     />
+                    {isCheckingUsername && (
+                        <div className="loading-spinner">⏳</div> // 显示加载中的图标
+                    )}
                     {showSuggestionPopup && (
                         <div className="suggestion-popup">
                             <span className="close-button"
@@ -122,8 +134,11 @@ function Login() {
                             {suggestions.map((suggestion, index) => (
                                 <div
                                     key={index}
-                                    className={`suggestion-item ${animationTarget === index ? 'clicked' : ''}`}
-                                    onClick={() => handleSuggestionClick(suggestion, index)}
+                                    className="suggestion-item"
+                                    onClick={() => {
+                                        setUsername(suggestion);
+                                        setShowSuggestionPopup(false);
+                                    }}
                                 >
                                     {suggestion}
                                 </div>

@@ -118,9 +118,17 @@
 
 
 
-
+.loading-spinner {
+    position: absolute;
+    right: 10px; /* 根据需要调整位置 */
+    top: 40%;
+    transform: translateY(-50%);
+    font-size: 20px; /* 图标大小 */
+}
 .suggestion-popup {
     position: absolute;
+    top: 40px;
+    left: 10px;
     background-color: white;
     border: 1px solid #ccc;
     border-radius: 5px;
