@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import {BrowserRouter, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
 import Chat from './Chat';
 import Login from './Login';
 import axios from 'axios';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
+import {AnimatePresence} from "framer-motion";
+import {motion} from "framer-motion";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const LOCAL_URLS = ['http://localhost:8090/health'];
@@ -71,14 +73,107 @@ function LoadingContainer() {
     return <div>Loading: {statusMessage}</div>;
 }
 
+function AnimatedRoutes() {
+    const location = useLocation(); // 获取当前的路由信息
+
+    return (
+        <AnimatePresence exitBeforeEnter>
+            <Routes location={location} key={location.pathname}>
+                <Route
+                    path="/"
+                    element={
+                        <motion.div
+                            initial="initial"
+                            animate="in"
+                            exit="out"
+                            variants={pageVariants}
+                            transition={pageTransition}
+                        >
+                            <LoadingContainer />
+                        </motion.div>
+                    }
+                />
+                <Route
+                    path="/login"
+                    element={
+                        <motion.div
+                            initial="initial"
+                            animate="in"
+                            exit="out"
+                            variants={loginVariants}
+                            transition={loginTransition}
+                        >
+                            <Login />
+                        </motion.div>
+                    }
+                />
+                <Route
+                    path="/chat"
+                    element={
+                        <motion.div
+                            initial="initial"
+                            animate="in"
+                            exit="out"
+                            variants={pageVariants}
+                            transition={pageTransition}
+                        >
+                            <Chat />
+                        </motion.div>
+                    }
+                />
+            </Routes>
+        </AnimatePresence>
+    );
+}
+
+// 在 root 渲染中调用 AnimatedRoutes
 root.render(
     <BrowserRouter>
-        <Routes>
-            <Route path="/" element={<LoadingContainer />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/chat" element={<Chat />} />
-        </Routes>
+        <AnimatedRoutes />
     </BrowserRouter>
 );
-
 reportWebVitals();
+// 定义动画的参数
+const pageVariants = {
+    initial: {
+        opacity: 0,
+        x: '-100vw', // 页面从左侧进入
+    },
+    in: {
+        opacity: 1,
+        x: 0, // 页面进入到正常位置
+    },
+    out: {
+        opacity: 0,
+        x: '100vw', // 页面向右侧退出
+    }
+};
+
+const pageTransition = {
+    type: 'tween',
+    ease: [0.65, 0, 0.35, 1], // 自定义贝塞尔曲线
+    duration: 0.21,
+};
+
+//login 独有的缩放动画 从大到设定大小
+const loginVariants = {
+    initial: {
+        opacity: 0,
+        scale: 8,
+    },
+    in: {
+        opacity: 1,
+        scale: 1,
+    },
+    out: {
+        opacity: 0,
+        scale: 0.3,
+    }
+};
+
+const loginTransition = {
+    type: 'tween',
+    ease: 'anticipate',
+    duration: 0.35,
+};
+
