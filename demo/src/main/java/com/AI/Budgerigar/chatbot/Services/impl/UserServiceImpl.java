@@ -137,7 +137,7 @@ public class UserServiceImpl implements userService {
             // 从数据库中获取用户信息
             UserPw user = userMapper.getUserByUuid(uuid);
             if (user == null) {
-                return Result.error("User not found.");
+                return Result.error("Not registered or link expired.");
             }
 
             // 获取管理员信息并检查是否已经验证
