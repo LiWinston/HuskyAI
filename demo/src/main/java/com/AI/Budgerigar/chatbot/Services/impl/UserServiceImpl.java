@@ -153,7 +153,7 @@ public class UserServiceImpl implements userService {
             userMapper.confirmAdmin(user.getUuid());
             userMapper.promoteToAdminByUuid(user.getUuid());
             adminWaitingListRedisDAO.removeToken(token);
-            return Result.success(null, "Admin registration confirmed.");
+            return Result.success(user.getUsername(), "Admin registration confirmed.");
         }
         catch (Exception e) {
             log.error("Admin registration confirmation failed.", e);

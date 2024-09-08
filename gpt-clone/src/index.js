@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import {BrowserRouter, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
 import Chat from './Chat';
 import Login from './Login';
+import Confirm from './Confirm';
 import axios from 'axios';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
@@ -105,6 +106,21 @@ function AnimatedRoutes() {
                             transition={loginTransition}
                         >
                             <Login />
+                        </motion.div>
+                    }
+                />
+                {/*AdminRegistrationConfirm*/}
+                <Route
+                    path="/user/register/confirm/:token"
+                    element={
+                        <motion.div
+                            initial="initial"
+                            animate="in"
+                            exit="out"
+                            variants={pageVariants}
+                            transition={pageTransition}
+                        >
+                            <Confirm />
                         </motion.div>
                     }
                 />
