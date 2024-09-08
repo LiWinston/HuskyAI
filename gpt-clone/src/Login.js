@@ -83,28 +83,28 @@ function Login() {
                 setErrorMessage(result.msg || 'Login failed. Please try again.');
             }
         } catch (error) {
-            setErrorMessage('Login failed due to network error. Please try again.');
+            setErrorMessage(error);
         }
     };
 
     const handleRegister = async () => {
         try {
-            const requestData = { username, password };
+            const requestData = { username, password, isAdmin, adminEmail };  // 新增管理员邮箱信息
             if (isAdmin) {
+                requestData.isAdmin = true;  // 如果是管理员，则增加管理员标识
                 requestData.adminEmail = adminEmail;  // 如果是管理员，则增加邮箱信息
+            }else{
+                requestData.isAdmin = false;  // 如果不是管理员，则增加管理员标识
             }
 
             const response = await axios.post(`${window.API_BASE_URL}/user/register`, requestData);
             const result = response.data;
 
             if (result.code === 1) {
-                alert('Registration successful. Please log in.');
+                alert(result.msg);
                 setIsLogin(true);
-            } else if (isAdmin) {
-                // 显示等待管理员确认的弹窗
-                alert('Please confirm your admin registration through the email.');
-            } else {
-                setErrorMessage(result.msg || 'Registration failed. Please try again.');
+            }  else {
+                setErrorMessage(result.msg || 'Unknown err, Registration failed. Please try again.');
             }
         } catch (error) {
             setErrorMessage('Registration failed due to network error. Please try again.');
