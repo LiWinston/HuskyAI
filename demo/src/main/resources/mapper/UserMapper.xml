@@ -21,7 +21,7 @@
     </delete>
 
     <select id="getUserByUuid" resultType="com.AI.Budgerigar.chatbot.model.UserPw">
-        SELECT uuid, username, password, role
+        SELECT *
         FROM userpw
         WHERE uuid = #{uuid}
     </select>

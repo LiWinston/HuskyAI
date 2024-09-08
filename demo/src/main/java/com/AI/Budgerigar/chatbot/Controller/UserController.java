@@ -6,6 +6,7 @@ import com.AI.Budgerigar.chatbot.mapper.UserMapper;
 import com.AI.Budgerigar.chatbot.model.UserPw;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.AI.Budgerigar.chatbot.security.JwtTokenUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,8 +41,13 @@ public class UserController {
 
     // 用户注册
     @PostMapping("/register")
-    public Result<?> register(@RequestBody UserRegisterDTO userRegisterDTO) {
-        return userService.register(userRegisterDTO);
+    public Result<?> register(HttpServletRequest request, @RequestBody UserRegisterDTO userRegisterDTO) {
+        return userService.register(request, userRegisterDTO);
+    }
+
+    @GetMapping("/register/confirm/{token}")
+    public Result<?> confirmAdmin(@PathVariable("token") String token) {
+        return userService.confirmAdmin(token);
     }
 
     // 用户登录
