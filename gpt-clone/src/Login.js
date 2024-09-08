@@ -15,6 +15,9 @@ function Login() {
     const [isCheckingUsername, setIsCheckingUsername] = useState(false); // 用户名检查状态
     const navigate = useNavigate();
 
+    const [isAdmin, setIsAdmin] = useState(false);  // 新增状态: 是否为管理员
+    const [adminEmail, setAdminEmail] = useState('');  // 新增状态: 管理员邮箱
+
     const handleUsernameBlur = async () => {
         function isBlank(username) {
             return /^\s*$/.test(username);
@@ -86,12 +89,20 @@ function Login() {
 
     const handleRegister = async () => {
         try {
-            const response = await axios.post(`${window.API_BASE_URL}/user/register`, { username, password });
+            const requestData = { username, password };
+            if (isAdmin) {
+                requestData.adminEmail = adminEmail;  // 如果是管理员，则增加邮箱信息
+            }
+
+            const response = await axios.post(`${window.API_BASE_URL}/user/register`, requestData);
             const result = response.data;
 
             if (result.code === 1) {
                 alert('Registration successful. Please log in.');
                 setIsLogin(true);
+            } else if (isAdmin) {
+                // 显示等待管理员确认的弹窗
+                alert('Please confirm your admin registration through the email.');
             } else {
                 setErrorMessage(result.msg || 'Registration failed. Please try again.');
             }
@@ -160,6 +171,31 @@ function Login() {
                         {showPassword ? '🙈' : '👁️'}
                     </button>
                 </div>
+                {!isLogin && (
+                    <>
+                        <div className="admin-checkbox">
+                            <label>
+                                As admin
+                            </label>
+                            <input
+                                type="checkbox"
+                                checked={isAdmin}
+                                onChange={(e) => setIsAdmin(e.target.checked)}
+                            />
+                        </div>
+                        {isAdmin && (
+                            <div className="admin-email-container">
+                                <input
+                                    type="email"
+                                    value={adminEmail}
+                                    onChange={(e) => setAdminEmail(e.target.value)}
+                                    placeholder="Admin Email"
+                                    required
+                                />
+                            </div>
+                        )}
+                    </>
+                )}
                 <button type="submit" className="auth-button">{isLogin ? 'Login' : 'Register'}</button>
             </form>
             <button onClick={() => setIsLogin(!isLogin)} className="auth-button">
