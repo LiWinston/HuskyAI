@@ -51,13 +51,13 @@ const ConversationItem = ({
     const handleShare = async () => {
         const uuid = localStorage.getItem('userUUID');
 
-        // 如果当前对话已经被选中且 messages 已经存在，直接使用它
-        if (selectedConversation === conversation.id && messages.length > 0) {
-            setShareMessages(messages);  // 直接复用当前的消息
-            setSharedCid(conversation.id);  // 设置分享的对话 ID
-            openShareModal(conversation.id);  // 打开分享 modal
-            return;
-        }
+        // // 如果当前对话已经被选中且 messages 已经存在，直接使用它
+        // if (selectedConversation === conversation.id && messages.length > 0) {
+        //     setShareMessages(messages);  // 直接复用当前的消息
+        //     setSharedCid(conversation.id);  // 设置分享的对话 ID
+        //     openShareModal(conversation.id);  // 打开分享 modal
+        //     return;
+        // }
 
         // 否则，发起请求获取历史消息
         try {
