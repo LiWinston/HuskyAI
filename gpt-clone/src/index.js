@@ -8,6 +8,7 @@ import './index.css';
 import reportWebVitals from './reportWebVitals';
 import {AnimatePresence} from "framer-motion";
 import {motion} from "framer-motion";
+import SharePage from "./SharePage";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const LOCAL_URLS = ['http://localhost:8090/health'];
@@ -120,6 +121,10 @@ function AnimatedRoutes() {
                             <Chat />
                         </motion.div>
                     }
+                />
+                <Route
+                    path="/chat/share/:shareCode"
+                    element={<SharePage />}  // 修正为 element 属性，渲染 SharePage 组件
                 />
             </Routes>
         </AnimatePresence>

@@ -1,0 +1,142 @@
+.share-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f9;
+    padding: 0;
+}
+
+.share-page__username-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #007aff;
+    color: white;
+}
+
+.share-page__export-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.share-page__button {
+    padding: 10px 20px;
+    background-color: #007aff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.share-page__button:hover {
+    background-color: #005bb5;
+}
+
+.share-page__chat-window {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff; /* 设置聊天窗口背景为白色 */
+    border-radius: 10px; /* 添加圆角 */
+    padding: 30px; /* 增加内边距 */
+}
+
+.share-page__message-container {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0);
+    margin-bottom: 30px; /* 增加消息之间的间距 */
+}
+
+
+.code-block {
+    background-color: rgba(245, 245, 245, 0); /* 设置代码块背景颜色 */
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px; /* 确保代码块与消息块有间距 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: #f5f5f5; /* 设置代码块背景颜色 */
+}
+
+
+.share-page__message--user {
+    align-self: flex-end;
+    text-align: right;
+    background-color: #f0f8ff;
+    border-top-right-radius: 0; /* 设置用户消息块的右上角为直角 */
+}
+
+.share-page__message--assistant {
+    align-self: flex-start;
+    text-align: left;
+    background-color: #fff8dc;
+    border-top-left-radius: 0; /* 去除助手消息的左上角圆角 */
+}
+
+.share-page__message-content {
+    flex: 1;
+    position: relative;
+}
+
+.share-page__avatar {
+    margin-right: 10px;
+}
+
+.share-page__avatar img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 添加头像阴影 */
+}
+
+.share-page__timestamp {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+}
+
+.copy-icon {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: #007aff;
+    display: none;
+    opacity: 0; /* 默认隐藏复制图标 */
+    transition: opacity 0.3s ease; /* 添加过渡效果 */
+}
+
+.code-block:hover .copy-icon,
+.share-page__message-container:hover .copy-icon {
+    display: block;
+    opacity: 1; /* 鼠标悬停时显示复制图标 */
+}
+
+.copy-notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    background-color: #4CAF50; /* 修改通知背景颜色 */
+    color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    animation: fadeOut 1.5s ease-in-out;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}

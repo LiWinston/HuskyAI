@@ -11,7 +11,7 @@ function App() {
         {/*<header className="App-header">*/}
         {/*  <h1>GPT Clone Chat</h1>*/}
         {/*</header>*/}
-        <Chat />
+        {/*<Chat />*/}
       </div>
   );
 }

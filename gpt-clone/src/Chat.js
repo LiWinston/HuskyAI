@@ -24,6 +24,10 @@ function Chat() {
     const [textareaHeight, setTextareaHeight] = useState('auto');
     const textareaRef = useRef(null);
     const [displayedTitle, setDisplayedTitle] = useState({});
+    const [showShareModal, setShowShareModal] = useState(false); // 控制分享弹窗
+    const [selectedMessages, setSelectedMessages] = useState([]); // 选择分享的消息
+    const [shareMessages, setShareMessages] = useState([]); // 存储分享的消息
+    const [sharedCid, setSharedCid] = useState(null);
 
     const handleInputChange = (event) => {
         const text = event.target.value;
@@ -129,6 +133,45 @@ function Chat() {
         }
     };
 
+    const openShareModal = async (conversationId) => {
+        try {
+            // const uuid = localStorage.getItem('userUUID');
+            // const response = await axios.get(`${window.API_BASE_URL}/chat/${uuid}/${conversationId}`);
+            // setShareMessages(response.data.data);  // 设置分享消息
+            setShowShareModal(true);  // 显示分享 modal
+        } catch (error) {
+            console.error('Error syncing conversation history', error);
+        }
+    };
+
+
+    const handleSelectMessage = (messageId) => {
+        setSelectedMessages(prev => {
+            if (prev.includes(messageId)) {
+                return prev.filter(id => id !== messageId); // 取消选择
+            } else {
+                return [...prev, messageId];  // 添加选择
+            }
+        });
+    };
+
+    const handleShareConfirm = async () => {
+        try {
+            const uuid = localStorage.getItem('userUUID');
+            const response = await axios.post(`${window.API_BASE_URL}/chat/share`, {
+                uuid,
+                conversationId: sharedCid,
+                messageIndexes: selectedMessages
+            });
+            const shareLink = window.location.origin + '/chat/share/' + response.data.data;
+            setShowShareModal(false);  // 关闭分享弹窗
+            alert(`Share link generated: ${shareLink}`);  // 显示分享链接
+        } catch (error) {
+            console.error('Error sharing conversation', error);
+        }
+    };
+
+
     // 将输入指针重新定位到输入框
     useEffect(() => {
         if (!loading && textareaRef.current) {
@@ -224,15 +267,49 @@ function Chat() {
                 <ConversationItem
                     key={conv.id}  // 每个对话的唯一 ID
                     conversation={conv}  // 传递对话数据
+                    messages={messages}  // 传递消息数据
                     loadConversation={loadConversation}  // 传递加载对话的函数
                     fetchConversations={fetchConversations}  // 传递刷新对话列表的函数
                     selectedConversation={selectedConversation}  // 传递当前选中的对话 ID
                     setSelectedConversation={setSelectedConversation}  // 传递设置对话状态的函数
                     setMessages={setMessages}  // 传递设置消息状态的函数
                     setNotification={setNotification}  // 传递设置通知状态的函数
+                    openShareModal={openShareModal}  // 传递打开分享弹窗的函数
+                    setShareMessages={setShareMessages}  // 传递设置分享消息状态的函数
+                    setSharedCid={setSharedCid}  // 传递设置分享对话 ID 的函数
                 />
             ))}
         </div>
+
+        {/* 分享弹窗 */}
+        {showShareModal && (
+            <div className="share-modal">
+                <h3>Select messages to share</h3>
+                <div className="message-list">
+                    {shareMessages && shareMessages.length > 0 ? (
+                        shareMessages.map((msg, index) => (
+                            <div key={index}>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedMessages.includes(index)}
+                                    onChange={() => handleSelectMessage(index)}
+                                />
+                                <span>{msg.content || msg.text}</span>
+                                {/* Fix for different message formats */
+                                // msg.content for GetResponse
+                                // msg.text for current messages in frontend
+                                }
+                            </div>
+                        ))
+                    ) : (
+                        <p>No messages available to share.</p>
+                    )}
+                </div>
+                <button onClick={handleShareConfirm}>Share</button>
+                <button onClick={() => setShowShareModal(false)}>Cancel</button>
+            </div>
+        )}
+
         <div className="chat-container">
             <div className="chat-window" ref={chatWindowRef}>
                 <AnimatePresence>

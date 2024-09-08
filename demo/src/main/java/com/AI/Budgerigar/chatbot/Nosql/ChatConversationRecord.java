@@ -1,6 +1,8 @@
-package com.AI.Budgerigar.chatbot.DTO;
+package com.AI.Budgerigar.chatbot.Nosql;
 
 import com.AI.Budgerigar.chatbot.AIUtil.Message;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -12,21 +14,18 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@Builder
 @Document(collection = "chat_conversations")
-public class ChatConversationDTO {
+public class ChatConversationRecord {
 
     @Id
     private String conversationId;
 
     private List<String[]> messages;
 
-    public ChatConversationDTO() {
+    public ChatConversationRecord() {
         this.messages = new ArrayList<>();
-    }
-
-    public ChatConversationDTO(String conversationId, List<String[]> messages) {
-        this.conversationId = conversationId;
-        this.messages = messages;
     }
 
     public void setMessages(List<String[]> messages) {

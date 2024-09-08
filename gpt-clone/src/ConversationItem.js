@@ -1,18 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import axios from 'axios';
-import { FaEllipsisV } from 'react-icons/fa';
+import {FaEllipsisV} from 'react-icons/fa';
 import './Chat.css';
 
 const ConversationItem = ({
                               conversation,
+                              messages,
                               loadConversation,
                               fetchConversations,
                               selectedConversation, // 当前选中的对话
                               setSelectedConversation,
                               setMessages,
-                              setNotification
+                              setNotification,
+                              openShareModal,
+                              setShareMessages,
+                              setSharedCid
                           }) => {
     const [showOptions, setShowOptions] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
 
     // 监听全局点击事件以关闭菜单
     useEffect(() => {
@@ -43,6 +48,30 @@ const ConversationItem = ({
         }
     };
 
+    const handleShare = async () => {
+        const uuid = localStorage.getItem('userUUID');
+
+        // 如果当前对话已经被选中且 messages 已经存在，直接使用它
+        if (selectedConversation === conversation.id && messages.length > 0) {
+            setShareMessages(messages);  // 直接复用当前的消息
+            setSharedCid(conversation.id);  // 设置分享的对话 ID
+            openShareModal(conversation.id);  // 打开分享 modal
+            return;
+        }
+
+        // 否则，发起请求获取历史消息
+        try {
+            const response = await axios.get(`${window.API_BASE_URL}/chat/${uuid}/${conversation.id}`);
+            const fetchedMessages = response.data.data;
+            setShareMessages(fetchedMessages);  // 更新分享消息
+            setSharedCid(conversation.id);  // 设置分享的对话 ID
+            openShareModal(conversation.id);  // 打开分享 modal
+        } catch (error) {
+            console.error('Failed to sync conversation history for sharing', error);
+        }
+    };
+
+
     const toggleOptionsMenu = (e) => {
         e.stopPropagation(); // 防止事件传播到父元素
         setShowOptions(prev => !prev);
@@ -63,7 +92,7 @@ const ConversationItem = ({
             <div className={`options-menu ${showOptions ? 'show' : ''}`} onClick={(e) => e.stopPropagation()}>
                 <ul>
                     <li onClick={handleDelete}>Delete</li>
-                    <li>Share</li>
+                    <li onClick={handleShare}>Share</li>
                 </ul>
             </div>
         </div>
