@@ -55,11 +55,11 @@ export default function Confirm() {
                             navigate("/login", { state: { username: data.data } });
                         }, 3000);
                     } else {
-                        setMessage(data.msg || "Confirmation failed.");
+                        setMessage(data.msg || "Confirmation failed. code: " + data.code);
                     }
                 })
                 .catch((error) => {
-                    setMessage(error.response?.data?.msg || "Confirmation failed.");
+                    setMessage(error.message || "Confirmation failed.");
                 });
         });
     }, [token, navigate]);

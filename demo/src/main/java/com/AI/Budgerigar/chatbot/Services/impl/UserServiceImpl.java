@@ -109,7 +109,7 @@ public class UserServiceImpl implements userService {
                     message.setSubject("Admin Registration Confirmation");
                     message.setText("Please confirm your admin registration by clicking the following link: "
                             + request.getScheme() + "://" + request.getServerName()
-//                            + ":" + request.getServerPort()
+                            // + ":" + request.getServerPort()
                             + "/user/register/confirm/" + inviteToken);
                     mailSender.send(message);
                 }
@@ -131,9 +131,13 @@ public class UserServiceImpl implements userService {
     }
 
     @Override
+    @Transactional
     public Result<?> confirmAdmin(String token) {
         try {
             String uuid = adminWaitingListRedisDAO.getUuidByToken(token);
+            if (uuid == null) {
+                return Result.error("Link expired.");
+            }
             // 从数据库中获取用户信息
             UserPw user = userMapper.getUserByUuid(uuid);
             if (user == null) {
@@ -143,7 +147,8 @@ public class UserServiceImpl implements userService {
             // 获取管理员信息并检查是否已经验证
             AdminInfo adminInfo = userMapper.getAdminInfoByUuid(user.getUuid());
             if (adminInfo == null) {
-                return Result.error("Apply for admin first.");
+                userMapper.downgradeAdminByUuid(user.getUuid());
+                return Result.error("Apply for admin first or link expired.");
             }
             if (adminInfo.isVerified()) {
                 return Result.error("Admin is already verified.");
