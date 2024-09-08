@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import {useLocation, useNavigate} from 'react-router-dom';
 import './login.css';
 
 function Login() {
@@ -17,6 +17,15 @@ function Login() {
 
     const [isAdmin, setIsAdmin] = useState(false);  // 新增状态: 是否为管理员
     const [adminEmail, setAdminEmail] = useState('');  // 新增状态: 管理员邮箱
+
+
+    const location = useLocation();// 获取当前的路由信息, 用于获取注册成功后的用户名
+    useEffect(() => {
+        // 如果从 Confirm 页面传递了用户名，则设置到输入框
+        if (location.state && location.state.username) {
+            setUsername(location.state.username);
+        }
+    }, [location]);
 
     const handleUsernameBlur = async () => {
         function isBlank(username) {
