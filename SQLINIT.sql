@@ -16,6 +16,15 @@ CREATE TABLE UserPw (
                         role VARCHAR(20) DEFAULT 'USER'   -- 用于区分不同权限的用户
 );
 
+DROP TABLE IF EXISTS AdminInfo CASCADE;
+CREATE TABLE AdminInfo(
+                        uuid VARCHAR(36) PRIMARY KEY,
+                        admin_level SMALLINT DEFAULT 0,
+                        email VARCHAR(50) NOT NULL,
+                        verified BOOLEAN DEFAULT FALSE,
+                        FOREIGN KEY (uuid) REFERENCES UserPw(uuid) ON DELETE CASCADE
+);
+
 DROP TABLE IF EXISTS Cid CASCADE;
 -- 创建对话表 Cid，包含带时区的时间戳字段
 CREATE TABLE Cid (
