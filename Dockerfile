@@ -90,3 +90,10 @@ CMD ["sh", "-c", "nginx && java -jar app.jar"]
 #Instructions for building the Docker image and running the container
 # docker build -t lms-gpt .
 # docker run -p 80:80 -p 8090:8090 lms-gpt
+
+#For (ngrok local 80 run) situation where service, redis are running both in docker, redis can not be accessed without adding them to the same network
+# docker network create testnet
+# docker run -it --name redis-test --network testnet --network-alias redis redis
+# (With host properties already been set "redis")docker run -it --name LG --network testnet --network-alias svc -p 80:80 -p 8090:8090 lms-gpt
+# docker run -it --name LG --network testnet --network-alias svc -p 80:80 -p 8090:8090 lms-gpt --spring.data.redis.host=redis
+# docker run -it --name LG --network testnet --network-alias svc -p 80:80 -p 8090:8090 -e SPRING_DATA_REDIS_HOST=redis lms-gpt
