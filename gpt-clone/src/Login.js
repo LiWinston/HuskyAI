@@ -79,20 +79,41 @@ function Login() {
 
     const handleLogin = async () => {
         try {
+            // 发送登录请求
             const response = await axios.post(`${window.API_BASE_URL}/user/login`, { username, password });
             const result = response.data;
 
             if (result.code === 1) {
-                const uuid = result.data;
-                const token = result.msg;
+                // 登录成功，处理登录后的逻辑
+                const token = result.token;
+                const uuid = result.uuid;
+                const role = result.role;
+                const confirmedAdmin = result.confirmedAdmin;
+
+                // 保存 token 和 uuid 到 localStorage
                 localStorage.setItem('token', token);
                 localStorage.setItem('userUUID', uuid);
-                navigate('/chat');
+
+                // 检查用户角色和管理员验证状态
+                if (role === 'admin' && confirmedAdmin) {
+                    // 已验证的管理员，跳转到管理员面板
+                    navigate('/adminBoard');
+                } else if (role === 'admin' && !confirmedAdmin) {
+                    // 未确认的管理员，显示独特的提示
+                    setErrorMessage(result.msg || 'Admin not yet verified. Please contact support.');
+                    navigate('/chat');
+                } else {
+                    // 普通用户，跳转到聊天页面
+                    navigate('/chat');
+                }
             } else {
+                // 登录失败，显示错误消息
                 setErrorMessage(result.msg || 'Login failed. Please try again.');
+                navigate('/');
             }
         } catch (error) {
-            setErrorMessage(error);
+            // 捕获异常，设置错误消息
+            setErrorMessage(error.response?.data?.msg || 'An error occurred during login. Please try again.');
         }
     };
 

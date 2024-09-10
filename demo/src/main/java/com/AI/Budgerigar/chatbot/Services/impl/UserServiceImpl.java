@@ -58,6 +58,23 @@ public class UserServiceImpl implements userService {
     }
 
     @Override
+    public Result<Boolean> checkUserIsAdminByUuid(String uuid) {
+        try {
+            AdminInfo adminInfo = userMapper.getAdminInfoByUuid(uuid);
+            if (adminInfo == null) {
+                return Result.error(false,"Not admin.");
+            }
+            if (!adminInfo.isVerified()) {
+                return Result.error(false, "Admin not verified.");
+            }
+            return Result.success(true, "Admin verified.");
+        }
+        catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @Override
     public List<Conversation> getConversations(String uuid) {
         return userMapper.getConversationsByUserUuid(uuid);
     }

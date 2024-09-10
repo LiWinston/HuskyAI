@@ -1,6 +1,7 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
 import com.AI.Budgerigar.chatbot.DTO.UserRegisterDTO;
+import com.AI.Budgerigar.chatbot.DTO.loginResponseDTO;
 import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.mapper.UserMapper;
 import com.AI.Budgerigar.chatbot.model.UserPw;
@@ -78,24 +79,47 @@ public class UserController {
      * 成功登录时返回带有UUID和JWT令牌的结果对象
      */
     @PostMapping("/login")
-    public Result<?> login(@RequestBody Map<String, String> userDetails) {
+    public loginResponseDTO login(@RequestBody Map<String, String> userDetails) {
         String username = userDetails.get("username");
         String password = userDetails.get("password");
 
         try {
             UserPw user = userMapper.getUserByUsername(username);
             if (user == null) {
-                return Result.error("User does not exist."); // 用户不存在
+                return loginResponseDTO.builder().
+                        code(0).
+                        msg("User not found").
+                        build(); // 用户不存在
             }
             else if (!passwordEncoder.matches(password, user.getPassword())) {
-                return Result.error("Incorrect password."); // 密码错误
+                return loginResponseDTO.builder().
+                        code(0).
+                        msg("Incorrect password").
+                        build(); // 密码错误
             }
             String token = jwtTokenUtil.generateToken(user.getUuid());
-            return Result.success(user.getUuid(), token); // 登录成功，返回UUID和JWT令牌
+            StringBuilder msg = new StringBuilder("Login successful");
+            var lginRspDto = loginResponseDTO.builder().
+                    code(1).
+                    token(token).
+                    username(user.getUsername()).
+                    uuid(user.getUuid()).
+                    role(user.getRole());
+            if (user.getRole().equals("admin")) {
+                var res = userService.checkUserIsAdminByUuid(user.getUuid());
+                lginRspDto.confirmedAdmin(res.getData());
+                msg.append(" Admin status: ").append(res.getMsg());
+                lginRspDto.msg(msg.toString());
+//                lginRspDto.msg(lginRspDto.getMsg() + " Admin: " + res.getData());
+            }
+            return lginRspDto.build();
         }
         catch (Exception e) {
             log.error("Login failed.", e); // 登录失败
-            return Result.error("Login failed."); // 返回登录失败信息
+            return loginResponseDTO.builder().
+                    code(0).
+                    msg("Login failed" + e.getMessage()).
+                    build();
         }
     }
 
