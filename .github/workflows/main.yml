@@ -22,23 +22,42 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16' # Adjust based on the version your project uses
+          node-version: '16'
 
-      # Install npm dependencies from the gpt-clone folder
+      # Install npm dependencies
       - name: Install dependencies
         working-directory: gpt-clone
         run: npm install
 
-      # Build the project instead of starting dev server
+      # Build the project
       - name: Build production version
         working-directory: gpt-clone
         run: npm run build
 
-      # Install 'serve' to run the production build
+      # Install serve to run the production build
       - name: Install serve
         run: npm install -g serve
 
-      # Serve the production build
+      # Start production server in the background
       - name: Start production server
         working-directory: gpt-clone/build
-        run: serve -s .
+        run: serve -s . &
+
+      # Test login endpoint with curl
+      - name: Test login with curl
+        run: |
+          sleep 5 # Wait for server to start
+          response=$(curl -s -X POST https://lms-gpt-latest.onrender.com/api/user/login \
+            -H "Content-Type: application/json" \
+            -d '{"username":"1","password":"1"}')
+          echo "Response: $response"
+          code=$(echo $response | jq -r '.result.code')
+          if [ "$code" != "1" ]; then
+            echo "Login test failed!"
+            exit 1
+          else
+            echo "Login test succeeded!"
+          fi
+      # Install jq to parse JSON (if not installed)
+      - name: Install jq
+        run: sudo apt-get install jq
