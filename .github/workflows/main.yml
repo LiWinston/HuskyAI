@@ -1,9 +1,10 @@
-name: CI - npm build check
+name: CI - npm build and serve check
 
 on:
   push:
     branches:
       - main
+      - cicdTest
   pull_request:
     branches:
       - main
@@ -32,3 +33,12 @@ jobs:
       - name: Build production version
         working-directory: gpt-clone
         run: npm run build
+
+      # Install 'serve' to run the production build
+      - name: Install serve
+        run: npm install -g serve
+
+      # Serve the production build
+      - name: Start production server
+        working-directory: gpt-clone/build
+        run: serve -s .
