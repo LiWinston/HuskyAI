@@ -18,4 +18,5 @@ public interface userService {
     Result<?> confirmAdmin(String token);
 
     Result<Boolean> checkUserIsAdminByUuid(String uuid);
+
 }

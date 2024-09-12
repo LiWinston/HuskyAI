@@ -1,4 +1,4 @@
-name: CI - npm start check
+name: CI - npm build check
 
 on:
   push:
@@ -9,26 +9,26 @@ on:
       - main
 
 jobs:
-  npm-start-check:
+  npm-build-check:
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout the repository
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      # Check out the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    # Set up Node.js environment
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16' # Adjust based on the version your project uses
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Adjust based on the version your project uses
 
-    # Install npm dependencies from the gpt-clone folder
-    - name: Install dependencies
-      working-directory: gpt-clone
-      run: npm install
+      # Install npm dependencies from the gpt-clone folder
+      - name: Install dependencies
+        working-directory: gpt-clone
+        run: npm install
 
-    # Test if npm start works from the gpt-clone folder
-    - name: Run npm start
-      working-directory: gpt-clone
-      run: npm start
+      # Build the project instead of starting dev server
+      - name: Build production version
+        working-directory: gpt-clone
+        run: npm run build

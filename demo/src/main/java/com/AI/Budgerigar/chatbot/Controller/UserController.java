@@ -86,40 +86,31 @@ public class UserController {
         try {
             UserPw user = userMapper.getUserByUsername(username);
             if (user == null) {
-                return loginResponseDTO.builder().
-                        code(0).
-                        msg("User not found").
-                        build(); // 用户不存在
+                return loginResponseDTO.builder().code(0).msg("User not found").build(); // 用户不存在
             }
             else if (!passwordEncoder.matches(password, user.getPassword())) {
-                return loginResponseDTO.builder().
-                        code(0).
-                        msg("Incorrect password").
-                        build(); // 密码错误
+                return loginResponseDTO.builder().code(0).msg("Incorrect password").build(); // 密码错误
             }
             String token = jwtTokenUtil.generateToken(user.getUuid());
             StringBuilder msg = new StringBuilder("Login successful");
-            var lginRspDto = loginResponseDTO.builder().
-                    code(1).
-                    token(token).
-                    username(user.getUsername()).
-                    uuid(user.getUuid()).
-                    role(user.getRole());
+            var lginRspDto = loginResponseDTO.builder()
+                .code(1)
+                .token(token)
+                .username(user.getUsername())
+                .uuid(user.getUuid())
+                .role(user.getRole());
             if (user.getRole().equals("admin")) {
                 var res = userService.checkUserIsAdminByUuid(user.getUuid());
                 lginRspDto.confirmedAdmin(res.getData());
                 msg.append(" Admin status: ").append(res.getMsg());
                 lginRspDto.msg(msg.toString());
-//                lginRspDto.msg(lginRspDto.getMsg() + " Admin: " + res.getData());
+                // lginRspDto.msg(lginRspDto.getMsg() + " Admin: " + res.getData());
             }
             return lginRspDto.build();
         }
         catch (Exception e) {
             log.error("Login failed.", e); // 登录失败
-            return loginResponseDTO.builder().
-                    code(0).
-                    msg("Login failed" + e.getMessage()).
-                    build();
+            return loginResponseDTO.builder().code(0).msg("Login failed" + e.getMessage()).build();
         }
     }
 

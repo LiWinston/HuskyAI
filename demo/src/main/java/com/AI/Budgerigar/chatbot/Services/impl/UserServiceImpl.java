@@ -62,7 +62,7 @@ public class UserServiceImpl implements userService {
         try {
             AdminInfo adminInfo = userMapper.getAdminInfoByUuid(uuid);
             if (adminInfo == null) {
-                return Result.error(false,"Not admin.");
+                return Result.error(false, "Not admin.");
             }
             if (!adminInfo.isVerified()) {
                 return Result.error(false, "Admin not verified.");
