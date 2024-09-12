@@ -11,6 +11,7 @@ function Login() {
     const [errorMessage, setErrorMessage] = useState('');
     const [suggestions, setSuggestions] = useState([]); // 存储替代用户名
     const [showSuggestionPopup, setShowSuggestionPopup] = useState(false); // 控制气泡提示的显示
+    // eslint-disable-next-line no-unused-vars
     const [checkDone, setCheckDone] = useState(false); // 确保只检查一次用户名
     const [isCheckingUsername, setIsCheckingUsername] = useState(false); // 用户名检查状态
     const navigate = useNavigate();

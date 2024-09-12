@@ -15,6 +15,7 @@ const CONVERSATION_SUMMARY_GENERATED = "#CVSG##CVSG##CVSG#";
 function Chat() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
+    // eslint-disable-next-line no-unused-vars
     const [rows, setRows] = useState(1); // 新增行数状态
     const [loading, setLoading] = useState(false);
     const [conversations, setConversations] = useState([]); // Ensure initial state is an array
@@ -23,6 +24,7 @@ function Chat() {
     const chatWindowRef = useRef(null);
     const [textareaHeight, setTextareaHeight] = useState('auto');
     const textareaRef = useRef(null);
+    // eslint-disable-next-line no-unused-vars
     const [displayedTitle, setDisplayedTitle] = useState({});
     const [showShareModal, setShowShareModal] = useState(false); // 控制分享弹窗
     const [selectedMessages, setSelectedMessages] = useState([]); // 选择分享的消息

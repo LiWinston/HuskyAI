@@ -5,9 +5,11 @@ const LOCAL_URLS = ['http://localhost:8090/health'];
 const REMOTE_URL = '/health';
 export default function Confirm() {
     const [message, setMessage] = useState("Confirming...");
+    // eslint-disable-next-line no-unused-vars
     const [username, setUsername] = useState("");
     const { token } = useParams(); // 获取路由中的 token 参数
     const navigate = useNavigate(); // 用于页面跳转
+    // eslint-disable-next-line no-unused-vars
     const [error, setError] = useState(null);
 
     useEffect(() => {

@@ -17,6 +17,7 @@ const ConversationItem = ({
                               setSharedCid
                           }) => {
     const [showOptions, setShowOptions] = useState(false);
+    // eslint-disable-next-line no-unused-vars
     const [showShareModal, setShowShareModal] = useState(false);
 
     // 监听全局点击事件以关闭菜单
