@@ -1,5 +1,12 @@
 ﻿# AI-Budgerigar
 
+## Project Overview: Canvas Intelligent Plugin
+The Canvas Intelligent Plugin project focuses on implementing key AI-driven features within  Canvas LMS to enhance the learning experience for students and streamline course management for teachdrs. This includes a smart chatbot that provides students with instant homework assistance, a quiz function to ask topic-related questions to help self-assess knowledge, and tracks their learning progress. The system offers immediate feedback on quizzes and adjusts question difficulty based on student performance. For instructors, the plugin simplifies course material management by enabling them to upload and delete learning resources, while also analysing frequently asked student questions to help address common areas of confusion. These core features aim to improve student outcomes and reduce the workload on teachers.
+
+## Project Goal
+- Enhance student learning by providing instant homework assistance, adaptive quizzes, and personalised progress tracking.
+- Streamline course management for instructors, simplifying material management and analysing student inquiries to reduce workload and improve teaching effectiveness.
+
 ## Roles and Responsibilities
 ### Product Owner
 - Define and prioritise the product backlog to align with project goals.
