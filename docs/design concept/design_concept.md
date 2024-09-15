@@ -11,33 +11,27 @@
 
 This project can broadly be categorised into two distinct parts:
 
-1. Creating the AI
+#### 1. Creating the AI
 
-2. Creating a web framework that supports the AI, and allows for both users and admins to interact with the various components of the AI.
+The technologies that will be used will be:
 
-  
+- **Google Vertex AI**: used for both model training and for model deployment
 
-With regards to part 1, the technologies that will be used will be:
+- **Facebook Llama 3.1**: A freely accessible LLM that will serve as the base model for training.
 
-- Google Vertex AI
-
-- Facebook Llama 3.1
+##### 2. Creating a web framework that supports the AI, and allows for both users and admins to interact with the various components of the AI.
 
   
 
-With regards to part 2, the technologies that will be used will be:
-
-- MongoDB
-
-- Express js
-
-- React
-
-- Node.js
-
-- PostGreSQL (With the PGVector extension)
-
-- Docker
+The technologies that will be used will be:
+- **MongoDB** 
+- **Express js**
+- **Redis**
+- **React.js**
+- **Node.js**
+- **PostGreSQL (With the PGVector extension)**
+- **Java**
+- **Docker**
 
   
 
@@ -47,15 +41,14 @@ The following table refers to the components depicted in Section 1: the UML Comp
 
   
 
-| Component | Development Approach | Comments |
+| Component            | Development Approach     | Comments                                                          |
+|----------------------|--------------------------|-------------------------------------------------------------------|
+| Webapp               | Develop                  | xyz                                                               |
+| Large Language Model | Reuse with modification  | Use prebuilt transformer (e.g llama 3.1) and fine-tune             |
+| Database             | Reuse generic            | Use PostgreSQL with pgvector framework                             |
 
-|----------|----------|----------|
 
-| Webapp| Develop| |
 
-| Large Language Model| Reuse with modification| Use prebuilt transformer (e.g llama 3.1) and fine-tune|
-
-| Database| Reuse generic| Use PostgreSQL with pgvector framework|
 
   
 
