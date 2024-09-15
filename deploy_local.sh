@@ -24,7 +24,7 @@ else
   echo "No Redis instance found, starting a new Redis container..."
   # 创建testnet网络并启动redis
   docker network create testnet
-  docker run -d --name redis-test --network testnet --network-alias redis redis
+  docker run -d --name redis-test --network testnet --network-alias redis -p 6379:6379 redis
 fi
 
 # 检查当前是否有正在运行的LG容器
