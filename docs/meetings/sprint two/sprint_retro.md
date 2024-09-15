@@ -1,5 +1,4 @@
-# Sprint 1 Retrospective
-<!A record of attendees for accountability and reference>
+# Sprint 2 Retrospective
 ## Participants
 * Shrimant Kohli
 * Adrian Dam
@@ -13,3 +12,6 @@
 ## Discussion
 | What went well | What didn't go well | Improvements|
 | -------- | ------- | -------- |
+| Development of backend went well| Communicating key decision in coding changes| Communicate key changes in Slack|
+| Team collaboration on integration testing was smooth|Delays in UI design finalisation|Hold more frequent design check-ins to avoid delays|
+| Sprint task allocation and tracking were effective | |
