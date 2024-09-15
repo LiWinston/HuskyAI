@@ -125,10 +125,15 @@ The Canvas Intelligent Plugin project focuses on implementing key AI-driven feat
 |   \---meetings
 |       |   meeting_minutes_template.md
 |       |   
-|       \---sprint one
+|       +---sprint one
+|       |       sprint_planning.md
+|       |       sprint_standups.md
+|       |       sprint_retro.md
+|       |
+|       \---sprint two
 |               sprint_planning.md
 |               sprint_standups.md
 |               sprint_retro.md
-|               
+|        
 \---gpt-clone
 ```
