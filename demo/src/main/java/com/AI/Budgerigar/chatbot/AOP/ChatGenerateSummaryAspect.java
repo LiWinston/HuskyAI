@@ -22,7 +22,8 @@ public class ChatGenerateSummaryAspect {
 
     // 修改切入点，匹配所有实现 ChatService 接口的类的 chat 方法
     @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.ChatService.chat(..))")
-    public void chatMethod() {}
+    public void chatMethod() {
+    }
 
     private static final Logger log = LoggerFactory.getLogger(ChatGenerateSummaryAspect.class);
 
@@ -48,10 +49,11 @@ public class ChatGenerateSummaryAspect {
                 try {
                     // Use reflection to find and call the generateAndSetConversationTitle
                     // method
-//                    Method method = joinPoint.getTarget()
-//                        .getClass()
-//                        .getMethod("generateAndSetConversationTitle", String.class);
-//                    return (Result<String>) method.invoke(joinPoint.getTarget(), args[1].toString());
+                    // Method method = joinPoint.getTarget()
+                    // .getClass()
+                    // .getMethod("generateAndSetConversationTitle", String.class);
+                    // return (Result<String>) method.invoke(joinPoint.getTarget(),
+                    // args[1].toString());
                     return generateTittle.generateAndSetConversationTitle(args[1].toString());
                 }
                 catch (Exception e) {

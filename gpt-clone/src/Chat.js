@@ -7,7 +7,7 @@ import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
 import VscDarkPlus from "react-syntax-highlighter/src/styles/prism/vsc-dark-plus";
 import {getWindowFromNode} from "@testing-library/dom/dist/helpers";
-import { FaPlus } from 'react-icons/fa';
+import {FaPlus} from 'react-icons/fa';
 import ConversationItem from "./ConversationItem"; // 引入加号图标
 
 const CONVERSATION_SUMMARY_GENERATED = "#CVSG##CVSG##CVSG#";
@@ -20,6 +20,12 @@ function Chat() {
     const [loading, setLoading] = useState(false);
     const [conversations, setConversations] = useState([]); // Ensure initial state is an array
     const [selectedConversation, setSelectedConversation] = useState(null);
+    // 当 selectedConversation 改变时，自动更新到 localStorage
+    useEffect(() => {
+        if (selectedConversation !== null) {
+            localStorage.setItem('selectedConversation', selectedConversation);
+        }
+    }, [selectedConversation]);
     const [notification, setNotification] = useState(null);
     const chatWindowRef = useRef(null);
     const [textareaHeight, setTextareaHeight] = useState('auto');
@@ -64,7 +70,7 @@ function Chat() {
                 setNotification('Fetching conversations...'); // 设置通知
                 console.log('Fetching conversations for user:', userUUID); // 打印用户UUID
 
-                console.log(`${window.API_BASE_URL}/chat`, { uuid: userUUID });
+                console.log(`${window.API_BASE_URL}/chat`, {uuid: userUUID});
                 await fetchConversations(); // 等待对话列表获取完成
                 setNotification(null); // 清除通知
             } catch (e) {
@@ -81,14 +87,12 @@ function Chat() {
 // 新增一个 useEffect 来监听 conversations 的变化，当 conversations 更新时，加载第一个对话
     useEffect(() => {
         if (conversations.length > 0) {
-            console.log('Conversations updated, loading first conversation with ID:', conversations[0].id);
-            loadConversation(conversations[0].id);
+            let selectedConversation = localStorage.getItem('selectedConversation');
+            loadConversation(selectedConversation ? selectedConversation : conversations[0].id);
         } else {
             console.log('No conversations available');
         }
     }, [conversations]); // 当 conversations 更新时执行
-
-
 
 
     const fetchConversations = async () => {
@@ -97,7 +101,10 @@ function Chat() {
                 params: {uuid: localStorage.getItem('userUUID')}
             });
             setConversations(response.data.data.map(conv => ({
-                id: conv.conversationId, title: conv.firstMessage, timestampCreat: conv.createdAt, timestampLast: conv.lastMessageAt
+                id: conv.conversationId,
+                title: conv.firstMessage,
+                timestampCreat: conv.createdAt,
+                timestampLast: conv.lastMessageAt
             })));
         } catch (error) {
             console.error('Error fetching conversations:', error);
@@ -214,7 +221,7 @@ function Chat() {
         if (input.trim() === '') return;
 
         const timestamp = new Date();
-        const newMessage = { sender: 'user', text: input, timestamp };
+        const newMessage = {sender: 'user', text: input, timestamp};
 
         setMessages(prevMessages => [...prevMessages, newMessage]);
         setInput('');
@@ -236,7 +243,7 @@ function Chat() {
                 prompt: input, conversationId: selectedConversation
             });
             const sanitizedResponse = DOMPurify.sanitize(response.data.data);
-            const assistantMessage = { sender: 'assistant', text: sanitizedResponse, timestamp: new Date() };
+            const assistantMessage = {sender: 'assistant', text: sanitizedResponse, timestamp: new Date()};
 
             setMessages(prevMessages => [...prevMessages, assistantMessage]);
             setLoading(false);
@@ -256,8 +263,8 @@ function Chat() {
             }
 
 
-                // setSelectedConversation(response.data.data.conversationId);
-                fetchConversations();
+            // setSelectedConversation(response.data.data.conversationId);
+            fetchConversations();
 
         } catch (error) {
             console.error('Error sending message:', error);
@@ -267,12 +274,12 @@ function Chat() {
 
     const animateTitleUpdate = (conversationId, newTitle) => {
         let currentTitle = '';
-        setDisplayedTitle(prev => ({ ...prev, [conversationId]: '' }));
+        setDisplayedTitle(prev => ({...prev, [conversationId]: ''}));
 
         newTitle.split('').forEach((char, index) => {
             setTimeout(() => {
                 currentTitle += char;
-                setDisplayedTitle(prev => ({ ...prev, [conversationId]: currentTitle }));
+                setDisplayedTitle(prev => ({...prev, [conversationId]: currentTitle}));
             }, index * 100); // 每个字符间隔100毫秒
         });
     };
@@ -328,8 +335,8 @@ function Chat() {
                                 />
                                 <span>{msg.content || msg.text}</span>
                                 {/* Fix for different message formats */
-                                // msg.content for GetResponse
-                                // msg.text for current messages in frontend
+                                    // msg.content for GetResponse
+                                    // msg.text for current messages in frontend
                                 }
                             </div>
                         ))
