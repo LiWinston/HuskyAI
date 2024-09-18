@@ -58,8 +58,38 @@ function Chat() {
     }, [input]);
 
     useEffect(() => {
-        fetchConversations();
+        const fetchAndLoadConversation = async () => {
+            try {
+                const userUUID = localStorage.getItem('userUUID');
+                setNotification('Fetching conversations...'); // 设置通知
+                console.log('Fetching conversations for user:', userUUID); // 打印用户UUID
+
+                console.log(`${window.API_BASE_URL}/chat`, { uuid: userUUID });
+                await fetchConversations(); // 等待对话列表获取完成
+                setNotification(null); // 清除通知
+            } catch (e) {
+                console.error('Error loading conversation:', e);
+            }
+        };
+
+        window.API_BASE_URL = localStorage.getItem('API_BASE_URL');
+        fetchAndLoadConversation()
+            .then(() => console.log('Conversations fetched'))
+            .catch(e => console.error('Error after fetchAndLoadConversation:', e));
     }, []);
+
+// 新增一个 useEffect 来监听 conversations 的变化，当 conversations 更新时，加载第一个对话
+    useEffect(() => {
+        if (conversations.length > 0) {
+            console.log('Conversations updated, loading first conversation with ID:', conversations[0].id);
+            loadConversation(conversations[0].id);
+        } else {
+            console.log('No conversations available');
+        }
+    }, [conversations]); // 当 conversations 更新时执行
+
+
+
 
     const fetchConversations = async () => {
         try {
