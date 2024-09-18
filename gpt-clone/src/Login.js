@@ -102,9 +102,13 @@ function Login() {
                 } else if (role === 'admin' && !confirmedAdmin) {
                     // 未确认的管理员，显示独特的提示
                     setErrorMessage(result.msg || 'Admin not yet verified. Please contact support.');
+                    localStorage.removeItem("selectedConversation");  // 清除选中的用户"
+                    localStorage.removeItem("conversations");  // 清除会话列表
                     navigate('/chat');
                 } else {
                     // 普通用户，跳转到聊天页面
+                    localStorage.removeItem("selectedConversation");  // 清除选中的用户"
+                    localStorage.removeItem("conversations");  // 清除会话列表
                     navigate('/chat');
                 }
             } else {
