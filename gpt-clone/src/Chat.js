@@ -24,6 +24,8 @@ function Chat() {
     useEffect(() => {
         if (selectedConversation !== null) {
             localStorage.setItem('selectedConversation', selectedConversation);
+        }else{
+            localStorage.removeItem('selectedConversation');
         }
     }, [selectedConversation]);
     const [notification, setNotification] = useState(null);
