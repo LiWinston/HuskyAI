@@ -24,7 +24,7 @@ import java.util.concurrent.ExecutorService;
 public class ChatController {
 
     @Autowired
-    @Qualifier("baidu")
+    @Qualifier("openai")
     private ChatService chatService;
 
     @Autowired

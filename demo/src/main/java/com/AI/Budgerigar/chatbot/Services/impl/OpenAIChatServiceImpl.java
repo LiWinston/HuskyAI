@@ -1,5 +1,6 @@
 package com.AI.Budgerigar.chatbot.Services.impl;
 
+import com.AI.Budgerigar.chatbot.AIUtil.TokenLimiter;
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.DTO.ChatRequestDTO;
 import com.AI.Budgerigar.chatbot.DTO.ChatResponseDTO;
@@ -17,13 +18,13 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Service
 @Slf4j
 public class OpenAIChatServiceImpl implements ChatService {
 
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    @Autowired
+    private ExecutorService executorService;
 
     @Autowired
     DateTimeFormatter dateTimeFormatter;
@@ -40,11 +41,14 @@ public class OpenAIChatServiceImpl implements ChatService {
     @Autowired
     private ChatSyncServiceImpl chatSyncService;
 
+    @Autowired
+    private TokenLimiter tokenLimiter;
+
     @Value("${openai.model}")
     private String model;
 
     @Value("${openai.api.url}")
-    private String apiUrl;
+    private String openAIUrl;
 
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
@@ -56,31 +60,45 @@ public class OpenAIChatServiceImpl implements ChatService {
             chatSyncService.updateRedisFromMongo(conversationId);
 
             chatMessagesRedisDAO.maintainMessageHistory(conversationId);
+            // 添加用户输入到 Redis 对话历史
+            chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(),
+                    StringEscapeUtils.escapeHtml4(prompt));
 
-            // 将用户的输入添加到 Redis 会话历史
-            chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(), prompt);
-
-            // 从 Redis 获取完整的会话历史
-            List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
+            // 从 Redis 中获取对话历史
+            List<String[]> conversationHistory = null;
+            try {
+                conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId, 1800);
+                log.info("自适应缩放到" + conversationHistory.size() + "条消息");
+                // for (String[] entry : conversationHistory) {
+                // log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20,
+                // entry[2].length())));
+                // }
+            }
+            catch (Exception e) {
+                log.error("Error occurred in {}: {}", TokenLimiter.class.getName(), e.getMessage(), e);
+                chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
+                        "Query failed. Please try again.");
+                throw new RuntimeException("Error processing chat request", e);
+            }
 
             // 使用工厂方法从 String[] 列表创建 ChatRequestDTO
             ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
 
-            // 调用 OpenAI API
-            ChatResponseDTO chatResponseDTO = restTemplate.postForObject(apiUrl, chatRequestDTO, ChatResponseDTO.class);
+            ChatResponseDTO chatResponseDTO = restTemplate.postForObject(openAIUrl, chatRequestDTO,
+                    ChatResponseDTO.class);
 
             if (chatResponseDTO == null || chatResponseDTO.getChoices() == null
                     || chatResponseDTO.getChoices().isEmpty()) {
                 throw new Exception("No response from API");
             }
 
-            String responseContent = chatResponseDTO.getChoices().get(0).getMessage().getContent();
+            String result = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
-            log.info("Response from OpenAI: {}", responseContent);
+            log.info("Response from OpenAI: {}", result);
 
             // 将助手的响应添加到 Redis 会话历史
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
-                    StringEscapeUtils.escapeHtml4(responseContent));
+                    StringEscapeUtils.escapeHtml4(result));
 
             // 计算 Redis 和 MongoDB 中会话长度的差异
             int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
@@ -91,10 +109,13 @@ public class OpenAIChatServiceImpl implements ChatService {
 
             // 如果差异超过阈值，则异步更新 MongoDB
             if (Math.abs(diff) > 5) {
-                executorService.submit(() -> chatSyncService.updateHistoryFromRedis(conversationId));
+                executorService.submit(() -> {
+                    chatSyncService.updateHistoryFromRedis(conversationId);
+                });
             }
 
-            return Result.success(responseContent);
+            return Result.success(result,
+                    "From " + chatResponseDTO.getModel() + ", Referenced " + conversationHistory.size() + " messages.");
         }
         catch (Exception e) {
             log.error("Error occurred in {}: {}", OpenAIChatServiceImpl.class.getName(), e.getMessage());

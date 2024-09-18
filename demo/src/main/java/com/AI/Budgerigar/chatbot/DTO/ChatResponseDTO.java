@@ -1,26 +1,53 @@
 package com.AI.Budgerigar.chatbot.DTO;
 
-import com.AI.Budgerigar.chatbot.AIUtil.Message;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
-//@Deprecated
+@Getter
+@Setter
 @AllArgsConstructor
-@lombok.Setter
-@lombok.Getter
+@JsonIgnoreProperties(ignoreUnknown = true) // 忽略未映射的字段
 public class ChatResponseDTO {
+
+    private String id;
+
+    private String object;
+
+    private long created;
+
+    private String model;
+
+    private Usage usage;
 
     private List<Choice> choices;
 
+    @Getter
+    @Setter
     @AllArgsConstructor
-    @lombok.Setter
-    @lombok.Getter
     public static class Choice {
 
         private int index;
 
-        private Message message;
+        private OAMessageDTO message;
+
+        private String finish_reason; // 完整响应中的字段
+
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class Usage {
+
+        private int prompt_tokens;
+
+        private int completion_tokens;
+
+        private int total_tokens;
 
     }
 

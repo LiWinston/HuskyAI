@@ -5,6 +5,7 @@ import com.AI.Budgerigar.chatbot.AIUtil.Message;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @lombok.Getter
 @lombok.Setter
@@ -12,9 +13,11 @@ public class ChatRequestDTO {
 
     private String model;
 
-    private List<Message> messages;
+    private List<OAMessageDTO> messages;
 
-    private int n = 1; // 默认值，根据需要调整
+    // private int maxTokens = 300;
+
+    private boolean stream = false;
 
     private double temperature = 0.7; // 默认值，根据需要调整
 
@@ -22,13 +25,15 @@ public class ChatRequestDTO {
     public ChatRequestDTO(String model, String prompt, Instant timestamp) {
         this.model = model;
         this.messages = new ArrayList<>();
-        this.messages.add(new Message("user", timestamp.toString(), prompt));
+        this.messages.add(new OAMessageDTO("user", prompt));
     }
 
     // 私有的构造函数
     private ChatRequestDTO(String model, List<Message> messages) {
         this.model = model;
-        this.messages = messages;
+        this.messages = messages.stream()
+            .map(message -> new OAMessageDTO(message.getRole(), message.getContent()))
+            .collect(Collectors.toList());
     }
 
     // 工厂方法，用于从 List<Message> 创建 ChatRequestDTO
