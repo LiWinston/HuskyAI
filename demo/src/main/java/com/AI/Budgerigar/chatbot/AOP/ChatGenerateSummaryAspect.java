@@ -1,14 +1,16 @@
 package com.AI.Budgerigar.chatbot.AOP;
 
+import com.AI.Budgerigar.chatbot.Services.GenerateTittle;
 import com.AI.Budgerigar.chatbot.result.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Method;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
@@ -18,11 +20,18 @@ import static com.AI.Budgerigar.chatbot.Constant.ApplicationConstant.CONVERSATIO
 @Component
 public class ChatGenerateSummaryAspect {
 
+    // 修改切入点，匹配所有实现 ChatService 接口的类的 chat 方法
+    @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.ChatService.chat(..))")
+    public void chatMethod() {}
+
     private static final Logger log = LoggerFactory.getLogger(ChatGenerateSummaryAspect.class);
 
     private static final Random RANDOM = new Random();
 
-    @Around("execution(* com.AI.Budgerigar.chatbot.Services.impl.BaiduChatServiceImpl.chat(..))")
+    @Autowired
+    private GenerateTittle generateTittle;
+
+    @Around("chatMethod()")
     public Object aroundChat(ProceedingJoinPoint joinPoint) throws Throwable {
         Object result;
         Object[] args = joinPoint.getArgs();
@@ -39,10 +48,11 @@ public class ChatGenerateSummaryAspect {
                 try {
                     // Use reflection to find and call the generateAndSetConversationTitle
                     // method
-                    Method method = joinPoint.getTarget()
-                        .getClass()
-                        .getMethod("generateAndSetConversationTitle", String.class);
-                    return (Result<String>) method.invoke(joinPoint.getTarget(), args[1].toString());
+//                    Method method = joinPoint.getTarget()
+//                        .getClass()
+//                        .getMethod("generateAndSetConversationTitle", String.class);
+//                    return (Result<String>) method.invoke(joinPoint.getTarget(), args[1].toString());
+                    return generateTittle.generateAndSetConversationTitle(args[1].toString());
                 }
                 catch (Exception e) {
                     log.error("Error calling generateAndSetConversationTitle: ", e);
