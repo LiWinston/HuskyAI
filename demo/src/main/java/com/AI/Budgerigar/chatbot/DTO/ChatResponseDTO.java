@@ -13,15 +13,15 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true) // 忽略未映射的字段
 public class ChatResponseDTO {
 
-    private String id;
-
-    private String object;
-
-    private long created;
-
-    private String model;
-
-    private Usage usage;
+//    private String id;
+//
+//    private String object;
+//
+//    private long created;
+//
+//    private String model;
+//
+//    private Usage usage;
 
     private List<Choice> choices;
 

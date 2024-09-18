@@ -115,7 +115,7 @@ public class OpenAIChatServiceImpl implements ChatService {
             }
 
             return Result.success(result,
-                    "From " + chatResponseDTO.getModel() + ", Referenced " + conversationHistory.size() + " messages.");
+                    ", Referenced " + conversationHistory.size() + " messages.");
         }
         catch (Exception e) {
             log.error("Error occurred in {}: {}", OpenAIChatServiceImpl.class.getName(), e.getMessage());
