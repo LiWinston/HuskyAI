@@ -7,6 +7,7 @@ import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.model.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
 @CrossOrigin(origins = "*")
@@ -25,7 +27,24 @@ public class ChatController {
 
     @Autowired
     @Qualifier("baidu")
-    private ChatService chatService;
+    private ChatService baiduChatService;
+
+    @Autowired
+    @Qualifier("doubao")
+    private ChatService doubaoChatService;
+
+    @Autowired
+    @Qualifier("openai")
+    private ChatService openaiChatService;
+
+    private final ConcurrentHashMap<String, ChatService> chatServices = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void init() {
+        chatServices.put("baidu", baiduChatService);
+        chatServices.put("doubao", doubaoChatService);
+        chatServices.put("openai", openaiChatService);
+    }
 
     @Autowired
     private userService userService;
@@ -93,12 +112,30 @@ public class ChatController {
         }
     }
 
-    @PostMapping("/{uuid}/{conversationId}")
-    public Result<?> chatPost(@PathVariable String uuid, @PathVariable String conversationId,
-            @RequestBody Map<String, String> body) {
+    @PostMapping
+    public Result<?> chatPost(@RequestBody Map<String, String> body) {
         try {
             // 使用 chatService 的 chat 方法并返回结果
-            Result<String> response = chatService.chat(body.get("prompt"), conversationId);
+            String model = body.get("model");
+            if (model == null) {
+                model = "";
+            }
+            ChatService chatService = chatServices.get("baidu");
+            while (chatService == null) {
+                chatService = chatServices.entrySet().iterator().next().getValue();
+            }
+            switch (model.toLowerCase()) {
+                case "doubao":
+                    chatService = chatServices.get("doubao");
+                    break;
+                case "openai":
+                    chatService = chatServices.get("openai");
+                    break;
+                case "baidu":
+                default:
+
+            }
+            Result<String> response = chatService.chat(body.get("prompt"), body.get("conversationId"));
             return Result.success(response.getData(), response.getMsg());
         }
         catch (Exception e) {

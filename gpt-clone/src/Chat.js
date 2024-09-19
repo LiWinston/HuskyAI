@@ -241,8 +241,8 @@ function Chat() {
                 setSelectedConversation(cid);
                 await axios.get(`${window.API_BASE_URL}/chat/${localStorage.getItem('userUUID')}/${cid}`);
             }
-            const response = await axios.post(`${window.API_BASE_URL}/chat/${localStorage.getItem('userUUID')}/${cid}`, {
-                prompt: input, conversationId: selectedConversation
+            const response = await axios.post(`${window.API_BASE_URL}/chat`, {
+                prompt: input, conversationId: selectedConversation, model: "baidu"
             });
             const sanitizedResponse = DOMPurify.sanitize(response.data.data);
             const assistantMessage = {sender: 'assistant', text: sanitizedResponse, timestamp: new Date()};
