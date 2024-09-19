@@ -112,7 +112,7 @@ public class OpenAIChatServiceImpl implements ChatService {
 
             String result = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
-            log.info("Response from OpenAI: {}", result.substring(0, Math.min(40, result.length())));
+            log.info("Response from {}: {}", chatResponseDTO.getModel(), result.substring(0, Math.min(40, result.length())));
 
             // 将助手的响应添加到 Redis 会话历史
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
