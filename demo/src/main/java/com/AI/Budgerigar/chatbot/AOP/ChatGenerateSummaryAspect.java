@@ -1,6 +1,7 @@
 package com.AI.Budgerigar.chatbot.AOP;
 
 import com.AI.Budgerigar.chatbot.Services.GenerateTittle;
+import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -30,20 +31,24 @@ public class ChatGenerateSummaryAspect {
     private static final Random RANDOM = new Random();
 
     @Autowired
+    ConversationMapper conversationMapper;
+
+    @Autowired
     private GenerateTittle generateTittle;
 
     @Around("chatMethod()")
     public Object aroundChat(ProceedingJoinPoint joinPoint) throws Throwable {
         Object result;
         Object[] args = joinPoint.getArgs();
-
+        // String prompt = args[0].toString();
+        String conversationId = args[1].toString();
         log.info("ChatGenerateSummaryAspect.aroundChat()");
 
         // Proceed with the chat method, but capture the result
         result = joinPoint.proceed();
 
         // Simulate a check after the first Redis.addMessage call
-        if (shouldGenerateTitle()) {
+        if (shouldGenerateTitle(conversationId)) {
             // Asynchronously generate and set the conversation title
             CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() -> {
                 try {
@@ -54,7 +59,7 @@ public class ChatGenerateSummaryAspect {
                     // .getMethod("generateAndSetConversationTitle", String.class);
                     // return (Result<String>) method.invoke(joinPoint.getTarget(),
                     // args[1].toString());
-                    return generateTittle.generateAndSetConversationTitle(args[1].toString());
+                    return generateTittle.generateAndSetConversationTitle(conversationId);
                 }
                 catch (Exception e) {
                     log.error("Error calling generateAndSetConversationTitle: ", e);
@@ -77,9 +82,40 @@ public class ChatGenerateSummaryAspect {
     }
 
     // Method to determine if title generation should occur
-    private boolean shouldGenerateTitle() {
-        // Example: 20% probability
-        return RANDOM.nextInt(100) < 100;
+    private boolean shouldGenerateTitle(String conversationId) {
+        return RANDOM.nextDouble() < 0.75;
+        // // 通过随机数实现60%的概率控制
+        // double probability = Math.random(); // 生成一个0到1之间的随机数
+        // if (probability > 1) {
+        // log.info("Not generating title. Probability: {}", probability);
+        // return false;
+        // }
+        // // 仅有60%的概率继续判断
+        //
+        // var now = LocalDateTime.now();
+        // Conversation conversation = conversationMapper.selectById(conversationId);
+        //
+        // // 如果查询失败或生成时间为null，直接返回false
+        // if (conversation == null || conversation.getCreatedAt() == null) {
+        // return false;
+        // }
+        // log.info("conversation.getCreatedAt():{}", conversation.getCreatedAt());
+        //
+        // // 计算上次生成标题时间与当前时间的差距
+        // var lastGenerated = conversation.getCreatedAt();
+        // if (Duration.between(lastGenerated, now).toMinutes() <= 1) {
+        // return true;
+        // }
+        //
+        // // 如果总结等于conversationId，直接返回true
+        // if (Objects.equals(conversationMapper.getSummaryByCid(conversationId),
+        // conversationId)) {
+        // return true;
+        // }
+        //
+        // probability = Math.random();
+        // return probability < 1;// 若非新会话，最终概率为0.48
+
     }
 
 }
