@@ -60,6 +60,7 @@ public class OpenAIChatServiceImpl implements ChatService {
             chatSyncService.updateRedisFromMongo(conversationId);
 
             chatMessagesRedisDAO.maintainMessageHistory(conversationId);
+
             // 添加用户输入到 Redis 对话历史
             chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(),
                     StringEscapeUtils.escapeHtml4(prompt));
@@ -67,7 +68,7 @@ public class OpenAIChatServiceImpl implements ChatService {
             // 从 Redis 中获取对话历史
             List<String[]> conversationHistory = null;
             try {
-                conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId, 1800);
+                conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId, 16000);
                 log.info("自适应缩放到" + conversationHistory.size() + "条消息");
                 // for (String[] entry : conversationHistory) {
                 // log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20,
@@ -94,7 +95,7 @@ public class OpenAIChatServiceImpl implements ChatService {
 
             String result = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
-            log.info("Response from OpenAI: {}", result);
+            log.info("Response from OpenAI: {}", result.substring(0, Math.min(40, result.length())));
 
             // 将助手的响应添加到 Redis 会话历史
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),

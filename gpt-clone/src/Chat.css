@@ -430,7 +430,67 @@ code {
 }
 
 
+/*FBMO*/
+.chat-interface .model-selector {
+    position: fixed;
+    top: 20px;
+    /*right: 20px;*/
+    z-index: 998; /* 确保在其他元素之上 */
+}
 
+.chat-interface .floating-model-btn {
+    background-color: #007bff; /* 改为页面内的主色调，统一风格 */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px; /* 改为圆角矩形 */
+    cursor: pointer;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* 增加一点阴影深度，显得更现代 */
+    z-index: 1000; /* 确保悬浮按钮始终在顶层 */
+    transition: background-color 0.3s ease;
+}
+
+.chat-interface .floating-model-btn:hover {
+    background-color: #0056b3; /* hover时颜色变化 */
+}
+
+.chat-interface .model-options {
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.75); /* 半透明深色背景，避免过于显眼 */
+    border: none;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15); /* 更深的阴影，突出效果 */
+    border-radius: 10px; /* 统一为圆角 */
+    padding: 10px 10px; /* 减小内边距，使其更紧凑 */
+    z-index: 100;
+    transition: transform 0.3s ease-in-out, opacity 0.2s ease;
+    transform-origin: top;
+    transform: scale(0);
+    opacity: 0;
+    visibility: hidden;
+    margin-top: 1px; /* 给按钮和选项之间一点间隔 */
+}
+
+.chat-interface .model-options.show {
+    transform: scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+.chat-interface .model-options button {
+    background: none;
+    border: none;
+    padding: 8px 12px; /* 增加一些内边距，使其更易点击 */
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 10px; /* 选项按钮也统一为圆角 */
+    color: white;
+    transition: background-color 0.3s ease; /* 平滑的hover效果 */
+}
+
+.chat-interface .model-options button:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* hover时柔和变化 */
+}
 
 /* 移动端适配 */
 @media (max-width: 1079px) {

@@ -99,9 +99,8 @@ public class ChatController {
         // chatSyncService.updateHistoryFromRedis(chatService.getConversationId()));
         chatSyncService.updateHistoryFromRedis(conversationId);
         // 读取 ConversationId 并设置到 chatService 中: read ConversationId and set to
-        // chatService
-        // chatService.setConversationId(conversationId);
-        chatSyncService.updateHistoryFromRedis(conversationId);
+
+        chatSyncService.updateRedisFromMongo(conversationId);
         // get历史传给前端显示: get history to show in front end
         try {
             List<Message> messageList = chatSyncService.getHistory(conversationId);
@@ -147,6 +146,16 @@ public class ChatController {
     @RequestMapping(value = "/chat", method = RequestMethod.OPTIONS)
     public ResponseEntity<Void> handleOptionsRequest() {
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/models")
+    public Result<?> getModels() {
+        try {
+            return Result.success(chatServices.keySet());
+        }
+        catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{uuid}/{conversationId}")

@@ -3,6 +3,7 @@ package com.AI.Budgerigar.chatbot.AIUtil;
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import java.util.regex.Pattern;
 import static java.lang.Math.min;
 
 @Component
+@Slf4j
 public class TokenLimiter {
 
     @Autowired
@@ -44,6 +46,7 @@ public class TokenLimiter {
         int batchSize = 8; // 初始批量读取数量
 
         int finalMaxTokens = min(maxTokenLimit, maxTokens);
+//        log.info("maxTokens: {}, finalMaxTokens: {},maxTokenLimit: {}", maxTokens, finalMaxTokens, maxTokenLimit);
         long messageCount = chatMessagesRedisDAO.getMessageCount(conversationId);
         int startIndex = (int) messageCount - 1;
 

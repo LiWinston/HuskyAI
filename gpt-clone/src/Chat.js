@@ -20,6 +20,9 @@ function Chat() {
     const [loading, setLoading] = useState(false);
     const [conversations, setConversations] = useState([]); // Ensure initial state is an array
     const [selectedConversation, setSelectedConversation] = useState(null);
+    const [selectedModel, setSelectedModel] = useState('baidu'); // 默认选择百度模型
+    const [models, setModels] = useState([]); // List of models
+    const [showModelOptions, setShowModelOptions] = useState(false); //
     // 当 selectedConversation 改变时，自动更新到 localStorage
     useEffect(() => {
         if (selectedConversation !== null) {
@@ -66,6 +69,18 @@ function Chat() {
     }, [input]);
 
     useEffect(() => {
+        const fetchModels = async () => {
+            try {
+                const response = await axios.get(`${window.API_BASE_URL}/chat/models`);
+                if (response.data.code === 1) {
+                    setModels(response.data.data); // Set models from response
+                } else {
+                    console.error('Error fetching models:', response.data.msg);
+                }
+            } catch (error) {
+                console.error('Failed to fetch models:', error);
+            }
+        };
         const fetchAndLoadConversation = async () => {
             try {
                 const userUUID = localStorage.getItem('userUUID');
@@ -81,9 +96,30 @@ function Chat() {
         };
 
         window.API_BASE_URL = localStorage.getItem('API_BASE_URL');
+
+        fetchModels().then(r => console.log(r)).catch(e => console.error('Error after fetchModels:', e));
+
         fetchAndLoadConversation()
             .then(() => console.log('Conversations fetched'))
             .catch(e => console.error('Error after fetchAndLoadConversation:', e));
+    }, []);
+
+    const modelSelectorRef = useRef(null);  // 用于引用整个模型选择器的 ref
+    // 点击页面其他地方隐藏模型选项的逻辑
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (modelSelectorRef.current && !modelSelectorRef.current.contains(event.target)) {
+                setShowModelOptions(false);
+            }
+        };
+
+        // 绑定全局点击事件
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            // 清除全局点击事件监听器
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
     }, []);
 
 // 新增一个 useEffect 来监听 conversations 的变化，当 conversations 更新时，加载第一个对话
@@ -242,7 +278,7 @@ function Chat() {
                 await axios.get(`${window.API_BASE_URL}/chat/${localStorage.getItem('userUUID')}/${cid}`);
             }
             const response = await axios.post(`${window.API_BASE_URL}/chat`, {
-                prompt: input, conversationId: selectedConversation, model: "baidu"
+                prompt: input, conversationId: selectedConversation, model: selectedModel
             });
             const sanitizedResponse = DOMPurify.sanitize(response.data.data);
             const assistantMessage = {sender: 'assistant', text: sanitizedResponse, timestamp: new Date()};
@@ -353,6 +389,28 @@ function Chat() {
 
         <div className="chat-container">
             <div className="chat-window" ref={chatWindowRef}>
+                <div className="model-selector" ref={modelSelectorRef}>
+                    <button className="floating-model-btn" onClick={() => setShowModelOptions(!showModelOptions)}>
+                        Current Model: {selectedModel}
+                    </button>
+
+                    <div className={`model-options ${showModelOptions ? 'show' : ''}`}>
+                        {models.length > 0 ? (
+                            models.map((model) => (
+                                <button key={model} onClick={() => {
+                                    setSelectedModel(model);
+                                    setShowModelOptions(false);
+                                }}>
+                                    {model}
+                                </button>
+                            ))
+                        ) : (
+                            <p>No models available</p>
+                        )}
+                    </div>
+                </div>
+
+
                 <AnimatePresence>
                     {messages.map((msg, index) => {
                         const messageDate = new Date(msg.timestamp);
@@ -379,7 +437,8 @@ function Chat() {
                                 >
                                     <div className={`message ${msg.sender}`}>
                                         <ReactMarkdown
-                                            children={DOMPurify.sanitize(msg.text)}
+                                            // children={DOMPurify.sanitize(msg.text)}
+                                            children={msg.text}
                                             components={{
                                                 code({node, inline, className, children, ...props}) {
                                                     const match = /language-(\w+)/.exec(className || '');
@@ -417,6 +476,7 @@ function Chat() {
                     })}
 
                 </AnimatePresence>
+
             </div>
 
             <div className="input-container">
