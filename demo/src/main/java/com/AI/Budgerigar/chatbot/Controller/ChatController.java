@@ -2,8 +2,10 @@ package com.AI.Budgerigar.chatbot.Controller;
 
 import com.AI.Budgerigar.chatbot.AIUtil.Message;
 import com.AI.Budgerigar.chatbot.Config.RemoteServiceConfig;
+import com.AI.Budgerigar.chatbot.Constant.ApplicationConstant;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
+import com.AI.Budgerigar.chatbot.Services.Factory.OpenAIChatServiceFactory;
 import com.AI.Budgerigar.chatbot.Services.impl.OpenAIChatServiceImpl;
 import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
@@ -48,6 +50,8 @@ public class ChatController {
 
     @Autowired
     private RestTemplate restTemplate;
+    @Autowired
+    private ApplicationConstant applicationConstant;
 
     @PostConstruct
     public void init() {
@@ -121,8 +125,11 @@ public class ChatController {
         }
     }
 
+    @Autowired
+    private OpenAIChatServiceFactory openAIChatServiceFactory;
+
     private void registerNewChatService(String modelId, String baseUrl) {
-        ChatService newService = OpenAIChatServiceImpl.create(baseUrl + "/v1/chat/completion", modelId);
+        ChatService newService = openAIChatServiceFactory.create(baseUrl + "/v1/chat/completion", modelId);
         chatServices.put(modelId, newService);
         log.info("Registered new ChatService with model: {} from {}", modelId, baseUrl + "/v1/chat/completion");
     }
