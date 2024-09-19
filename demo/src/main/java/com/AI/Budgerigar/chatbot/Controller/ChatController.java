@@ -11,6 +11,8 @@ import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.model.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +22,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -50,6 +52,7 @@ public class ChatController {
 
     @Autowired
     private RestTemplate restTemplate;
+
     @Autowired
     private ApplicationConstant applicationConstant;
 
@@ -84,43 +87,116 @@ public class ChatController {
         }
     }
 
-    @Scheduled(fixedDelay = 60000)  // 每60秒执行一次
+    @Scheduled(fixedDelay = 8000) // 每8秒执行一次
     public void checkRemoteServicesHealth() {
+        // 使用 ExecutorService 异步执行任务
         executorService.submit(() -> {
-            chatServices.entrySet().removeIf(entry -> {
-                String serviceName = entry.getKey();
-                if (!"baidu".equals(serviceName) && !"doubao".equals(serviceName) && !"openai".equals(serviceName)) {
-                    ChatService service = entry.getValue();
-                    if(service.getClass() != OpenAIChatServiceImpl.class) {
-                        return false;
-                    }
-                    OpenAIChatServiceImpl Oservice = (OpenAIChatServiceImpl) service;
-                    // 检查服务是否可用
-                    if (!isServiceAvailable(Oservice)) {
-                        log.info("Service {} is unavailable, removing from chatServices", serviceName);
-                        return true;  // 移除不可用服务
+            // 遍历配置中的所有服务链接
+            for (RemoteServiceConfig.ServiceConfig serviceConfig : remoteServiceConfig.getServices()) {
+                String serviceUrl = serviceConfig.getUrl();
+
+                // 从当前链接获取可用的模型列表
+                List<String> availableModels = fetchModelsFromService(serviceUrl);
+
+                // 获取当前服务中注册的模型
+                Set<String> registeredModels = chatServices.keySet()
+                    .stream()
+                    .filter(modelId -> chatServices.get(modelId) instanceof OpenAIChatServiceImpl)
+                    .filter(modelId -> ((OpenAIChatServiceImpl) chatServices.get(modelId)).getOpenAIUrl()
+                        .startsWith(serviceUrl))
+                    .collect(Collectors.toSet());
+
+                // 处理新增模型
+                for (String modelId : availableModels) {
+                    if (!registeredModels.contains(modelId)) {
+                        // 注册新模型
+                        registerNewChatService(modelId, serviceUrl);
                     }
                 }
-                return false;
-            });
+
+                // 处理减少的模型
+                for (String modelId : registeredModels) {
+                    if (!availableModels.contains(modelId)) {
+                        if (modelId.equals("baidu") || modelId.equals("doubao") || modelId.equals("openai")) {
+                            continue;
+                        }
+                        // 移除不可用模型
+                        log.info("Model {} is no longer available, removing service.", modelId);
+                        chatServices.remove(modelId);
+                    }
+                }
+            }
         });
+    }
+
+    private List<String> fetchModelsFromService(String serviceUrl) {
+        try {
+            String modelEndpoint = serviceUrl + "/v1/models";
+
+            // 发送 GET 请求并获取响应
+            ResponseEntity<String> response = restTemplate.getForEntity(modelEndpoint, String.class);
+
+            // 如果响应状态码不是 2xx，则返回空列表
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                return Collections.emptyList();
+            }
+
+            // 使用 Jackson 解析 JSON 响应
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+
+            // 提取模型 ID 列表
+            List<String> modelIds = new ArrayList<>();
+            JsonNode dataNode = jsonResponse.get("data");
+            if (dataNode != null && dataNode.isArray()) {
+                for (JsonNode modelNode : dataNode) {
+                    modelIds.add(modelNode.get("id").asText());
+                }
+            }
+
+            return modelIds;
+
+        }
+        catch (Exception e) {
+            log.error("Failed to fetch models from service: {}", serviceUrl, e);
+            return Collections.emptyList();
+        }
     }
 
     private boolean isServiceAvailable(OpenAIChatServiceImpl service) {
         try {
-            // 从 ChatService 实例中获取根路径，拼接 models 端点
             String chatUrl = service.getOpenAIUrl();
-            //"/v1/chat/completion" -> "/v1/models"
             String checkUrl = chatUrl.replace("/v1/chat/completion", "/v1/models");
 
-            // 使用 RestTemplate 发送 GET 请求来检查服务状态
             ResponseEntity<String> response = restTemplate.getForEntity(checkUrl, String.class);
 
-            // 检查是否返回成功的 2xx 状态码
-            return response.getStatusCode().is2xxSuccessful();
-        } catch (Exception e) {
-            // 如果发生异常，说明服务不可用，返回 false
-            log.error("Service check failed for {}: {}", service.getOpenAIUrl() + "-" + service.getModel(), e.getMessage());
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                return false;
+            }
+
+            // 使用 Jackson 解析 JSON 响应
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+
+            // 检查 "data" 数组中是否包含指定的模型 ID
+            JsonNode dataNode = jsonResponse.get("data");
+            if (dataNode != null && dataNode.isArray()) {
+                for (JsonNode modelNode : dataNode) {
+                    if (modelNode.get("id").asText().equals(service.getModel())) {
+                        return true; // 模型存在，服务可用
+                    }
+                }
+            }
+
+            // 如果模型未找到，返回 false
+            log.info("Model {} not found in service {}. Service might be unavailable.", service.getModel(),
+                    service.getOpenAIUrl());
+            return false;
+
+        }
+        catch (Exception e) {
+            log.error("Service check failed for {}: {}", service.getOpenAIUrl() + "-" + service.getModel(),
+                    e.getMessage());
             return false;
         }
     }
