@@ -1,8 +1,10 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
 import com.AI.Budgerigar.chatbot.AIUtil.Message;
+import com.AI.Budgerigar.chatbot.Config.RemoteServiceConfig;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
+import com.AI.Budgerigar.chatbot.Services.impl.OpenAIChatServiceImpl;
 import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.model.Conversation;
@@ -12,7 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -37,13 +41,90 @@ public class ChatController {
     @Qualifier("openai")
     private ChatService openaiChatService;
 
+    @Autowired
+    private RemoteServiceConfig remoteServiceConfig;
+
     private final ConcurrentHashMap<String, ChatService> chatServices = new ConcurrentHashMap<>();
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @PostConstruct
     public void init() {
         chatServices.put("baidu", baiduChatService);
         chatServices.put("doubao", doubaoChatService);
         chatServices.put("openai", openaiChatService);
+        // 从配置中读取根路径并动态注册服务
+        for (RemoteServiceConfig.ServiceConfig service : remoteServiceConfig.getServices()) {
+            fetchAndRegisterModelsFromService(service.getUrl());
+        }
+    }
+
+    private void fetchAndRegisterModelsFromService(String baseUrl) {
+        String modelsEndpoint = baseUrl + "/v1/models";
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(modelsEndpoint, Map.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                List<Map<String, Object>> models = (List<Map<String, Object>>) response.getBody().get("data");
+                for (Map<String, Object> modelData : models) {
+                    String modelId = (String) modelData.get("id");
+                    registerNewChatService(modelId, baseUrl);
+                }
+            }
+            else {
+                log.warn("Failed to fetch models from {}: {}", modelsEndpoint, response.getStatusCode());
+            }
+        }
+        catch (Exception e) {
+            log.error("Error fetching models from {}", modelsEndpoint, e);
+        }
+    }
+
+    @Scheduled(fixedDelay = 60000)  // 每60秒执行一次
+    public void checkRemoteServicesHealth() {
+        executorService.submit(() -> {
+            chatServices.entrySet().removeIf(entry -> {
+                String serviceName = entry.getKey();
+                if (!"baidu".equals(serviceName) && !"doubao".equals(serviceName) && !"openai".equals(serviceName)) {
+                    ChatService service = entry.getValue();
+                    if(service.getClass() != OpenAIChatServiceImpl.class) {
+                        return false;
+                    }
+                    OpenAIChatServiceImpl Oservice = (OpenAIChatServiceImpl) service;
+                    // 检查服务是否可用
+                    if (!isServiceAvailable(Oservice)) {
+                        log.info("Service {} is unavailable, removing from chatServices", serviceName);
+                        return true;  // 移除不可用服务
+                    }
+                }
+                return false;
+            });
+        });
+    }
+
+    private boolean isServiceAvailable(OpenAIChatServiceImpl service) {
+        try {
+            // 从 ChatService 实例中获取根路径，拼接 models 端点
+            String chatUrl = service.getOpenAIUrl();
+            //"/v1/chat/completion" -> "/v1/models"
+            String checkUrl = chatUrl.replace("/v1/chat/completion", "/v1/models");
+
+            // 使用 RestTemplate 发送 GET 请求来检查服务状态
+            ResponseEntity<String> response = restTemplate.getForEntity(checkUrl, String.class);
+
+            // 检查是否返回成功的 2xx 状态码
+            return response.getStatusCode().is2xxSuccessful();
+        } catch (Exception e) {
+            // 如果发生异常，说明服务不可用，返回 false
+            log.error("Service check failed for {}: {}", service.getOpenAIUrl() + "-" + service.getModel(), e.getMessage());
+            return false;
+        }
+    }
+
+    private void registerNewChatService(String modelId, String baseUrl) {
+        ChatService newService = OpenAIChatServiceImpl.create(baseUrl + "/v1/chat/completion", modelId);
+        chatServices.put(modelId, newService);
+        log.info("Registered new ChatService with model: {} from {}", modelId, baseUrl + "/v1/chat/completion");
     }
 
     @Autowired

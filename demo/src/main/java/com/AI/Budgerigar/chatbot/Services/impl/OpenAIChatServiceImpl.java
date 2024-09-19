@@ -7,6 +7,9 @@ import com.AI.Budgerigar.chatbot.DTO.ChatResponseDTO;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.result.Result;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 
 @Service
 @Slf4j
+@NoArgsConstructor
 public class OpenAIChatServiceImpl implements ChatService {
 
     @Autowired
@@ -44,11 +48,24 @@ public class OpenAIChatServiceImpl implements ChatService {
     @Autowired
     private TokenLimiter tokenLimiter;
 
+    @Getter
+    @Setter
     @Value("${openai.model:${PC.LMStudioServer.model}}")
     private String model;
 
+    @Getter
+    @Setter
     @Value("${openai.api.url:${PC.LMStudioServer.url}}")
     private String openAIUrl;
+
+    public OpenAIChatServiceImpl(String openAIUrl, String model) {
+        this.model = model;
+        this.openAIUrl = openAIUrl;
+    }
+
+    public static OpenAIChatServiceImpl create(String openAIUrl, String model) {
+        return new OpenAIChatServiceImpl(openAIUrl, model);
+    }
 
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
