@@ -117,23 +117,9 @@ public class ChatController {
             // 使用 chatService 的 chat 方法并返回结果
             String model = body.get("model");
             if (model == null) {
-                model = "";
+                model = "baidu";
             }
-            ChatService chatService = chatServices.get("baidu");
-            while (chatService == null) {
-                chatService = chatServices.entrySet().iterator().next().getValue();
-            }
-            switch (model.toLowerCase()) {
-                case "doubao":
-                    chatService = chatServices.get("doubao");
-                    break;
-                case "openai":
-                    chatService = chatServices.get("openai");
-                    break;
-                case "baidu":
-                default:
-
-            }
+            ChatService chatService = chatServices.get(model);
             Result<String> response = chatService.chat(body.get("prompt"), body.get("conversationId"));
             return Result.success(response.getData(), response.getMsg());
         }
