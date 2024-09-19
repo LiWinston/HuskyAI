@@ -63,7 +63,8 @@ public class GenerateTittle {
             // StringBuilder s = new StringBuilder();
             for (String[] entry : recentMessages) {
                 chatCompletion.addMessage(entry[0], entry[2]);
-                log.info(entry[0] + ": " + entry[2].substring(0, Math.min(30, entry[2].length())));
+                // log.info(entry[0] + ": " + entry[2].substring(0, Math.min(30,
+                // entry[2].length())));
             }
             // log.info(String.valueOf(s));
 

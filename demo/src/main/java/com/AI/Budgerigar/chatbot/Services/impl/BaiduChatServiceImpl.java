@@ -117,8 +117,8 @@ public class BaiduChatServiceImpl implements ChatService {
 
             // 将助手的响应添加到 Redis 对话历史
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
-                    StringEscapeUtils.escapeHtml4(result));
-
+                    // StringEscapeUtils.escapeHtml4(result));
+                    result);
             // Calculate the difference in conversation length
             long redisLength = chatMessagesRedisDAO.getMessageCount(conversationId);
             int mongoLength = getMongoConversationLength(conversationId);

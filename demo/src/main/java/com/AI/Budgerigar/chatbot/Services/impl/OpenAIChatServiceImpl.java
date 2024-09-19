@@ -99,8 +99,8 @@ public class OpenAIChatServiceImpl implements ChatService {
 
             // 将助手的响应添加到 Redis 会话历史
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
-                    StringEscapeUtils.escapeHtml4(result));
-
+                    // StringEscapeUtils.escapeHtml4(result));
+                    result);
             // 计算 Redis 和 MongoDB 中会话长度的差异
             int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
             int mongoLength = getMongoConversationLength(conversationId);

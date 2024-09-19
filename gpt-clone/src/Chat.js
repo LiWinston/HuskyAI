@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
-import DOMPurify from 'dompurify';
 import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
 import VscDarkPlus from "react-syntax-highlighter/src/styles/prism/vsc-dark-plus";
@@ -27,7 +26,7 @@ function Chat() {
     useEffect(() => {
         if (selectedConversation !== null) {
             localStorage.setItem('selectedConversation', selectedConversation);
-        }else{
+        } else {
             localStorage.removeItem('selectedConversation');
         }
     }, [selectedConversation]);
@@ -68,19 +67,20 @@ function Chat() {
         adjustTextareaHeight();
     }, [input]);
 
-    useEffect(() => {
-        const fetchModels = async () => {
-            try {
-                const response = await axios.get(`${window.API_BASE_URL}/chat/models`);
-                if (response.data.code === 1) {
-                    setModels(response.data.data); // Set models from response
-                } else {
-                    console.error('Error fetching models:', response.data.msg);
-                }
-            } catch (error) {
-                console.error('Failed to fetch models:', error);
+    const fetchModels = async () => {
+        try {
+            const response = await axios.get(`${window.API_BASE_URL}/chat/models`);
+            if (response.data.code === 1) {
+                setModels(response.data.data); // Set models from response
+            } else {
+                console.error('Error fetching models:', response.data.msg);
             }
-        };
+        } catch (error) {
+            console.error('Failed to fetch models:', error);
+        }
+    };
+
+    useEffect(() => {
         const fetchAndLoadConversation = async () => {
             try {
                 const userUUID = localStorage.getItem('userUUID');
@@ -280,7 +280,8 @@ function Chat() {
             const response = await axios.post(`${window.API_BASE_URL}/chat`, {
                 prompt: input, conversationId: selectedConversation, model: selectedModel
             });
-            const sanitizedResponse = DOMPurify.sanitize(response.data.data);
+            // const sanitizedResponse = DOMPurify.sanitize(response.data.data);
+            const sanitizedResponse = response.data.data;
             const assistantMessage = {sender: 'assistant', text: sanitizedResponse, timestamp: new Date()};
 
             setMessages(prevMessages => [...prevMessages, assistantMessage]);
@@ -390,7 +391,15 @@ function Chat() {
         <div className="chat-container">
             <div className="chat-window" ref={chatWindowRef}>
                 <div className="model-selector" ref={modelSelectorRef}>
-                    <button className="floating-model-btn" onClick={() => setShowModelOptions(!showModelOptions)}>
+                    <button className="floating-model-btn" onClick={() => {
+                        if (showModelOptions) {
+                            setShowModelOptions(false);
+                        } else {
+                            fetchModels().then(r => {
+                                setShowModelOptions(true);
+                            });
+                        }
+                    }}>
                         Current Model: {selectedModel}
                     </button>
 

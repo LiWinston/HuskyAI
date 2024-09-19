@@ -186,7 +186,8 @@ function SharePage() {
                                 }}
                             >
                                 <ReactMarkdown
-                                    children={DOMPurify.sanitize(msg.content)}
+                                    // children={DOMPurify.sanitize(msg.content)}
+                                    children={msg.content}
                                     components={{
                                         code({node, inline, className, children, ...props}) {
                                             const match = /language-(\w+)/.exec(className || '');
