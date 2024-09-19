@@ -46,7 +46,8 @@ public class TokenLimiter {
         int batchSize = 8; // 初始批量读取数量
 
         int finalMaxTokens = min(maxTokenLimit, maxTokens);
-//        log.info("maxTokens: {}, finalMaxTokens: {},maxTokenLimit: {}", maxTokens, finalMaxTokens, maxTokenLimit);
+        // log.info("maxTokens: {}, finalMaxTokens: {},maxTokenLimit: {}", maxTokens,
+        // finalMaxTokens, maxTokenLimit);
         long messageCount = chatMessagesRedisDAO.getMessageCount(conversationId);
         int startIndex = (int) messageCount - 1;
 
