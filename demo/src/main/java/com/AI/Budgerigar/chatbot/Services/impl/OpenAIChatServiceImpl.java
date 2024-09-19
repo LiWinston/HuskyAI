@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -63,8 +64,12 @@ public class OpenAIChatServiceImpl implements ChatService {
         this.openAIUrl = openAIUrl;
     }
 
-    public static OpenAIChatServiceImpl create(String openAIUrl, String model) {
-        return new OpenAIChatServiceImpl(openAIUrl, model);
+
+
+    public static OpenAIChatServiceImpl create(String openAIUrl, String model, AutowireCapableBeanFactory beanFactory) {
+        OpenAIChatServiceImpl service = new OpenAIChatServiceImpl(openAIUrl, model);
+        beanFactory.autowireBean(service);
+        return service;
     }
 
     String getNowTimeStamp() {

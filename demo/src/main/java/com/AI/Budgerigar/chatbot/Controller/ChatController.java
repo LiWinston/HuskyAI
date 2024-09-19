@@ -13,6 +13,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
@@ -121,8 +122,10 @@ public class ChatController {
         }
     }
 
+    @Autowired
+    private AutowireCapableBeanFactory beanFactory;
     private void registerNewChatService(String modelId, String baseUrl) {
-        ChatService newService = OpenAIChatServiceImpl.create(baseUrl + "/v1/chat/completion", modelId);
+        ChatService newService = OpenAIChatServiceImpl.create(baseUrl + "/v1/chat/completion", modelId, beanFactory);
         chatServices.put(modelId, newService);
         log.info("Registered new ChatService with model: {} from {}", modelId, baseUrl + "/v1/chat/completion");
     }
