@@ -44,10 +44,10 @@ public class OpenAIChatServiceImpl implements ChatService {
     @Autowired
     private TokenLimiter tokenLimiter;
 
-    @Value("${openai.model}")
+    @Value("${openai.model:${PC.LMStudioServer.model}}")
     private String model;
 
-    @Value("${openai.api.url}")
+    @Value("${openai.api.url:${PC.LMStudioServer.url}}")
     private String openAIUrl;
 
     String getNowTimeStamp() {
