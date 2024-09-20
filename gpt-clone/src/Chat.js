@@ -72,7 +72,12 @@ function Chat() {
             const response = await axios.get(`${window.API_BASE_URL}/chat/models`);
             if (response.data.code === 1) {
                 setModels(response.data.data); // Set models from response
-            } else {
+            } else if(response.data.code === 0 && response.data.data) {
+                setModels(response.data.data);
+                setNotification("Fail to update models, list remains the same");
+                setTimeout(() => setNotification(null), 1000);
+            }
+            else {
                 console.error('Error fetching models:', response.data.msg);
             }
         } catch (error) {

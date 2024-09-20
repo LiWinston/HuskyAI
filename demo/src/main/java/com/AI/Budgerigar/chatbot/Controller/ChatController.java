@@ -87,7 +87,7 @@ public class ChatController {
         }
     }
 
-    @Scheduled(fixedDelay = 24000) // 每8秒执行一次
+    @Scheduled(fixedDelay = 180000) // 每 3 分钟更新一次服务健康状态
     public void checkRemoteServicesHealth() {
         // 使用 ExecutorService 异步执行任务
         executorService.submit(() -> {
@@ -208,9 +208,9 @@ public class ChatController {
     private OpenAIChatServiceFactory openAIChatServiceFactory;
 
     private void registerNewChatService(String modelId, String baseUrl) {
-        ChatService newService = openAIChatServiceFactory.create(baseUrl + "/v1/chat/completion", modelId);
+        ChatService newService = openAIChatServiceFactory.create(baseUrl + "/v1/chat/completions", modelId);
         chatServices.put(modelId, newService);
-        log.info("Registered new ChatService with model: {} from {}", modelId, baseUrl + "/v1/chat/completion");
+        log.info("Registered new ChatService with model: {} from {}", modelId, baseUrl + "/v1/chat/completions");
     }
 
     @Autowired
@@ -304,10 +304,11 @@ public class ChatController {
     @GetMapping("/models")
     public Result<?> getModels() {
         try {
+            checkRemoteServicesHealth();
             return Result.success(chatServices.keySet());
         }
         catch (Exception e) {
-            return Result.error(e.getMessage());
+            return Result.error(chatServices.keySet(), e.getMessage());
         }
     }
 
