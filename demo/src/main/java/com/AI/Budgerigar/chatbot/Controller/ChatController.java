@@ -75,7 +75,7 @@ public class ChatController {
                 List<Map<String, Object>> models = (List<Map<String, Object>>) response.getBody().get("data");
                 for (Map<String, Object> modelData : models) {
                     String modelId = (String) modelData.get("id");
-                    registerNewChatService(modelId, baseUrl);
+                    if(!chatServices.containsKey(modelId)) registerNewChatService(modelId, baseUrl);
                 }
             }
             else {
@@ -87,7 +87,7 @@ public class ChatController {
         }
     }
 
-    @Scheduled(fixedDelay = 8000) // 每8秒执行一次
+    @Scheduled(fixedDelay = 24000) // 每8秒执行一次
     public void checkRemoteServicesHealth() {
         // 使用 ExecutorService 异步执行任务
         executorService.submit(() -> {
@@ -97,22 +97,24 @@ public class ChatController {
 
                 // 从当前链接获取可用的模型列表
                 List<String> availableModels = fetchModelsFromService(serviceUrl);
+                log.info("Available models from {}: {}", serviceUrl, availableModels);
 
-                // 获取当前服务中注册的模型
-                Set<String> registeredModels = chatServices.keySet()
-                    .stream()
-                    .filter(modelId -> chatServices.get(modelId) instanceof OpenAIChatServiceImpl)
-                    .filter(modelId -> ((OpenAIChatServiceImpl) chatServices.get(modelId)).getOpenAIUrl()
-                        .startsWith(serviceUrl))
-                    .collect(Collectors.toSet());
+//                // 获取当前服务中注册的模型
+                Set<String> registeredModels = chatServices.keySet();
+//                    .stream()
+//                    .filter(modelId -> chatServices.get(modelId) instanceof OpenAIChatServiceImpl)
+//                    .filter(modelId -> ((OpenAIChatServiceImpl) chatServices.get(modelId)).getOpenAIUrl()
+//                        .startsWith(serviceUrl))
+//                    .collect(Collectors.toSet());
 
                 // 处理新增模型
                 for (String modelId : availableModels) {
-                    if (!registeredModels.contains(modelId)) {
+                    if (!chatServices.containsKey(modelId)) {
                         // 注册新模型
                         registerNewChatService(modelId, serviceUrl);
                     }
                 }
+
 
                 // 处理减少的模型
                 for (String modelId : registeredModels) {

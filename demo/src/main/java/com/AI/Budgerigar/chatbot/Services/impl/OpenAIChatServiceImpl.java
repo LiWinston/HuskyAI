@@ -59,6 +59,7 @@ public class OpenAIChatServiceImpl implements ChatService {
     private String openAIUrl;
 
     public OpenAIChatServiceImpl(String openAIUrl, String model) {
+        log.info("CustomImpl created with model: {}, OpenAI URL: {}", model, openAIUrl);
         this.model = model;
         this.openAIUrl = openAIUrl;
     }
