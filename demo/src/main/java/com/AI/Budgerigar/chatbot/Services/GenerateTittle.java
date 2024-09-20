@@ -41,12 +41,14 @@ public class GenerateTittle {
     @Autowired
     private ConversationMapper conversationMapper;
 
+    @Value("${chatbot.maxTokenLimit:800}")
+    private int maxTokenLimit;
+
     // @Transactional
     public Result<String> generateAndSetConversationTitle(String conversationId) {
         try {
             // Step 1: Get the last 15 messages of the conversation
-            List<String[]> recentMessages = tokenLimiter.getFixedHistory(conversationId,
-                    (int) Math.min(15, chatMessagesRedisDAO.getMessageCount(conversationId)));
+            List<String[]> recentMessages = tokenLimiter.getAdaptiveConversationHistory(conversationId, maxTokenLimit * 2 / 3);
 
             if (recentMessages == null || recentMessages.isEmpty()) {
                 return Result.error(conversationId, "No messages found for the conversation.");

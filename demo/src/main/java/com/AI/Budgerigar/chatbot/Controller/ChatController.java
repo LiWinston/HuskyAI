@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -87,7 +86,7 @@ public class ChatController {
         }
     }
 
-    @Scheduled(fixedDelay = 180000) // 每 3 分钟更新一次服务健康状态
+    // @Scheduled(fixedDelay = 600000) // check every 10 minutes
     public void checkRemoteServicesHealth() {
         // 使用 ExecutorService 异步执行任务
         executorService.submit(() -> {

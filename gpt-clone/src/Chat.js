@@ -72,12 +72,11 @@ function Chat() {
             const response = await axios.get(`${window.API_BASE_URL}/chat/models`);
             if (response.data.code === 1) {
                 setModels(response.data.data); // Set models from response
-            } else if(response.data.code === 0 && response.data.data) {
+            } else if (response.data.code === 0 && response.data.data) {
                 setModels(response.data.data);
                 setNotification("Fail to update models, list remains the same");
                 setTimeout(() => setNotification(null), 1000);
-            }
-            else {
+            } else {
                 console.error('Error fetching models:', response.data.msg);
             }
         } catch (error) {
@@ -283,7 +282,11 @@ function Chat() {
                 await axios.get(`${window.API_BASE_URL}/chat/${localStorage.getItem('userUUID')}/${cid}`);
             }
             const response = await axios.post(`${window.API_BASE_URL}/chat`, {
-                prompt: input, conversationId: selectedConversation, model: selectedModel
+                prompt: input,
+                conversationId: selectedConversation,
+                model: selectedModel
+            }, {
+                timeout: 60000  // 设置超时时间为60秒
             });
             // const sanitizedResponse = DOMPurify.sanitize(response.data.data);
             const sanitizedResponse = response.data.data;

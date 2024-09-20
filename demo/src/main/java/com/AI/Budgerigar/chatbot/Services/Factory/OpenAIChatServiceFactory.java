@@ -29,7 +29,8 @@ public class OpenAIChatServiceFactory {
         service.setOpenAIUrl(openAIUrl);
         service.setRestTemplate(new RestTemplate());
 
-        return service;
+        return (OpenAIChatServiceImpl) beanFactory.initializeBean(service,
+                "openAIChatService_" + openAIUrl + "_" + model);
     }
 
 }

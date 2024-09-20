@@ -1,5 +1,6 @@
 package com.AI.Budgerigar.chatbot.AOP;
 
+import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Services.GenerateTittle;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
@@ -20,6 +21,9 @@ import static com.AI.Budgerigar.chatbot.Constant.ApplicationConstant.CONVERSATIO
 @Aspect
 @Component
 public class ChatGenerateSummaryAspect {
+
+    @Autowired
+    private ChatMessagesRedisDAO chatMessagesRedisDAO;
 
     // 修改切入点，匹配所有实现 ChatService 接口的类的 chat 方法
     @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.ChatService.chat(..))")
@@ -83,7 +87,11 @@ public class ChatGenerateSummaryAspect {
 
     // Method to determine if title generation should occur
     private boolean shouldGenerateTitle(String conversationId) {
-        if (RANDOM.nextDouble() < 0.75) {
+        if (RANDOM.nextDouble() < 0.5) {
+            // new conversation must generate title
+            if (chatMessagesRedisDAO.getMessageCount(conversationId) <= 3) {
+                return true;
+            }
             log.info("Not generating title.");
             return false;
         }
