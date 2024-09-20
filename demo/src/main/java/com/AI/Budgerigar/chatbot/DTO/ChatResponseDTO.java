@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true) // 忽略未映射的字段
+@ToString
 public class ChatResponseDTO {
 
     private String id;
@@ -25,22 +27,30 @@ public class ChatResponseDTO {
 
     private List<Choice> choices;
 
+    private String system_fingerprint;
+
     @Getter
     @Setter
     @AllArgsConstructor
+    @ToString
     public static class Choice {
 
         private int index;
 
-        private OAMessageDTO message;
+        private OAMessageDTO message; // 用于同步响应
+
+        private OAMessageDTO delta; // 用于流式响应的命名映射
 
         private String finish_reason; // 完整响应中的字段
 
     }
 
+    private String logprobs; // 完整响应中的字段
+
     @Getter
     @Setter
     @AllArgsConstructor
+    @ToString
     public static class Usage {
 
         private int prompt_tokens;
