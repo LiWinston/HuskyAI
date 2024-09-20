@@ -35,3 +35,30 @@
 
 ## Action Items
 * Sid to send invite link to Corey
+
+
+# Client Demo Meeting (20/09/2024)
+## Agenda
+* Demonstrate client meeting
+
+## Participants
+* Shrimant Kohli
+* Adrian Dam
+* Weiran Xu
+* Yongchun Li
+* Xiang Wang
+* Pengyuan Yu
+* Rong Wang
+* Yuxin Ren
+* Afsana
+
+## Discussion Summary/ Feedback
+* Single sign on would be a nice to have from Canvas instead of having a seperate login into the chat tool
+* Admin able to switch the large language model would be nice to have
+* Corey liked the UI design and the conversation history
+* Include a thinking annimation into UI after prompt has sent
+* Have 3 pretrained bots would be nice to have - Corey to send follow up email on further details on how these bots should behave
+
+## Action Items
+* Finetune model on training data
+* Embed the web app in an iframe

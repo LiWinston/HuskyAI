@@ -51,12 +51,12 @@ public class OpenAIChatServiceImpl implements ChatService {
 
     @Getter
     @Setter
-    @Value("${openai.model:${PC.LMStudioServer.model}}")
+    @Value("${openai.model:}")
     private String model;
 
     @Getter
     @Setter
-    @Value("${openai.api.url:${PC.LMStudioServer.url}}")
+    @Value("${openai.api.url:}")
     private String openAIUrl;
 
     public OpenAIChatServiceImpl(String openAIUrl, String model) {
