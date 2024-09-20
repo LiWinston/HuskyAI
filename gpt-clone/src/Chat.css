@@ -119,6 +119,23 @@
     background-color: #ffffff;
 }
 
+.message-container.streaming {
+    border: 1px solid #007aff; /* 突出未完成的消息 */
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    }
+}
+
 .chat-window {
     flex: 1;
     padding: 20px;
