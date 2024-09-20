@@ -100,13 +100,6 @@ public class ChatController {
 
                 // // 获取当前服务中注册的模型
                 Set<String> registeredModels = chatServices.keySet();
-                // .stream()
-                // .filter(modelId -> chatServices.get(modelId) instanceof
-                // OpenAIChatServiceImpl)
-                // .filter(modelId -> ((OpenAIChatServiceImpl)
-                // chatServices.get(modelId)).getOpenAIUrl()
-                // .startsWith(serviceUrl))
-                // .collect(Collectors.toSet());
 
                 // 处理新增模型
                 for (String modelId : availableModels) {
@@ -303,8 +296,25 @@ public class ChatController {
     @GetMapping("/models")
     public Result<?> getModels() {
         try {
+            // 检查远程服务的健康状况
             checkRemoteServicesHealth();
-            return Result.success(chatServices.keySet());
+
+            // 优先模型列表
+            List<String> prioritizedModels = Arrays.asList("openai", "doubao", "baidu");
+            // 初始化返回列表大小,避免不必要的扩容
+            List<String> result = new ArrayList<>(chatServices.size());
+
+            // 直接使用Stream过滤出优先模型，并按优先顺序排序
+            prioritizedModels.stream().filter(chatServices::containsKey).forEach(result::add);
+
+            // 对其余模型按字母顺序排序并加入结果
+            chatServices.keySet()
+                .stream()
+                .filter(model -> !prioritizedModels.contains(model))
+                .sorted() // 只对剩下的模型排序
+                .forEach(result::add);
+
+            return Result.success(result);
         }
         catch (Exception e) {
             return Result.error(chatServices.keySet(), e.getMessage());

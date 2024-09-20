@@ -289,8 +289,8 @@ function Chat() {
                 timeout: 60000  // 设置超时时间为60秒
             });
             // const sanitizedResponse = DOMPurify.sanitize(response.data.data);
-            const sanitizedResponse = response.data.data;
-            const assistantMessage = {sender: 'assistant', text: sanitizedResponse, timestamp: new Date()};
+            // const sanitizedResponse = response.data.data;
+            const assistantMessage = {sender: 'assistant', text: response.data.data, timestamp: new Date()};
 
             setMessages(prevMessages => [...prevMessages, assistantMessage]);
             setLoading(false);

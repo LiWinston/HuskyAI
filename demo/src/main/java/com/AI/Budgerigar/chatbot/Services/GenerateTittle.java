@@ -48,7 +48,8 @@ public class GenerateTittle {
     public Result<String> generateAndSetConversationTitle(String conversationId) {
         try {
             // Step 1: Get the last 15 messages of the conversation
-            List<String[]> recentMessages = tokenLimiter.getAdaptiveConversationHistory(conversationId, maxTokenLimit * 2 / 3);
+            List<String[]> recentMessages = tokenLimiter.getAdaptiveConversationHistory(conversationId,
+                    maxTokenLimit * 2 / 3);
 
             if (recentMessages == null || recentMessages.isEmpty()) {
                 return Result.error(conversationId, "No messages found for the conversation.");
@@ -78,8 +79,8 @@ public class GenerateTittle {
             if (summary == null || summary.isEmpty()) {
                 return Result.error(conversationId, "Failed to generate a title.");
             }
-            log.info("Generated title: " + summary);
-
+            log.info("Generated title: " + "\u001B[32m" + summary + "\u001B[0m" + " \u001B[35mBased on "
+                    + recentMessages.size() + " messages.\u001B[0m");
             // Step 3: Update the 'firstmessage' field in the database
             conversationMapper.setMessageForShort(conversationId, summary);
 

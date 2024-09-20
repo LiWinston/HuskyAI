@@ -109,26 +109,10 @@ public class OpenAIChatServiceImpl implements ChatService {
 
             String result = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
-            log.info("Response from {}: {}", chatResponseDTO.getModel(),
+            log.info("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m", chatResponseDTO.getModel(),
                     result.substring(0, Math.min(40, result.length())));
 
-            // 将助手的响应添加到 Redis 会话历史
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
-                    // StringEscapeUtils.escapeHtml4(result));
-                    result);
-            // 计算 Redis 和 MongoDB 中会话长度的差异
-            int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
-            int mongoLength = getMongoConversationLength(conversationId);
-            int diff = redisLength - mongoLength;
-            log.info("Redis length: {}, MongoDB length: {}, diff: {} FROM {}", redisLength, mongoLength, diff,
-                    OpenAIChatServiceImpl.class.getName());
-
-            // 如果差异超过阈值，则异步更新 MongoDB
-            if (Math.abs(diff) > 5) {
-                executorService.submit(() -> {
-                    chatSyncService.updateHistoryFromRedis(conversationId);
-                });
-            }
+            updateConversationHistory(conversationId, result);
 
             return Result.success(result,
                     "From " + chatResponseDTO.getModel() + ", Referenced " + conversationHistory.size() + " messages.");
@@ -138,6 +122,19 @@ public class OpenAIChatServiceImpl implements ChatService {
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
                     "Query failed. Please try again.");
             throw new RuntimeException("Error processing chat request", e);
+        }
+    }
+
+    private void updateConversationHistory(String conversationId, String fullResponse) {
+        chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), fullResponse);
+
+        int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
+        int mongoLength = chatMessagesMongoDAO.getConversationLengthById(conversationId);
+        int diff = redisLength - mongoLength;
+        log.info("Redis length: {}, MongoDB length: {}, diff: {} FROM {}", redisLength, mongoLength, diff,
+                OpenAIChatServiceImpl.class.getName());
+        if (Math.abs(diff) > 5) {
+            executorService.submit(() -> chatSyncService.updateHistoryFromRedis(conversationId));
         }
     }
 
