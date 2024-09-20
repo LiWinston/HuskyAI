@@ -34,6 +34,7 @@ public class OpenAIChatServiceImpl implements ChatService {
     DateTimeFormatter dateTimeFormatter;
 
     @Autowired
+    @Setter
     private RestTemplate restTemplate;
 
     @Autowired
@@ -59,13 +60,8 @@ public class OpenAIChatServiceImpl implements ChatService {
     private String openAIUrl;
 
     public OpenAIChatServiceImpl(String openAIUrl, String model) {
-        log.info("CustomImpl created with model: {}, OpenAI URL: {}", model, openAIUrl);
         this.model = model;
         this.openAIUrl = openAIUrl;
-    }
-
-    public static OpenAIChatServiceImpl create(String openAIUrl, String model) {
-        return new OpenAIChatServiceImpl(openAIUrl, model);
     }
 
     String getNowTimeStamp() {

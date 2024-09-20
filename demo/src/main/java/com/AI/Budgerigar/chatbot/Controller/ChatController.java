@@ -25,7 +25,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -75,7 +74,8 @@ public class ChatController {
                 List<Map<String, Object>> models = (List<Map<String, Object>>) response.getBody().get("data");
                 for (Map<String, Object> modelData : models) {
                     String modelId = (String) modelData.get("id");
-                    if(!chatServices.containsKey(modelId)) registerNewChatService(modelId, baseUrl);
+                    if (!chatServices.containsKey(modelId))
+                        registerNewChatService(modelId, baseUrl);
                 }
             }
             else {
@@ -99,13 +99,15 @@ public class ChatController {
                 List<String> availableModels = fetchModelsFromService(serviceUrl);
                 log.info("Available models from {}: {}", serviceUrl, availableModels);
 
-//                // 获取当前服务中注册的模型
+                // // 获取当前服务中注册的模型
                 Set<String> registeredModels = chatServices.keySet();
-//                    .stream()
-//                    .filter(modelId -> chatServices.get(modelId) instanceof OpenAIChatServiceImpl)
-//                    .filter(modelId -> ((OpenAIChatServiceImpl) chatServices.get(modelId)).getOpenAIUrl()
-//                        .startsWith(serviceUrl))
-//                    .collect(Collectors.toSet());
+                // .stream()
+                // .filter(modelId -> chatServices.get(modelId) instanceof
+                // OpenAIChatServiceImpl)
+                // .filter(modelId -> ((OpenAIChatServiceImpl)
+                // chatServices.get(modelId)).getOpenAIUrl()
+                // .startsWith(serviceUrl))
+                // .collect(Collectors.toSet());
 
                 // 处理新增模型
                 for (String modelId : availableModels) {
@@ -114,7 +116,6 @@ public class ChatController {
                         registerNewChatService(modelId, serviceUrl);
                     }
                 }
-
 
                 // 处理减少的模型
                 for (String modelId : registeredModels) {

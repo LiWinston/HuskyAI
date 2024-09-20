@@ -4,6 +4,7 @@ import com.AI.Budgerigar.chatbot.Services.impl.OpenAIChatServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 @Component
 public class OpenAIChatServiceFactory {
@@ -18,11 +19,15 @@ public class OpenAIChatServiceFactory {
      * @return 返回一个自动注入依赖的 OpenAIChatServiceImpl 实例
      */
     public OpenAIChatServiceImpl create(String openAIUrl, String model) {
-        // 手动传递 openAIUrl 和 model 构造实例
-        OpenAIChatServiceImpl service = new OpenAIChatServiceImpl(openAIUrl, model);
+        OpenAIChatServiceImpl service = new OpenAIChatServiceImpl();
 
-        // 使用 Spring 的 AutowireCapableBeanFactory 来注入其他依赖
+        // 先注入其他依赖
         beanFactory.autowireBean(service);
+
+        // 然后设置特定的值
+        service.setModel(model);
+        service.setOpenAIUrl(openAIUrl);
+        service.setRestTemplate(new RestTemplate());
 
         return service;
     }
