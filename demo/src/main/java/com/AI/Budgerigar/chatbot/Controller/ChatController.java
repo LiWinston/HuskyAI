@@ -6,11 +6,13 @@ import com.AI.Budgerigar.chatbot.Constant.ApplicationConstant;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
 import com.AI.Budgerigar.chatbot.Services.Factory.OpenAIChatServiceFactory;
+import com.AI.Budgerigar.chatbot.Services.StreamChatService;
 import com.AI.Budgerigar.chatbot.Services.impl.OpenAIChatServiceImpl;
 import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.model.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import reactor.core.publisher.Flux;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +33,8 @@ import java.util.concurrent.ExecutorService;
 @RequestMapping("/chat")
 @Slf4j
 public class ChatController {
+
+    private final ConcurrentHashMap<String, ChatService> chatServices = new ConcurrentHashMap<>();
 
     @Autowired
     @Qualifier("baidu")
@@ -46,13 +51,29 @@ public class ChatController {
     @Autowired
     private RemoteServiceConfig remoteServiceConfig;
 
-    private final ConcurrentHashMap<String, ChatService> chatServices = new ConcurrentHashMap<>();
-
     @Autowired
     private RestTemplate restTemplate;
 
     @Autowired
     private ApplicationConstant applicationConstant;
+
+    @Autowired
+    private OpenAIChatServiceFactory openAIChatServiceFactory;
+
+    @Autowired
+    private userService userService;
+
+    @Autowired
+    private ChatSyncService chatSyncService;
+
+    @Autowired
+    private ExecutorService executorService;// 线程池 thread pool
+
+    @Autowired
+    private ConversationMapper conversationMapper;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @PostConstruct
     public void init() {
@@ -196,26 +217,11 @@ public class ChatController {
         }
     }
 
-    @Autowired
-    private OpenAIChatServiceFactory openAIChatServiceFactory;
-
     private void registerNewChatService(String modelId, String baseUrl) {
         ChatService newService = openAIChatServiceFactory.create(baseUrl + "/v1/chat/completions", modelId);
         chatServices.put(modelId, newService);
         log.info("Registered new ChatService with model: {} from {}", modelId, baseUrl + "/v1/chat/completions");
     }
-
-    @Autowired
-    private userService userService;
-
-    @Autowired
-    private ChatSyncService chatSyncService;
-
-    @Autowired
-    private ExecutorService executorService;// 线程池 thread pool
-
-    @Autowired
-    private ConversationMapper conversationMapper;
 
     // 获取DB中所有对话清单，以备用户选取.每个对话清单包含对话ID和对话节选
     // get all conversation list from DB for user to choose.
@@ -271,20 +277,66 @@ public class ChatController {
     }
 
     @PostMapping
-    public Result<?> chatPost(@RequestBody Map<String, String> body) {
+    public Result<String> chatPost(@RequestBody Map<String, String> body) {
         try {
-            // 使用 chatService 的 chat 方法并返回结果
             String model = body.get("model");
             if (model == null) {
                 model = "baidu";
             }
             ChatService chatService = chatServices.get(model);
+            if (chatService == null) {
+                return Result.error("Model not found: " + model);
+            }
+            chatServices.forEach((k, v) -> {
+                log.info("key: " + k + " value: " + v.toString());
+            });
+
+            // 非流式调用
             Result<String> response = chatService.chat(body.get("prompt"), body.get("conversationId"));
             return Result.success(response.getData(), response.getMsg());
         }
         catch (Exception e) {
-            // 捕获任何异常并返回错误响应
             return Result.error(e.getMessage());
+        }
+    }
+
+    @PostMapping("/stream")
+    public Flux<String> chatPostStream(@RequestBody Map<String, String> body) {
+        try {
+            String model = body.get("model");
+            if (model == null) {
+                model = "baidu";
+            }
+            ChatService chatService = chatServices.get(model);
+
+            // 检查是否支持流式调用
+            if (chatService instanceof StreamChatService) {
+                return ((StreamChatService) chatService).chatFlux(body.get("prompt"), body.get("conversationId"))
+                    .map(result -> {
+                        // 将Result对象转换为JSON字符串并添加换行符
+                        try {
+                            return objectMapper.writeValueAsString(result) + "\n";
+                        }
+                        catch (JsonProcessingException e) {
+                            throw new RuntimeException("Error serializing result", e);
+                        }
+                    });
+            }
+            else {
+                return Flux
+                    .just(Result.error("Try Switching off streaming", "Model does not support streaming: " + model))
+                    .map(result -> {
+                        try {
+                            return objectMapper.writeValueAsString(result) + "\n";
+                        }
+                        catch (JsonProcessingException e) {
+                            throw new RuntimeException("Error serializing result", e);
+                        }
+                    });
+            }
+        }
+        catch (Exception e) {
+            return Flux.error(e);
         }
     }
 
