@@ -1,6 +1,6 @@
 # 第一阶段：使用 Maven 构建 Spring Boot 后端
 # Stage 1: Build the Spring Boot backend using Maven
-FROM maven:3.8.7-eclipse-temurin-17 AS backend-build
+FROM maven:3.9.9-amazoncorretto-21 AS backend-build
 
 # 设置工作目录为 /app/backend
 # Set the working directory to /app/backend
@@ -48,7 +48,7 @@ RUN npm run build
 
 # 第三阶段：运行时镜像，使用 OpenJDK 和 Nginx
 # Stage 3: Runtime image using OpenJDK and Nginx
-FROM eclipse-temurin:17-jre AS runtime
+FROM eclipse-temurin:21-jre AS runtime
 
 # 设置应用的工作目录为 /app
 # Set the application working directory to /app
