@@ -352,7 +352,7 @@ function Chat() {
 
                 const finalStreamText = accumulatedText;
                 setMessages(prevMessages => [...prevMessages, {
-                    sender: 'assistant', text: finalStreamText, timestamp: timestamp
+                    sender: 'assistant', text: finalStreamText, timestamp: new Date()
                 }]);
                 setLoading(false);
                 setStreamingMessage(null);
