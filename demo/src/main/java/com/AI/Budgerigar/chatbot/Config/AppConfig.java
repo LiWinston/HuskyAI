@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -70,6 +71,12 @@ public class AppConfig {
         }
         log.warn("Invalid token limit type: {}. Using default value: 'Adaptive'", tokenLimitTypeStr);
         return ChatService.TokenLimitType.Adaptive;
+    }
+
+    @Bean
+    @Qualifier("chatServices")
+    protected ConcurrentHashMap<String, ChatService> chatServices() {
+        return new ConcurrentHashMap<>();
     }
 
     @Bean

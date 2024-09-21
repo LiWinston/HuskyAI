@@ -34,7 +34,9 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 public class ChatController {
 
-    private final ConcurrentHashMap<String, ChatService> chatServices = new ConcurrentHashMap<>();
+    @Autowired
+    @Qualifier("chatServices")
+    private ConcurrentHashMap<String, ChatService> chatServices;
 
     @Autowired
     @Qualifier("baidu")

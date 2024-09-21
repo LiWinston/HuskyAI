@@ -5,6 +5,7 @@ import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.DTO.ChatRequestDTO;
 import com.AI.Budgerigar.chatbot.DTO.ChatResponseDTO;
+import com.AI.Budgerigar.chatbot.Services.impl.OpenAIChatServiceImpl;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.baidubce.qianfan.core.builder.ChatBuilder;
@@ -15,6 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -26,11 +30,14 @@ public class GenerateTittle {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Value("${openai.api.url:${PC.LMStudioServer.url}}")
+    @Value("${openai.api.url}")
     private String openAIUrl;
 
-    @Value("${openai.model:${PC.LMStudioServer.model}}")
+    @Value("${openai.model}")
     private String model;
+
+    @Autowired
+    private ConcurrentHashMap<String, ChatService> chatServices;
 
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
@@ -47,6 +54,15 @@ public class GenerateTittle {
     // @Transactional
     public Result<String> generateAndSetConversationTitle(String conversationId) {
         try {
+            AtomicReference<String> _openAIUrl = new AtomicReference<String>();
+            AtomicReference<String> _model = new AtomicReference<String>();
+            chatServices.forEach((key, value) -> {
+                if (value instanceof OpenAIChatServiceImpl && !Objects.equals(key, "openai")) {
+                    _openAIUrl.set(((OpenAIChatServiceImpl) value).getOpenAIUrl());
+                    _model.set(key);
+                }
+            });
+
             // Step 1: Get the last 15 messages of the conversation
             List<String[]> recentMessages = tokenLimiter.getAdaptiveConversationHistory(conversationId,
                     maxTokenLimit * 2 / 3);
@@ -72,8 +88,8 @@ public class GenerateTittle {
             // log.info(String.valueOf(s));
 
             // String summary = chatCompletion.execute().getResult();
-            ChatResponseDTO chatResponseDTO = restTemplate.postForObject(openAIUrl,
-                    ChatRequestDTO.fromStringTuples(model, recentMessages), ChatResponseDTO.class);
+            ChatResponseDTO chatResponseDTO = restTemplate.postForObject(_openAIUrl.get(),
+                    ChatRequestDTO.fromStringTuples(_model.get(), recentMessages), ChatResponseDTO.class);
             String summary = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
             if (summary == null || summary.isEmpty()) {
