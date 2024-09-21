@@ -29,7 +29,7 @@ public class AppConfig {
 
     @Bean
     public ExecutorService executorService() {
-        return Executors.newCachedThreadPool();
+        return Executors.newVirtualThreadPerTaskExecutor();
     }
 
     @Bean
