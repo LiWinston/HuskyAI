@@ -20,11 +20,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -36,10 +40,10 @@ import java.util.concurrent.ExecutorService;
 public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
 
     @Autowired
-    private ExecutorService executorService;
+    DateTimeFormatter dateTimeFormatter;
 
     @Autowired
-    DateTimeFormatter dateTimeFormatter;
+    private ExecutorService executorService;
 
     @Autowired
     @Setter
@@ -66,6 +70,11 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
     @Setter
     @Value("${openai.api.url:}")
     private String openAIUrl;
+
+    private WebClient webClient;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
@@ -133,18 +142,21 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
         }
     }
 
-    private WebClient webClient;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @PostConstruct
     public void init() {
-        webClient = WebClient.builder()
+        // 设置连接池，保活连接
+        ConnectionProvider provider = ConnectionProvider.builder("custom")
+            .maxConnections(500) // 设置最大连接数
+            .pendingAcquireTimeout(Duration.ofSeconds(60)) // 等待连接池的超时时间
+            .maxIdleTime(Duration.ofSeconds(30)) // 空闲连接保活时间
+            .maxLifeTime(Duration.ofMinutes(5)) // 连接最长保留时间
+            .build();
+
+        this.webClient = WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(HttpClient.create(provider).compress(true).keepAlive(true)))
             .baseUrl(openAIUrl)
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // 设置内容类型
             .defaultHeader(HttpHeaders.CACHE_CONTROL, "no-cache") // 设置缓存控制
-            // .defaultHeader(HttpHeaders.CONNECTION, "keep-alive") // 设置连接保持
             .build();
     }
 
