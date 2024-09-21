@@ -403,8 +403,19 @@ function Chat() {
 
     useEffect(() => {
         if (animatingTitle) {
+            const totalLength = animatingTitle.targetTitle.length;
+            const remainingChars = totalLength - animatingTitle.index;
+
+            // 基础延迟时间
+            const baseDelay = 3;
+            const maxDelay = 55;
+
+            // 根据剩余字符数调整延迟
+            // 字符越少，延迟越长，但不超过200ms
+            const adjustedDelay = Math.min(baseDelay + (1 / remainingChars) * 1000, maxDelay);
+
             const timer = setTimeout(() => {
-                if (animatingTitle.index < animatingTitle.targetTitle.length) {
+                if (animatingTitle.index < totalLength) {
                     setAnimatingTitle(prev => ({
                         ...prev,
                         currentTitle: prev.currentTitle + prev.targetTitle[prev.index],
@@ -420,7 +431,7 @@ function Chat() {
                     );
                     setAnimatingTitle(null);
                 }
-            }, 15);
+            }, adjustedDelay);
 
             return () => clearTimeout(timer);
         }
