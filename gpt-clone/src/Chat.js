@@ -36,7 +36,7 @@ function Chat() {
     const [textareaHeight, setTextareaHeight] = useState('auto');
     const textareaRef = useRef(null);
     // eslint-disable-next-line no-unused-vars
-    const [displayedTitle, setDisplayedTitle] = useState({});
+    const [animatingTitle, setAnimatingTitle] = useState(null);
     const [showShareModal, setShowShareModal] = useState(false); // 控制分享弹窗
     const [selectedMessages, setSelectedMessages] = useState([]); // 选择分享的消息
     const [shareMessages, setShareMessages] = useState([]); // 存储分享的消息
@@ -393,16 +393,38 @@ function Chat() {
 
 
     const animateTitleUpdate = (conversationId, newTitle) => {
-        let currentTitle = '';
-        setDisplayedTitle(prev => ({...prev, [conversationId]: ''}));
-
-        newTitle.split('').forEach((char, index) => {
-            setTimeout(() => {
-                currentTitle += char;
-                setDisplayedTitle(prev => ({...prev, [conversationId]: currentTitle}));
-            }, index * 100); // 每个字符间隔100毫秒
+        setAnimatingTitle({
+            id: conversationId,
+            targetTitle: newTitle,
+            currentTitle: '',
+            index: 0
         });
     };
+
+    useEffect(() => {
+        if (animatingTitle) {
+            const timer = setTimeout(() => {
+                if (animatingTitle.index < animatingTitle.targetTitle.length) {
+                    setAnimatingTitle(prev => ({
+                        ...prev,
+                        currentTitle: prev.currentTitle + prev.targetTitle[prev.index],
+                        index: prev.index + 1
+                    }));
+                } else {
+                    setConversations(prevConversations =>
+                        prevConversations.map(conv =>
+                            conv.id === animatingTitle.id
+                                ? { ...conv, title: animatingTitle.targetTitle }
+                                : conv
+                        )
+                    );
+                    setAnimatingTitle(null);
+                }
+            }, 15);
+
+            return () => clearTimeout(timer);
+        }
+    }, [animatingTitle]);
 
     const [userScrolled, setUserScrolled] = useState(false); // 用于判断用户是否手动滚动
 
@@ -455,7 +477,12 @@ function Chat() {
             </div>
             {Array.isArray(conversations) && conversations.map((conv) => (<ConversationItem
                 key={conv.id}  // 每个对话的唯一 ID
-                conversation={conv}  // 传递对话数据
+                conversation={{
+                    ...conv,
+                    title: animatingTitle && animatingTitle.id === conv.id
+                        ? animatingTitle.currentTitle
+                        : conv.title
+                }}  // 传递对话数据
                 messages={messages}  // 传递消息数据
                 loadConversation={loadConversation}  // 传递加载对话的函数
                 fetchConversations={fetchConversations}  // 传递刷新对话列表的函数
