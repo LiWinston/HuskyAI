@@ -62,13 +62,6 @@ public class ChatGenerateSummaryAspect {
             // Asynchronously generate and set the conversation title
             CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() -> {
                 try {
-                    // Use reflection to find and call the generateAndSetConversationTitle
-                    // method
-                    // Method method = joinPoint.getTarget()
-                    // .getClass()
-                    // .getMethod("generateAndSetConversationTitle", String.class);
-                    // return (Result<String>) method.invoke(joinPoint.getTarget(),
-                    // args[1].toString());
                     return generateTittle.generateAndSetConversationTitle(conversationId);
                 }
                 catch (Exception e) {
@@ -113,15 +106,26 @@ public class ChatGenerateSummaryAspect {
         // 执行目标方法 (即流式chat)
         Flux<Result<String>> resultFlux = (Flux<Result<String>>) joinPoint.proceed();
 
-        // 在流完成时插入标题
-        return resultFlux.concatWith(
-                // 等流结束后，将异步生成的标题结果插入流中
-                Mono.fromFuture(future).map(titleResult -> {
+        // 监听流的每一条消息，并在最后一条（即 finishReason != null）时合并标题
+        return resultFlux.concatMap(result -> {
+            // 检查 finishReason，判断是否为流的最后一条消息
+            if (result.getMsg() != null
+                    && result.getData().isBlank()) {
+                // 当是最后一条消息时，等待标题生成结果，并将其与原有的消息合并
+                return Mono.fromFuture(future).map(titleResult -> {
                     if (titleResult.getCode() == 1) {
-                        return Result.success("", CONVERSATION_SUMMARY_GENRATED + titleResult.getData());
+                        // 将生成的标题与原始返回的 finishReason 消息合并
+                        String combinedMessage = result.getMsg() + " " + CONVERSATION_SUMMARY_GENRATED + titleResult.getData();
+                        return Result.success(result.getData(), combinedMessage);
+                    } else {
+                        return result; // 如果标题生成失败，直接返回原始结果
                     }
-                    return Result.error(titleResult.getData(), "Title generation failed" + titleResult.getMsg());
-                }));
+                });
+            } else {
+                // 如果不是最后一条消息，直接返回
+                return Mono.just(result);
+            }
+        });
     }
 
     // Method to determine if title generation should occur
