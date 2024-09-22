@@ -39,9 +39,19 @@ const ConversationItem = ({
         const uuid = localStorage.getItem('userUUID');
         try {
             await axios.delete(`${window.API_BASE_URL}/chat/${uuid}/${conversation.id}`);
-            fetchConversations();
-            setSelectedConversation(null);
-            setMessages([]);
+            await fetchConversations();
+
+            if (selectedConversation === conversation.id) {
+                const updatedConversations = await fetchConversations();
+                if (updatedConversations.length > 0) {
+                    loadConversation(updatedConversations[0].id);
+                } else {
+                    setSelectedConversation(null);
+                    setMessages([]);
+                    localStorage.removeItem('selectedConversation');
+                }
+            }
+
             setNotification("Conversation deleted successfully");
             setTimeout(() => setNotification(null), 2000);
         } catch (error) {

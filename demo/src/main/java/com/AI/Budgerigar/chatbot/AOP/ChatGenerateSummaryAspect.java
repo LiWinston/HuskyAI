@@ -87,7 +87,7 @@ public class ChatGenerateSummaryAspect {
 
     // Method to determine if title generation should occur
     private boolean shouldGenerateTitle(String conversationId) {
-        if (RANDOM.nextDouble() < 0.5) {
+        if (RANDOM.nextDouble() > 1) {
             // new conversation must generate title
             if (chatMessagesRedisDAO.getMessageCount(conversationId) <= 3) {
                 return true;

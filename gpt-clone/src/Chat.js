@@ -23,6 +23,7 @@ function Chat() {
     const [models, setModels] = useState([]); // List of models
     const [showModelOptions, setShowModelOptions] = useState(false); //
     const [useStream, setUseStream] = useState(false)
+    const [isLoading, setIsLoading] = useState(true);
     // 当 selectedConversation 改变时，自动更新到 localStorage
     useEffect(() => {
         if (selectedConversation !== null) {
@@ -130,15 +131,21 @@ function Chat() {
         };
     }, []);
 
-// 新增一个 useEffect 来监听 conversations 的变化，当 conversations 更新时，加载第一个对话
+    // 修改初始化加载对话的 useEffect
     useEffect(() => {
-        if (conversations.length > 0) {
-            let selectedConversation = localStorage.getItem('selectedConversation');
-            loadConversation(selectedConversation ? selectedConversation : conversations[0].id);
-        } else {
-            console.log('No conversations available');
-        }
-    }, [conversations]); // 当 conversations 更新时执行
+        const loadInitialConversation = async () => {
+            if (conversations.length > 0) {
+                const storedConversationId = localStorage.getItem('selectedConversation');
+                const conversationToLoad = conversations.find(conv => conv.id === storedConversationId) || conversations[0];
+                await loadConversation(conversationToLoad.id);
+            } else {
+                setSelectedConversation(null);
+                setMessages([]);
+            }
+        };
+
+        loadInitialConversation();
+    }, [conversations]);
 
 
     const fetchConversations = async () => {
@@ -154,6 +161,7 @@ function Chat() {
             })));
         } catch (error) {
             console.error('Error fetching conversations:', error);
+            throw error;
         }
     };
 
@@ -161,31 +169,29 @@ function Chat() {
     const loadConversation = async (conversationId) => {
         try {
             const uuid = localStorage.getItem('userUUID');
-            console.log('Loading conversation:', conversationId);
             const response = await axios.get(`${window.API_BASE_URL}/chat/${uuid}/${conversationId}`);
 
-            // 如果 response.data.data 为空，则处理为空的情况
-            const loadedMessages = response.data.data.length ? response.data.data.map(msg => ({
-                sender: msg.role, text: msg.content, timestamp: msg.timestamp
-            })) : [];
-
-            setMessages(loadedMessages);
-            setSelectedConversation(conversationId);
-
-            // 如果没有消息，添加一条默认提示消息
-            if (loadedMessages.length === 0) {
-                setMessages([{
+            const loadedMessages = response.data.data.length
+                ? response.data.data.map(msg => ({
+                    sender: msg.role,
+                    text: msg.content,
+                    timestamp: msg.timestamp
+                }))
+                : [{
                     sender: 'system',
                     text: 'No messages yet in this conversation. Start the conversation now!',
                     timestamp: new Date()
-                }]);
-            }
+                }];
 
+            setMessages(loadedMessages);
+            setSelectedConversation(conversationId);
+            localStorage.setItem('selectedConversation', conversationId);
         } catch (error) {
             console.error('Error loading conversation:', error);
-            // 如果加载出错，仍然显示错误提示
             setMessages([{
-                sender: 'system', text: 'Failed to load conversation. Please try again later.', timestamp: new Date()
+                sender: 'system',
+                text: 'Failed to load conversation. Please try again later.',
+                timestamp: new Date()
             }]);
         }
     };
@@ -194,18 +200,16 @@ function Chat() {
     const createNewConversation = async () => {
         try {
             const uuid = localStorage.getItem('userUUID');
-            const newConversationId = new Date().getTime().toString(); // 生成新对话ID
+            const newConversationId = new Date().getTime().toString();
             const newConversation = {
-                id: newConversationId, title: "New Conversation", timestampCreat: new Date(), timestampLast: new Date(),
+                id: newConversationId,
+                title: "New Conversation",
+                timestampCreat: new Date(),
+                timestampLast: new Date(),
             };
-            setConversations([newConversation, ...conversations]);
-            setSelectedConversation(newConversationId);
-            setMessages([{
-                sender: 'system',
-                text: 'This is a new conversation. Start by sending a message!',
-                timestamp: new Date(),
-            }]);
-            await axios.get(`${window.API_BASE_URL}/chat/${uuid}/${newConversationId}`); // 模拟API调用
+            setConversations(prevConversations => [newConversation, ...prevConversations]);
+            await loadConversation(newConversationId);
+            await axios.get(`${window.API_BASE_URL}/chat/${uuid}/${newConversationId}`);
         } catch (error) {
             console.error("Failed to create new conversation", error);
         }
