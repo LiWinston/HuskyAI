@@ -73,7 +73,7 @@ public class GenerateTittle {
 
             // Step 2: Generate a summary using AI service
             ChatBuilder chatCompletion = baiduConfig.getRandomChatBuilder();
-            recentMessages.add(new String[] { "assistant", null, "Still to be answered" }); // Add
+            recentMessages.add(new String[] { "assistant", null, "answering, please wait" }); // Add
 
             recentMessages.add(new String[] { "user", null,
                     "Generate a concise and relevant title for this conversation, matching the original content's language. No matter how the content changes, provide a title. Focus slightly more on recent messages. If the topic has significantly shifted, determine the title based on the updated subject. Please reply with only the title, without any pleasantries, introductions, or prefixes. Directly provide a subject-predicate, verb-object, or modifier-head structure. If it's an English title, ensure it follows a subject-predicate, or adjective-noun phrase. Avoid phrases like 'Recent message:' in the title. If there are multiple possible titles, choose the simplest one." });
