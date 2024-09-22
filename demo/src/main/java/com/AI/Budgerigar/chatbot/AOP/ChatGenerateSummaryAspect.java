@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.AI.Budgerigar.chatbot.Constant.ApplicationConstant.CONVERSATION_SUMMARY_GENRATED;
 
@@ -130,15 +131,37 @@ public class ChatGenerateSummaryAspect {
         // 执行目标方法 (即流式chat)
         Flux<Result<String>> resultFlux = (Flux<Result<String>>) joinPoint.proceed();
         CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // 从Map中获取并移除
+        AtomicBoolean titleAppended = new AtomicBoolean(false);
 
         // 监听流的每一条消息，并在最后一条（即 finishReason != null）时合并标题
         return resultFlux.concatMap(result -> {
+            if (future != null && future.isDone() && !titleAppended.get()) {
+                // 如果 future 已经完成，尽早合并标题
+                return Mono.fromFuture(future).map(titleResult -> {
+                    titleAppended.set(true);
+                    if (titleResult.getCode() == 1) {
+                        // 合并生成的标题
+                        String combinedMessage = result.getMsg() + " " + CONVERSATION_SUMMARY_GENRATED
+                                + titleResult.getData();
+                        return Result.success(result.getData(), combinedMessage);
+                    }
+                    else {
+                        String combinedMessage = result.getMsg() + " " + CONVERSATION_SUMMARY_GENRATED
+                                + titleResult.getMsg();
+                        return Result.success(result.getData(), combinedMessage);
+                    }
+                }).onErrorResume(e -> {
+                    log.error("Error waiting for title generation in chatFlux: ", e);
+                    return Mono.just(result);
+                });
+            }
             // 检查 finishReason，判断是否为流的最后一条消息
-            if (result.getMsg() != null && result.getData().isBlank()) {
+            if (result.getMsg() != null && result.getData().isBlank() && !titleAppended.get()) {
                 if (future != null) {
                     // 当是最后一条消息时，等待标题生成结果，并将其与原有的消息合并
                     return Mono.fromFuture(future).map(titleResult -> {
 
+                        titleAppended.set(true);
                         if (titleResult.getCode() == 1) {
                             // 将生成的标题与原始返回的 finishReason 消息合并
                             String combinedMessage = result.getMsg() + " " + CONVERSATION_SUMMARY_GENRATED
