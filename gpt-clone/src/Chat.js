@@ -318,14 +318,14 @@ function Chat() {
 
                         try {
                             const parsedChunk = JSON.parse(jsonChunk);  // 解析JSON
-                            console.log('Parsed chunk:', parsedChunk);
+                            // console.log('Parsed chunk:', parsedChunk);
                             if (parsedChunk.data) {
                                 accumulatedText += parsedChunk.data;
                                 setStreamingMessage(prevMessage => ({
                                     ...prevMessage, text: accumulatedText, timestamp: timestamp
                                 }));
                                 // 每次更新消息到 messages 列表
-                                console.log('Streaming message:', streamingMessage);
+                                // console.log('Streaming message:', streamingMessage);
                                 // setMessages(prevMessages => [...prevMessages, { sender: 'assistant', text: parsedChunk.data, timestamp: new Date() }]);
                             }
                             if (parsedChunk.msg) {
