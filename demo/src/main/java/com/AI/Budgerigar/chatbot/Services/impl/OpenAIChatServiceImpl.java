@@ -106,10 +106,13 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
         }
     }
 
+    @Autowired
+    private OpenAIChatServiceImpl self;
+
     @Override
     public Result<String> chat(String prompt, String conversationId) {
         try {
-            List<String[]> conversationHistory = getHistoryPreChat(prompt, conversationId);
+            List<String[]> conversationHistory = self.getHistoryPreChat(prompt, conversationId);
 
             // 使用工厂方法从 String[] 列表创建 ChatRequestDTO
             ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
@@ -159,7 +162,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
     }
 
     public Flux<Result<String>> chatFlux(String prompt, String conversationId) {
-        List<String[]> conversationHistory = getHistoryPreChat(prompt, conversationId);
+        List<String[]> conversationHistory = self.getHistoryPreChat(prompt, conversationId);
         ChatRequestDTO requestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
         requestDTO.setStream(true);
 
