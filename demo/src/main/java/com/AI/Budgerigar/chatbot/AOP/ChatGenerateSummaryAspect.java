@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -28,6 +30,10 @@ public class ChatGenerateSummaryAspect {
     // 修改切入点，匹配所有实现 ChatService 接口的类的 chat 方法
     @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.ChatService.chat(..))")
     public void chatMethod() {
+    }
+
+    @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.StreamChatService.chatFlux(..))")
+    public void chatFluxMethod() {
     }
 
     private static final Logger log = LoggerFactory.getLogger(ChatGenerateSummaryAspect.class);
@@ -83,6 +89,39 @@ public class ChatGenerateSummaryAspect {
         }
 
         return result;
+    }
+
+    @Around("chatFluxMethod()")
+    public Object aroundChatFlux(ProceedingJoinPoint joinPoint) throws Throwable {
+        // 提前获取参数
+        Object[] args = joinPoint.getArgs();
+        String conversationId = args[1].toString();
+
+        log.info("ChatGenerateSummaryAspect.aroundChatFlux()");
+
+        // 异步触发标题生成任务
+        CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() -> {
+            try {
+                return generateTittle.generateAndSetConversationTitle(conversationId);
+            }
+            catch (Exception e) {
+                log.error("Error generating title during chatFlux: ", e);
+                return Result.error("Error generating title");
+            }
+        });
+
+        // 执行目标方法 (即流式chat)
+        Flux<Result<String>> resultFlux = (Flux<Result<String>>) joinPoint.proceed();
+
+        // 在流完成时插入标题
+        return resultFlux.concatWith(
+                // 等流结束后，将异步生成的标题结果插入流中
+                Mono.fromFuture(future).map(titleResult -> {
+                    if (titleResult.getCode() == 1) {
+                        return Result.success("", CONVERSATION_SUMMARY_GENRATED + titleResult.getData());
+                    }
+                    return Result.error(titleResult.getData(), "Title generation failed" + titleResult.getMsg());
+                }));
     }
 
     // Method to determine if title generation should occur
