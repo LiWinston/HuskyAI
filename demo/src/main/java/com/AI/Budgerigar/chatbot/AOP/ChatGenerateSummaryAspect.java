@@ -29,9 +29,8 @@ public class ChatGenerateSummaryAspect {
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
 
-    @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.ChatService.getHistoryPreChat(..))")
-    public void getHistoryPreChatMethod() {
-    }
+    @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.impl.preChatBehaviour.getHistoryPreChat(..))")
+    public void getHistoryPreChatMethod() {}
 
     // 修改切入点，匹配所有实现 ChatService 接口的类的 chat 方法
     @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.ChatService.chat(..))")
@@ -108,11 +107,11 @@ public class ChatGenerateSummaryAspect {
                 // 合并标题结果到原有的返回值
                 if (titleResult.getCode() == 1) {
                     return Result.success(originalResult.getData(),
-                            originalResult.getMsg() + " | " + titleResult.getData());
+                            originalResult.getMsg() + CONVERSATION_SUMMARY_GENRATED + titleResult.getData());
                 }
                 else {
                     return Result.success(originalResult.getData(),
-                            originalResult.getMsg() + " | " + titleResult.getMsg());
+                            originalResult.getMsg() + CONVERSATION_SUMMARY_GENRATED + titleResult.getMsg());
                 }
             }
             catch (Exception e) {

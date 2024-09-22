@@ -75,44 +75,17 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private preChatBehaviour preChatBehaviour;
+
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
     }
 
-    public List<String[]> getHistoryPreChat(String prompt, String conversationId) {
-        chatSyncService.updateRedisFromMongo(conversationId);
-
-        chatMessagesRedisDAO.maintainMessageHistory(conversationId);
-
-        // 添加用户输入到 Redis 对话历史
-        chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(), prompt);
-
-        // 从 Redis 中获取对话历史
-        List<String[]> conversationHistory;
-        try {
-            conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId, 16000);
-            log.info("自适应缩放到" + conversationHistory.size() + "条消息");
-            // for (String[] entry : conversationHistory) {
-            // log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20,
-            // entry[2].length())));
-            // }
-            return conversationHistory;
-        }
-        catch (Exception e) {
-            log.error("Error occurred in {}: {}", TokenLimiter.class.getName(), e.getMessage(), e);
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
-                    "Query failed. Please try again.");
-            throw new RuntimeException("Error processing chat request", e);
-        }
-    }
-
-    @Autowired
-    private OpenAIChatServiceImpl self;
-
     @Override
     public Result<String> chat(String prompt, String conversationId) {
         try {
-            List<String[]> conversationHistory = self.getHistoryPreChat(prompt, conversationId);
+            List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(prompt, conversationId);
 
             // 使用工厂方法从 String[] 列表创建 ChatRequestDTO
             ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
@@ -162,7 +135,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
     }
 
     public Flux<Result<String>> chatFlux(String prompt, String conversationId) {
-        List<String[]> conversationHistory = self.getHistoryPreChat(prompt, conversationId);
+        List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(prompt, conversationId);
         ChatRequestDTO requestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
         requestDTO.setStream(true);
 

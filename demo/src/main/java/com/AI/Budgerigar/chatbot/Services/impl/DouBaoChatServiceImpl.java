@@ -71,37 +71,13 @@ public class DouBaoChatServiceImpl implements ChatService {
         conversationId = "default_doubao_conversation";
     }
 
-    public List<String[]> getHistoryPreChat(String prompt, String conversationId) {
-        chatSyncService.updateRedisFromMongo(conversationId);
-
-        chatMessagesRedisDAO.maintainMessageHistory(conversationId);
-
-        // 添加用户输入到 Redis 对话历史
-        chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(), prompt);
-
-        // 从 Redis 中获取对话历史
-        List<String[]> conversationHistory;
-        try {
-            conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId, 16000);
-            log.info("自适应缩放到" + conversationHistory.size() + "条消息");
-            // for (String[] entry : conversationHistory) {
-            // log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20,
-            // entry[2].length())));
-            // }
-            return conversationHistory;
-        }
-        catch (Exception e) {
-            log.error("Error occurred in {}: {}", TokenLimiter.class.getName(), e.getMessage(), e);
-            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
-                    "Query failed. Please try again.");
-            throw new RuntimeException("Error processing chat request", e);
-        }
-    }
+    @Autowired
+    private preChatBehaviour preChatBehaviour;
 
     @SneakyThrows
     @Override
     public Result<String> chat(String prompt, String conversationId) {
-        List<String[]> conversationHistory = getHistoryPreChat(prompt, conversationId);
+        List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(prompt, conversationId);
 
         // Build ChatMessage list from conversation history
         List<ChatMessage> messages = new java.util.ArrayList<>(conversationHistory.stream()

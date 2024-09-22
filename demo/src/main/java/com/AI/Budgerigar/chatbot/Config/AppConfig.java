@@ -10,6 +10,7 @@ import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -24,6 +25,7 @@ import java.util.concurrent.Executors;
 
 @EnableAsync
 @EnableScheduling
+@EnableAspectJAutoProxy(proxyTargetClass = true)
 @Configuration
 @Slf4j
 public class AppConfig {

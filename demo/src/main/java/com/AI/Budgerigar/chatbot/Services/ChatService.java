@@ -3,7 +3,6 @@ package com.AI.Budgerigar.chatbot.Services;
 import com.AI.Budgerigar.chatbot.result.Result;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.logging.Logger;
 
 @Service
@@ -17,7 +16,7 @@ public interface ChatService {
 
     Logger logger = Logger.getLogger(ChatService.class.getName());
 
-    List<String[]> getHistoryPreChat(String prompt, String conversationId) throws Exception;
+//    List<String[]> getHistoryPreChat(String prompt, String conversationId) throws Exception;
 
     Result<String> chat(String prompt, String conversationId) throws Exception;
 
