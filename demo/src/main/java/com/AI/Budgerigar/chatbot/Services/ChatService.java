@@ -2,6 +2,7 @@ package com.AI.Budgerigar.chatbot.Services;
 
 import com.AI.Budgerigar.chatbot.result.Result;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 public interface ChatService {
@@ -14,6 +15,7 @@ public interface ChatService {
 
     Logger logger = Logger.getLogger(ChatService.class.getName());
 
+    List<String[]> getHistoryPreChat(String prompt, String conversationId) throws Exception;
     Result<String> chat(String prompt, String conversationId) throws Exception;
 
     // 默认方法来记录信息

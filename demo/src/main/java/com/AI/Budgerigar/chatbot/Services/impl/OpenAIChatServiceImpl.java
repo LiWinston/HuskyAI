@@ -15,7 +15,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -80,14 +79,13 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
         return Instant.now().toString().formatted(dateTimeFormatter);
     }
 
-    List<String[]> getHistoryPreChat(String prompt, String conversationId) {
+    public List<String[]> getHistoryPreChat(String prompt, String conversationId) {
         chatSyncService.updateRedisFromMongo(conversationId);
 
         chatMessagesRedisDAO.maintainMessageHistory(conversationId);
 
         // 添加用户输入到 Redis 对话历史
-        chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(),
-                StringEscapeUtils.escapeHtml4(prompt));
+        chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(), prompt);
 
         // 从 Redis 中获取对话历史
         List<String[]> conversationHistory;

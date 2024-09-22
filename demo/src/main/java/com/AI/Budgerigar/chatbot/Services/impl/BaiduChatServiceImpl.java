@@ -13,7 +13,6 @@ import com.baidubce.qianfan.model.chat.ChatResponse;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -74,35 +73,41 @@ public class BaiduChatServiceImpl implements ChatService {
         return Instant.now().toString().formatted(dateTimeFormatter);
     }
 
+    public List<String[]> getHistoryPreChat(String prompt, String conversationId) {
+        chatSyncService.updateRedisFromMongo(conversationId);
+
+        chatMessagesRedisDAO.maintainMessageHistory(conversationId);
+
+        // 添加用户输入到 Redis 对话历史
+        chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(), prompt);
+
+        // 从 Redis 中获取对话历史
+        List<String[]> conversationHistory;
+        try {
+            conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId, 16000);
+            log.info("自适应缩放到" + conversationHistory.size() + "条消息");
+            // for (String[] entry : conversationHistory) {
+            // log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20,
+            // entry[2].length())));
+            // }
+            return conversationHistory;
+        }
+        catch (Exception e) {
+            log.error("Error occurred in {}: {}", TokenLimiter.class.getName(), e.getMessage(), e);
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
+                    "Query failed. Please try again.");
+            throw new RuntimeException("Error processing chat request", e);
+        }
+    }
+
     @Override
     public Result<String> chat(String input, String conversationId) {
         try {
-            chatSyncService.updateRedisFromMongo(conversationId);
-
-            chatMessagesRedisDAO.maintainMessageHistory(conversationId);
-            // 添加用户输入到 Redis 对话历史
-            chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(),
-                    StringEscapeUtils.escapeHtml4(input));
+            // 从 Redis 中获取对话历史
+            List<String[]> conversationHistory = getHistoryPreChat(input, conversationId);
 
             // 创建 ChatCompletion 请求对象
             ChatBuilder chatCompletion = baiduConfig.getRandomChatBuilder();
-
-            // 从 Redis 中获取对话历史
-            List<String[]> conversationHistory = null;
-            try {
-                conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId, 9000);
-                log.info("自适应缩放到" + conversationHistory.size() + "条消息");
-                // for (String[] entry : conversationHistory) {
-                // log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20,
-                // entry[2].length())));
-                // }
-            }
-            catch (Exception e) {
-                log.error("Error occurred in {}: {}", TokenLimiter.class.getName(), e.getMessage(), e);
-                chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
-                        "Query failed. Please try again.");
-                throw new RuntimeException("Error processing chat request", e);
-            }
 
             // 添加对话历史到请求对象中
             for (String[] entry : conversationHistory) {
