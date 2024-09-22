@@ -48,40 +48,41 @@ public class ChatGenerateSummaryAspect {
 
     @Around("chatMethod()")
     public Object aroundChat(ProceedingJoinPoint joinPoint) throws Throwable {
-        Object result;
         Object[] args = joinPoint.getArgs();
-        // String prompt = args[0].toString();
         String conversationId = args[1].toString();
-        log.info("ChatGenerateSummaryAspect.aroundChat()");
+        if (!shouldGenerateTitle(conversationId))
+            return joinPoint.proceed();
 
+        // String prompt = args[0].toString();
+
+        log.info("ChatGenerateSummaryAspect.aroundChat()");
+        // Simulate a check after the first Redis.addMessage call
+        // Asynchronously generate and set the conversation title
+        CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() -> {
+            try {
+                return generateTittle.generateAndSetConversationTitle(conversationId);
+            }
+            catch (Exception e) {
+                log.error("Error calling generateAndSetConversationTitle: ", e);
+                return Result.error("Error generating title");
+            }
+        });
+
+        Object result;
         // Proceed with the chat method, but capture the result
         result = joinPoint.proceed();
+        // Wait for the title generation to complete
+        Result<String> titleResult = future.get();
 
-        // Simulate a check after the first Redis.addMessage call
-        if (shouldGenerateTitle(conversationId)) {
-            // Asynchronously generate and set the conversation title
-            CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() -> {
-                try {
-                    return generateTittle.generateAndSetConversationTitle(conversationId);
-                }
-                catch (Exception e) {
-                    log.error("Error calling generateAndSetConversationTitle: ", e);
-                    return Result.error("Error generating title");
-                }
-            });
-
-            // Wait for the title generation to complete
-            Result<String> titleResult = future.get();
-
-            if (titleResult.getCode() == 1) {
-                // Modify the result to include the generated title
-                Result<String> originalResult = (Result<String>) result;
-                return Result.success(originalResult.getData(),
-                        originalResult.getMsg() + CONVERSATION_SUMMARY_GENRATED + titleResult.getData());
-            }
-        }
-
-        return result;
+        Result<String> originalResult = (Result<String>) result;
+        // Modify the result to include the generated title
+        if (titleResult.getCode() == 1)
+            return Result.success(originalResult.getData(),
+                    originalResult.getMsg() + CONVERSATION_SUMMARY_GENRATED + titleResult.getData());
+        else
+            return Result.success(originalResult.getData(),
+                    originalResult.getMsg() + CONVERSATION_SUMMARY_GENRATED + titleResult.getMsg());
+//        return result;
     }
 
     @Around("chatFluxMethod()")
@@ -109,19 +110,21 @@ public class ChatGenerateSummaryAspect {
         // 监听流的每一条消息，并在最后一条（即 finishReason != null）时合并标题
         return resultFlux.concatMap(result -> {
             // 检查 finishReason，判断是否为流的最后一条消息
-            if (result.getMsg() != null
-                    && result.getData().isBlank()) {
+            if (result.getMsg() != null && result.getData().isBlank()) {
                 // 当是最后一条消息时，等待标题生成结果，并将其与原有的消息合并
                 return Mono.fromFuture(future).map(titleResult -> {
                     if (titleResult.getCode() == 1) {
                         // 将生成的标题与原始返回的 finishReason 消息合并
-                        String combinedMessage = result.getMsg() + " " + CONVERSATION_SUMMARY_GENRATED + titleResult.getData();
+                        String combinedMessage = result.getMsg() + " " + CONVERSATION_SUMMARY_GENRATED
+                                + titleResult.getData();
                         return Result.success(result.getData(), combinedMessage);
-                    } else {
+                    }
+                    else {
                         return result; // 如果标题生成失败，直接返回原始结果
                     }
                 });
-            } else {
+            }
+            else {
                 // 如果不是最后一条消息，直接返回
                 return Mono.just(result);
             }
@@ -130,18 +133,21 @@ public class ChatGenerateSummaryAspect {
 
     // Method to determine if title generation should occur
     private boolean shouldGenerateTitle(String conversationId) {
-        if (RANDOM.nextDouble() > 1) {
-            // new conversation must generate title
-            if (chatMessagesRedisDAO.getMessageCount(conversationId) <= 3) {
-                return true;
-            }
-            log.info("Not generating title.");
-            return false;
-        }
-        else {
-            log.info("Generating title.");
-            return true;
-        }
+        return true;
+//        if (RANDOM.nextDouble() > 1) {
+//            // new conversation must generate title
+//            if (chatMessagesRedisDAO.getMessageCount(conversationId) <= 3) {
+//                return true;
+//            }
+//            log.info("Not generating title.");
+//            return false;
+//        }
+//        else {
+//            log.info("Generating title.");
+//            return true;
+//        }
+
+
         // // 通过随机数实现60%的概率控制
         // double probability = Math.random(); // 生成一个0到1之间的随机数
         // if (probability > 1) {
