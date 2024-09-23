@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,21 +52,27 @@ public class GenerateTittle {
     @Value("${chatbot.maxTokenLimit:800}")
     private int maxTokenLimit;
 
-    // @Transactional
     public Result<String> generateAndSetConversationTitle(String conversationId) {
+        return generateAndSetConversationTitle(conversationId, false, null, null);
+    }
+
+    public Result<String> generateAndSetConversationTitle(String conversationId, String escapeUrl, String escapeModel) {
+        return generateAndSetConversationTitle(conversationId, true, escapeUrl, escapeModel);
+    }
+
+    // @Transactional
+    private Result<String> generateAndSetConversationTitle(String conversationId, Boolean escape, String escapeUrl,
+            String escapeModel) {
         try {
             AtomicReference<String> _openAIUrl = new AtomicReference<>(openAIUrl);
             AtomicReference<String> _model = new AtomicReference<>(model);
 
-            // 遍历服务和模型
-            chatServices.forEach((serviceName, serviceMap) -> {
-                serviceMap.forEach((modelId, chatService) -> {
-                    if (chatService instanceof OpenAIChatServiceImpl && !Objects.equals(modelId, "openai")) {
-                        _openAIUrl.set(((OpenAIChatServiceImpl) chatService).getOpenAIUrl());
-                        _model.set(serviceName + ":" + modelId);
-                    }
-                });
-            });
+            if (escape) {
+                rollAndSetModelWithEscaping(_openAIUrl, _model, escapeUrl, escapeModel);
+            }
+            else {
+                rollAndSetModel(_openAIUrl, _model);
+            }
 
             // Step 1: Get the last 15 messages of the conversation
             List<String[]> recentMessages = tokenLimiter.getAdaptiveConversationHistory(conversationId,
@@ -112,6 +119,63 @@ public class GenerateTittle {
             // Log the exception (use a logging framework)
             e.printStackTrace();
             return Result.error("An error occurred while generating and setting the conversation title.");
+        }
+    }
+
+    private void rollAndSetModel(AtomicReference<String> _openAIUrl, AtomicReference<String> _model) {
+        // 遍历服务和模型
+        chatServices.forEach((serviceName, serviceMap) -> {
+            serviceMap.forEach((modelId, chatService) -> {
+                if (chatService instanceof OpenAIChatServiceImpl && !Objects.equals(modelId, "openai")) {
+                    _openAIUrl.set(((OpenAIChatServiceImpl) chatService).getOpenAIUrl());
+                    _model.set(serviceName + ":" + modelId);
+                }
+            });
+        });
+    }
+
+    private void rollAndSetModelWithEscaping(AtomicReference<String> _openAIUrl, AtomicReference<String> _model,
+            String escapeUrl, String escapeModel) {
+
+        List<OpenAIChatServiceImpl> availableServices = new ArrayList<>();
+
+        // 先收集所有可用的OpenAIChatServiceImpl实例
+        chatServices.forEach((serviceName, serviceMap) -> {
+            serviceMap.forEach((modelId, chatService) -> {
+                if (chatService instanceof OpenAIChatServiceImpl && !Objects.equals(modelId, "openai")) {
+                    availableServices.add((OpenAIChatServiceImpl) chatService);
+                }
+            });
+        });
+
+        // 如果只有一个模型，直接使用它，不进行避让
+        if (availableServices.size() == 1) {
+            if (openAIUrl != null && model != null) {
+                // 预先注入了openAIUrl和model，则退行到该设定，否则使用唯一的可用模型
+                return;
+            }
+            OpenAIChatServiceImpl singleService = availableServices.getFirst();
+            _openAIUrl.set(singleService.getOpenAIUrl());
+            _model.set("openai:" + singleService.getModel());
+            return;
+        }
+
+        // 遍历服务和模型，进行避让
+        for (OpenAIChatServiceImpl service : availableServices) {
+            if (service.getOpenAIUrl().equals(escapeUrl) && service.getModel().equals(escapeModel)) {
+                continue; // 避让当前模型
+            }
+            // 选择其他模型并设置
+            _openAIUrl.set(service.getOpenAIUrl());
+            _model.set("openai:" + service.getModel());
+            return;
+        }
+
+        // 如果避让后没有可选模型，仍然使用原模型
+        if (_openAIUrl.get() == null || _model.get() == null) {
+            OpenAIChatServiceImpl fallbackService = availableServices.get(0); // 回退到第一个可用模型
+            _openAIUrl.set(fallbackService.getOpenAIUrl());
+            _model.set("openai:" + fallbackService.getModel());
         }
     }
 

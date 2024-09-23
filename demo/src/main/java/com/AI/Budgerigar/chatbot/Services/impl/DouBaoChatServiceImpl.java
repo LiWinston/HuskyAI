@@ -77,7 +77,7 @@ public class DouBaoChatServiceImpl implements ChatService {
     @SneakyThrows
     @Override
     public Result<String> chat(String prompt, String conversationId) {
-        List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(prompt, conversationId);
+        List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, prompt, conversationId);
 
         // Build ChatMessage list from conversation history
         List<ChatMessage> messages = new java.util.ArrayList<>(conversationHistory.stream()

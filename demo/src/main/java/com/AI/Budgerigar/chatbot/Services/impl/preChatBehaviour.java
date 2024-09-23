@@ -33,7 +33,7 @@ public class preChatBehaviour {
     }
 
     @Transactional
-    public List<String[]> getHistoryPreChat(String prompt, String conversationId) {
+    public List<String[]> getHistoryPreChat(Object caller, String prompt, String conversationId) {
         chatSyncService.updateRedisFromMongo(conversationId);
 
         chatMessagesRedisDAO.maintainMessageHistory(conversationId);

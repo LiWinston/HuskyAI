@@ -85,7 +85,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
     @Override
     public Result<String> chat(String prompt, String conversationId) {
         try {
-            List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(prompt, conversationId);
+            List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, prompt, conversationId);
 
             // 使用工厂方法从 String[] 列表创建 ChatRequestDTO
             ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
@@ -135,7 +135,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
     }
 
     public Flux<Result<String>> chatFlux(String prompt, String conversationId) {
-        List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(prompt, conversationId);
+        List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, prompt, conversationId);
         ChatRequestDTO requestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
         requestDTO.setStream(true);
 
@@ -148,10 +148,14 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
             .flatMap(this::parseJsonChunk)
             .map(chatResponseDTO -> {
                 String content = extractContentFromFirstChoice(chatResponseDTO);
+                log.info("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m",
+                        chatResponseDTO.getModel(), content.substring(0, Math.min(40, content.length())));
                 contentBuilder.append(content);
                 var finishReason = chatResponseDTO.getChoices().get(0).getFinish_reason();
                 if (finishReason != null && !finishReason.isEmpty()) {
                     updateConversationHistory(conversationId, contentBuilder.toString());
+                    log.info("Conversation finished: " + finishReason + ": \u001B[32m"
+                            + contentBuilder.substring(0, Math.min(30, contentBuilder.length())) + "\u001B[0m");
                     return Result.success(content, "From " + chatResponseDTO.getModel() + ", Referenced "
                             + conversationHistory.size() + " messages.");
                 }

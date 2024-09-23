@@ -80,7 +80,7 @@ public class BaiduChatServiceImpl implements ChatService {
     public Result<String> chat(String input, String conversationId) {
         try {
             // 从 Redis 中获取对话历史
-            List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(input, conversationId);
+            List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, input, conversationId);
 
             // 创建 ChatCompletion 请求对象
             ChatBuilder chatCompletion = baiduConfig.getRandomChatBuilder();

@@ -2,6 +2,7 @@ package com.AI.Budgerigar.chatbot.AOP;
 
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.Services.GenerateTittle;
+import com.AI.Budgerigar.chatbot.Services.impl.OpenAIChatServiceImpl;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -60,13 +61,14 @@ public class ChatGenerateSummaryAspect {
     @Around("getHistoryPreChatMethod()")
     public Object aroundGetHistoryPreChat(ProceedingJoinPoint joinPoint) throws Throwable {
         log.info("开切：aroundGetHistoryPreChat");
+
         List<String[]> result = (List<String[]>) joinPoint.proceed(); // 执行
                                                                       // getHistoryPreChat
                                                                       // 方法
-
         // 提前准备好标题生成的异步任务
         Object[] args = joinPoint.getArgs();
-        String conversationId = args[1].toString(); // 假设 conversationId 是第二个参数
+        Object caller = args[0];
+        String conversationId = args[2].toString(); // 假设 conversationId 是第二个参数
 
         log.info("getHistoryPreChat completed for conversationId: {}", conversationId);
 
@@ -74,6 +76,11 @@ public class ChatGenerateSummaryAspect {
             // 如果需要生成标题，启动异步任务并存储到 futureMap 中
             CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() -> {
                 try {
+                    if (caller instanceof OpenAIChatServiceImpl openAIChatService) {
+                        String openAIUrl = openAIChatService.getOpenAIUrl();
+                        String model = openAIChatService.getModel();
+                        return generateTittle.generateAndSetConversationTitle(conversationId, openAIUrl, model);
+                    }
                     return generateTittle.generateAndSetConversationTitle(conversationId);
                 }
                 catch (Exception e) {
