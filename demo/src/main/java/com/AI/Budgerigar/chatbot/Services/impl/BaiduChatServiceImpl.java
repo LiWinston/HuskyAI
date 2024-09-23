@@ -9,6 +9,7 @@ import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
 import com.AI.Budgerigar.chatbot.Services.StreamChatService;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
+import com.baidubce.qianfan.core.StreamIterator;
 import com.baidubce.qianfan.core.builder.ChatBuilder;
 import com.baidubce.qianfan.model.chat.ChatResponse;
 import com.google.gson.Gson;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -147,7 +149,6 @@ public class BaiduChatServiceImpl implements ChatService, StreamChatService {
     @Override
     public Flux<Result<String>> chatFlux(String prompt, String conversationId) {
         List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, prompt, conversationId);
-
         ChatBuilder chatBuilder = baiduConfig.getRandomChatBuilder();
         for (String[] entry : conversationHistory) {
             chatBuilder.addMessage(entry[0], entry[2]);
@@ -156,27 +157,29 @@ public class BaiduChatServiceImpl implements ChatService, StreamChatService {
         StringBuilder contentBuilder = new StringBuilder();
 
         return Flux.<Result<String>>create(emitter -> {
-            chatBuilder.executeStream().forEachRemaining(chunk -> {
-                ChatResponse response = gson.fromJson(gson.toJson(chunk), ChatResponse.class);
-                String content = response.getResult();
+            Schedulers.boundedElastic().schedule(() -> {
+                try {
+                    StreamIterator<ChatResponse> iterator = chatBuilder.executeStream();
+                    while (iterator.hasNext()) {
+                        ChatResponse response = iterator.next();
+                        String content = response.getResult();
 
-                if (content != null && !content.isEmpty()) {
-                    log.info("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m",
-                            baiduConfig.getCurrentModel(), content
-                    // .substring(0, Math.min(40, content.length()))
-                    );
+                        log.info("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m",
+                                baiduConfig.getCurrentModel(), content.substring(0, Math.min(40, content.length())));
+                        contentBuilder.append(content);
 
-                    contentBuilder.append(content);
-                    emitter.next(Result.success(content));
+                        emitter.next(Result.success(content));
+
+                        if (response.getEnd()) {
+                            updateConversationHistory(conversationId, contentBuilder.toString());
+                            log.info("Conversation finished: \u001B[32m{}\u001B[0m",
+                                    contentBuilder.substring(0, Math.min(30, contentBuilder.length())));
+                            emitter.complete();
+                        }
+                    }
                 }
-
-                if (response.getEnd()) {
-                    updateConversationHistory(conversationId, contentBuilder.toString());
-                    log.info("Conversation finished: \u001B[32m{}\u001B[0m",
-                            contentBuilder.substring(0, Math.min(30, contentBuilder.length())));
-                    emitter.next(Result.success(content, "From " + baiduConfig.getCurrentModel() + ", Referenced "
-                            + conversationHistory.size() + " messages."));
-                    emitter.complete();
+                catch (Exception e) {
+                    emitter.error(e);
                 }
             });
         }).onErrorResume(e -> {

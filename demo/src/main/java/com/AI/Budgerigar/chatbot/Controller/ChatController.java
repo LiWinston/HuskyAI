@@ -388,6 +388,7 @@ public class ChatController {
 
             // 检查是否支持流式调用
             if (chatService instanceof StreamChatService) {
+                log.info("支持流式调用");
                 return ((StreamChatService) chatService).chatFlux(body.get("prompt"), body.get("conversationId"))
                     .map(result -> {
                         // 将Result对象转换为JSON字符串并添加换行符

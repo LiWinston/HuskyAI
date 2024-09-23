@@ -58,7 +58,9 @@ public class ChatGenerateSummaryAspect {
     private final ConcurrentHashMap<Thread, CompletableFuture<Result<String>>> futureMap = new ConcurrentHashMap<>();
 
     public static final Result<String> DO_NOT_GEN = Result.error("DO_NOT_GEN");
-    private static final CompletableFuture<Result<String>> NO_TITLE_GEN_Future = CompletableFuture.completedFuture(DO_NOT_GEN);
+
+    private static final CompletableFuture<Result<String>> NO_TITLE_GEN_Future = CompletableFuture
+        .completedFuture(DO_NOT_GEN);
 
     // 监控 getHistoryPreChat 方法的执行
     @Around("getHistoryPreChatMethod()")
@@ -110,7 +112,7 @@ public class ChatGenerateSummaryAspect {
 
         // 获取异步任务，并等待其完成（如果存在）
         CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // 从Map中获取并移除
-        if (future != null && future != NO_TITLE_GEN_Future) {
+        if (future != null && future.get() != DO_NOT_GEN) {
             try {
                 // 等待异步标题生成完成
                 Result<String> titleResult = future.get(); // 等待任务完成
@@ -146,7 +148,7 @@ public class ChatGenerateSummaryAspect {
 
         // 监听流的每一条消息，并在最后一条（即 finishReason != null）时合并标题
         return resultFlux.concatMap(result -> {
-            if (future != null && future.isDone() && !titleAppended.get() && future != NO_TITLE_GEN_Future) {
+            if (future != null && future.isDone() && !titleAppended.get()) {
                 // 如果 future 已经完成，尽早合并标题
                 return Mono.fromFuture(future).map(titleResult -> {
                     titleAppended.set(true);
@@ -156,11 +158,12 @@ public class ChatGenerateSummaryAspect {
                                 + titleResult.getData();
                         return Result.success(result.getData(), combinedMessage);
                     }
-                    else {
+                    else if (titleResult != DO_NOT_GEN) {
                         String combinedMessage = result.getMsg() + " " + CONVERSATION_SUMMARY_GENRATED
                                 + titleResult.getMsg();
                         return Result.success(result.getData(), combinedMessage);
                     }
+                    return result;
                 }).onErrorResume(e -> {
                     log.error("Error waiting for title generation in chatFlux: ", e);
                     return Mono.just(result);
