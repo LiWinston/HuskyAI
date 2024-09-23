@@ -6,7 +6,7 @@
 DOCKER_USERNAME="yongchunl"  # 替换为你的 Docker Hub 用户名
 IMAGE_NAME="lms-gpt"
 TAG="latest"  # 可以根据需要修改标签，例如使用版本号
-RENDER_URL="https://api.render.com/deploy/srv-crb9ustsvqrc73euclf0?key=n3MN1qYCZXM"
+RENDER_URL="https://api.render.com/deploy/srv-cronat2j1k6c739ksph0?key=s-dNsYQvuP4"
 
 # 检查 Docker 是否安装
 if ! [ -x "$(command -v docker)" ]; then
