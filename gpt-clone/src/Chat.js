@@ -153,12 +153,16 @@ function Chat() {
             const response = await axios.get(`${window.API_BASE_URL}/chat`, {
                 params: {uuid: localStorage.getItem('userUUID')}
             });
-            setConversations(response.data.data.map(conv => ({
+            const conversationsData = response.data.data.map(conv => ({
                 id: conv.conversationId,
                 title: conv.firstMessage,
                 timestampCreat: conv.createdAt,
                 timestampLast: conv.lastMessageAt
-            })));
+            }));
+
+            setConversations(conversationsData);
+
+            return conversationsData;
         } catch (error) {
             console.error('Error fetching conversations:', error);
             throw error;
@@ -500,6 +504,7 @@ function Chat() {
                         ? animatingTitle.currentTitle
                         : conv.title
                 }}  // 传递对话数据
+                conversations={conversations}  // 传递对话列表数据
                 messages={messages}  // 传递消息数据
                 loadConversation={loadConversation}  // 传递加载对话的函数
                 fetchConversations={fetchConversations}  // 传递刷新对话列表的函数

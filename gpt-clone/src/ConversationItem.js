@@ -5,6 +5,7 @@ import './Chat.css';
 
 const ConversationItem = ({
                               conversation,
+                              conversations,
                               messages,
                               loadConversation,
                               fetchConversations,
@@ -39,10 +40,10 @@ const ConversationItem = ({
         const uuid = localStorage.getItem('userUUID');
         try {
             await axios.delete(`${window.API_BASE_URL}/chat/${uuid}/${conversation.id}`);
-            await fetchConversations();
+            // 获取更新后的会话列表
+            const updatedConversations = await fetchConversations();
 
             if (selectedConversation === conversation.id) {
-                const updatedConversations = await fetchConversations();
                 if (updatedConversations.length > 0) {
                     loadConversation(updatedConversations[0].id);
                 } else {
@@ -88,8 +89,7 @@ const ConversationItem = ({
         setShowOptions(prev => !prev);
     };
 
-    return (
-        <div
+    return (<div
             className={`conversation-item ${selectedConversation === conversation.id ? 'selected' : ''}`}
             onClick={() => {
                 setSelectedConversation(conversation.id);
@@ -106,8 +106,7 @@ const ConversationItem = ({
                     <li onClick={handleShare}>Share</li>
                 </ul>
             </div>
-        </div>
-    );
+        </div>);
 };
 
 export default ConversationItem;
