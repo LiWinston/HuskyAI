@@ -27,7 +27,7 @@ function detectEnvironment(updateStatus, setError, finishDetection) {
                 localStorage.setItem('API_BASE_URL', window.API_BASE_URL);
                 isLocalServiceAvailable = true;
                 updateStatus(`Connected to local service: ${url}`);
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // await new Promise(resolve => setTimeout(resolve, 100));
                 finishDetection();
                 return;
             } catch (error) {
@@ -42,7 +42,7 @@ function detectEnvironment(updateStatus, setError, finishDetection) {
                 window.API_BASE_URL = REMOTE_URL.replace('/health', '/api');
                 localStorage.setItem('API_BASE_URL', window.API_BASE_URL);
                 updateStatus('Connected to remote server');
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // await new Promise(resolve => setTimeout(resolve, 100));
                 finishDetection();
             } catch (error) {
                 setError('Failed to connect to any service.');

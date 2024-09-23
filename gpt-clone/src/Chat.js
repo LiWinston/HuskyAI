@@ -350,7 +350,7 @@ function Chat() {
                             }));
                         }
                     } catch (error) {
-                        console.error('Error parsing final chunk:', error);
+                        console.error('Error parsing final chunk:' + accumulatedData, error);
                     }
                 }
 
@@ -385,15 +385,17 @@ function Chat() {
 
     const parseMsgAndPotentialNotify = (msg, to1 = 3500, to2 = 2000) => {
         if (msg.includes(CONVERSATION_SUMMARY_GENERATED)) {
-            const newTitle = msg.split(CONVERSATION_SUMMARY_GENERATED)[1];
+            const [beforeSummary, newTitle] = msg.split(CONVERSATION_SUMMARY_GENERATED);
+            const notificationMsg = beforeSummary.trim() ? beforeSummary + ', Conversation summary generated, ' + newTitle : 'Conversation summary generated, ' + newTitle;
             animateTitleUpdate(selectedConversation, newTitle);
-            setNotification(msg.split(CONVERSATION_SUMMARY_GENERATED)[0] + ', Conversation summary generated, ' + newTitle);
+            setNotification(notificationMsg);
             setTimeout(() => setNotification(null), to1);
         } else {
             setNotification(msg);
             setTimeout(() => setNotification(null), to2);
         }
-    }
+    };
+
 
 
     const animateTitleUpdate = (conversationId, newTitle) => {
