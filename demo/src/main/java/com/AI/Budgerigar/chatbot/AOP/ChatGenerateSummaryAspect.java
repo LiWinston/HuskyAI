@@ -57,6 +57,9 @@ public class ChatGenerateSummaryAspect {
     // 用于存储每个线程中异步任务的状态
     private final ConcurrentHashMap<Thread, CompletableFuture<Result<String>>> futureMap = new ConcurrentHashMap<>();
 
+    public static final Result<String> DO_NOT_GEN = Result.error("DO_NOT_GEN");
+    private static final CompletableFuture<Result<String>> NO_TITLE_GEN_Future = CompletableFuture.completedFuture(DO_NOT_GEN);
+
     // 监控 getHistoryPreChat 方法的执行
     @Around("getHistoryPreChatMethod()")
     public Object aroundGetHistoryPreChat(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -92,7 +95,7 @@ public class ChatGenerateSummaryAspect {
         }
         else {
             // 如果不需要生成标题，存储 null 到 futureMap
-            futureMap.put(Thread.currentThread(), null); // 标记不生成标题
+            futureMap.put(Thread.currentThread(), NO_TITLE_GEN_Future);
         }
 
         return result;
@@ -107,7 +110,7 @@ public class ChatGenerateSummaryAspect {
 
         // 获取异步任务，并等待其完成（如果存在）
         CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // 从Map中获取并移除
-        if (future != null) {
+        if (future != null && future != NO_TITLE_GEN_Future) {
             try {
                 // 等待异步标题生成完成
                 Result<String> titleResult = future.get(); // 等待任务完成
@@ -143,7 +146,7 @@ public class ChatGenerateSummaryAspect {
 
         // 监听流的每一条消息，并在最后一条（即 finishReason != null）时合并标题
         return resultFlux.concatMap(result -> {
-            if (future != null && future.isDone() && !titleAppended.get()) {
+            if (future != null && future.isDone() && !titleAppended.get() && future != NO_TITLE_GEN_Future) {
                 // 如果 future 已经完成，尽早合并标题
                 return Mono.fromFuture(future).map(titleResult -> {
                     titleAppended.set(true);
@@ -198,7 +201,7 @@ public class ChatGenerateSummaryAspect {
 
     // Method to determine if title generation should occur
     private boolean shouldGenerateTitle(String conversationId) {
-        return true;
+        return false;
         // if (RANDOM.nextDouble() > 1) {
         // // new conversation must generate title
         // if (chatMessagesRedisDAO.getMessageCount(conversationId) <= 3) {
