@@ -106,6 +106,7 @@ public class ChatController {
         String baseUrl = serviceConfig.getUrl();
         String modelsEndpoint = baseUrl + "/v1/models";
         String serviceName = serviceConfig.getName() != null ? serviceConfig.getName() : baseUrl;
+        String openaiApiKey = serviceConfig.getApiKey() != null ? serviceConfig.getApiKey() : "";
 
         try {
             ResponseEntity<Map> response = restTemplate.getForEntity(modelsEndpoint, Map.class);
@@ -116,7 +117,7 @@ public class ChatController {
                 for (Map<String, Object> modelData : models) {
                     String modelId = (String) modelData.get("id");
                     if (!modelServices.containsKey(modelId)) {
-                        registerNewChatService(modelId, baseUrl, serviceName);
+                        registerNewChatService(modelId, baseUrl, serviceName, openaiApiKey);
                     }
                 }
                 chatServices.put(serviceName, modelServices);
@@ -140,6 +141,7 @@ public class ChatController {
             for (RemoteServiceConfig.ServiceConfig serviceConfig : remoteServiceConfig.getServices()) {
                 String serviceUrl = serviceConfig.getUrl();
                 String serviceName = serviceConfig.getName() != null ? serviceConfig.getName() : serviceUrl;
+                String openaiApiKey = serviceConfig.getApiKey() != null ? serviceConfig.getApiKey() : "";
 
                 List<String> availableModels = fetchModelsFromService(serviceUrl);
                 log.info("Available models from {}: {}", serviceName, availableModels);
@@ -149,7 +151,7 @@ public class ChatController {
 
                 for (String modelId : availableModels) {
                     if (!registeredModels.containsKey(modelId)) {
-                        registerNewChatService(modelId, serviceUrl, serviceName);
+                        registerNewChatService(modelId, serviceUrl, serviceName, openaiApiKey);
                     }
                 }
 
@@ -238,8 +240,9 @@ public class ChatController {
         }
     }
 
-    private void registerNewChatService(String modelId, String baseUrl, String serviceName) {
-        ChatService newService = openAIChatServiceFactory.create(baseUrl + "/v1/chat/completions", modelId);
+    private void registerNewChatService(String modelId, String baseUrl, String serviceName, String openaiApiKey) {
+        ChatService newService = openAIChatServiceFactory.create(baseUrl + "/v1/chat/completions", modelId,
+                openaiApiKey);
         ConcurrentHashMap<String, ChatService> modelServices = chatServices.getOrDefault(serviceName,
                 new ConcurrentHashMap<>());
         modelServices.put(modelId, newService);

@@ -70,6 +70,11 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
     @Value("${openai.api.url:}")
     private String openAIUrl;
 
+    @Getter
+    @Setter
+    @Value("${openai.api.key:}")
+    private String openaiApiKey;
+
     private WebClient webClient;
 
     @Autowired
@@ -131,6 +136,8 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
             .baseUrl(openAIUrl)
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // 设置内容类型
             .defaultHeader(HttpHeaders.CACHE_CONTROL, "no-cache") // 设置缓存控制
+            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + openaiApiKey) // 设置 API
+                                                                                // Key
             .build();
     }
 

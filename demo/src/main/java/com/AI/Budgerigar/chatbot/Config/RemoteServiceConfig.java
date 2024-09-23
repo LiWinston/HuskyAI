@@ -27,6 +27,8 @@ public class RemoteServiceConfig {
 
         private String name; // 可选的别名
 
+        private String apiKey; // 可选的 API 密钥
+
     }
 
 }
