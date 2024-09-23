@@ -73,7 +73,7 @@ public class GenerateTittle {
                 rollAndSetModelWithEscaping(_openAIUrl, _model, _apikey, escapeUrl, escapeModel);
             }
             else {
-                rollAndSetModel(_openAIUrl, _model);
+                rollAndSetModel(_openAIUrl, _model, _apikey);
             }
 
             // Step 1: Get the last 15 messages of the conversation
@@ -136,13 +136,15 @@ public class GenerateTittle {
         }
     }
 
-    private void rollAndSetModel(AtomicReference<String> _openAIUrl, AtomicReference<String> _model) {
+    private void rollAndSetModel(AtomicReference<String> _openAIUrl, AtomicReference<String> _model,
+            AtomicReference<String> _apikey) {
         // 遍历服务和模型
         chatServices.forEach((serviceName, serviceMap) -> {
             serviceMap.forEach((modelId, chatService) -> {
-                if (chatService instanceof OpenAIChatServiceImpl && !Objects.equals(modelId, "openai")) {
-                    _openAIUrl.set(((OpenAIChatServiceImpl) chatService).getOpenAIUrl());
-                    _model.set(serviceName + ":" + modelId);
+                if (chatService instanceof OpenAIChatServiceImpl oachatService && !Objects.equals(modelId, "openai")) {
+                    _openAIUrl.set(oachatService.getOpenAIUrl());
+                    _model.set(modelId);
+                    _apikey.set(oachatService.getOpenaiApiKey());
                 }
             });
         });
