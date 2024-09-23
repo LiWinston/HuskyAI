@@ -1,7 +1,7 @@
 package com.AI.Budgerigar.chatbot.DTO;
 
 import com.AI.Budgerigar.chatbot.AIUtil.Message;
-import lombok.Builder;
+import lombok.ToString;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 @lombok.Getter
 @lombok.Setter
+@ToString
 public class ChatRequestDTO {
 
     private String model;

@@ -122,8 +122,20 @@ public class ChatController {
                 List<Map<String, Object>> models = (List<Map<String, Object>>) response.getBody().get("data");
                 ConcurrentHashMap<String, ChatService> modelServices = chatServices.getOrDefault(serviceName,
                         new ConcurrentHashMap<>());
+
+                // 获取允许注册的模型列表
+                List<String> allowedModels = serviceConfig.getAllowedModels();
+
                 for (Map<String, Object> modelData : models) {
                     String modelId = (String) modelData.get("id");
+
+                    // 如果 allowedModels 不为空，且 modelId 不在列表中，跳过
+                    if (allowedModels != null && !allowedModels.isEmpty() && !allowedModels.contains(modelId)) {
+                        log.info("Model {} is not in the allowed list for service {}, skipping registration.", modelId,
+                                serviceName);
+                        continue;
+                    }
+                    // 如果模型不存在，则注册新的 ChatService
                     if (!modelServices.containsKey(modelId)) {
                         registerNewChatService(modelId, baseUrl, serviceName, openaiApiKey);
                     }
@@ -151,7 +163,7 @@ public class ChatController {
                 String serviceName = serviceConfig.getName() != null ? serviceConfig.getName() : serviceUrl;
                 String openaiApiKey = serviceConfig.getApiKey() != null ? serviceConfig.getApiKey() : "";
 
-                List<String> availableModels = fetchModelsFromService(serviceUrl);
+                List<String> availableModels = fetchModelsFromService(serviceUrl, serviceConfig);
                 log.info("Available models from {}: {}", serviceName, availableModels);
 
                 ConcurrentHashMap<String, ChatService> registeredModels = chatServices.getOrDefault(serviceName,
@@ -176,17 +188,20 @@ public class ChatController {
         });
     }
 
-    private List<String> fetchModelsFromService(String serviceUrl) {
+    private List<String> fetchModelsFromService(String serviceUrl, RemoteServiceConfig.ServiceConfig serviceConfig) {
         try {
             String modelEndpoint = serviceUrl + "/v1/models";
-            String apikey = remoteServiceConfig.getServices().stream()
-                    .filter(service -> service.getUrl().equals(serviceUrl)).findFirst().get().getApiKey();
+            String apikey = remoteServiceConfig.getServices()
+                .stream()
+                .filter(service -> service.getUrl().equals(serviceUrl))
+                .findFirst()
+                .get()
+                .getApiKey();
 
             var restTemplate = new RestTemplate() {
                 {
                     getInterceptors().add((request, body, execution) -> {
-                        request.getHeaders().add("Authorization",
-                                "Bearer " + apikey);
+                        request.getHeaders().add("Authorization", "Bearer " + apikey);
                         return execution.execute(request, body);
                     });
                 }
@@ -200,10 +215,19 @@ public class ChatController {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonResponse = objectMapper.readTree(response.getBody());
 
+            List<String> allowedModels = serviceConfig.getAllowedModels();
+
+            // 获取模型ID
             List<String> modelIds = new ArrayList<>();
             JsonNode dataNode = jsonResponse.get("data");
             if (dataNode != null && dataNode.isArray()) {
                 for (JsonNode modelNode : dataNode) {
+                    if (allowedModels != null && !allowedModels.isEmpty()
+                            && !allowedModels.contains(modelNode.get("id").asText())) {
+                        log.info("Model {} is not in the allowed list for service {}, skipping registration.",
+                                modelNode.get("id").asText(), serviceUrl);
+                        continue;
+                    }
                     modelIds.add(modelNode.get("id").asText());
                 }
             }
@@ -222,43 +246,46 @@ public class ChatController {
         }
     }
 
-//    private boolean isServiceAvailable(OpenAIChatServiceImpl service) {
-//        try {
-//            String chatUrl = service.getOpenAIUrl();
-//            String checkUrl = chatUrl.replace("/v1/chat/completion", "/v1/models");
-//
-//            ResponseEntity<String> response = restTemplate.getForEntity(checkUrl, String.class);
-//
-//            if (!response.getStatusCode().is2xxSuccessful()) {
-//                return false;
-//            }
-//
-//            // 使用 Jackson 解析 JSON 响应
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            JsonNode jsonResponse = objectMapper.readTree(response.getBody());
-//
-//            // 检查 "data" 数组中是否包含指定的模型 ID
-//            JsonNode dataNode = jsonResponse.get("data");
-//            if (dataNode != null && dataNode.isArray()) {
-//                for (JsonNode modelNode : dataNode) {
-//                    if (modelNode.get("id").asText().equals(service.getModel())) {
-//                        return true; // 模型存在，服务可用
-//                    }
-//                }
-//            }
-//
-//            // 如果模型未找到，返回 false
-//            log.info("Model {} not found in service {}. Service might be unavailable.", service.getModel(),
-//                    service.getOpenAIUrl());
-//            return false;
-//
-//        }
-//        catch (Exception e) {
-//            log.error("Service check failed for {}: {}", service.getOpenAIUrl() + "-" + service.getModel(),
-//                    e.getMessage());
-//            return false;
-//        }
-//    }
+    // private boolean isServiceAvailable(OpenAIChatServiceImpl service) {
+    // try {
+    // String chatUrl = service.getOpenAIUrl();
+    // String checkUrl = chatUrl.replace("/v1/chat/completion", "/v1/models");
+    //
+    // ResponseEntity<String> response = restTemplate.getForEntity(checkUrl,
+    // String.class);
+    //
+    // if (!response.getStatusCode().is2xxSuccessful()) {
+    // return false;
+    // }
+    //
+    // // 使用 Jackson 解析 JSON 响应
+    // ObjectMapper objectMapper = new ObjectMapper();
+    // JsonNode jsonResponse = objectMapper.readTree(response.getBody());
+    //
+    // // 检查 "data" 数组中是否包含指定的模型 ID
+    // JsonNode dataNode = jsonResponse.get("data");
+    // if (dataNode != null && dataNode.isArray()) {
+    // for (JsonNode modelNode : dataNode) {
+    // if (modelNode.get("id").asText().equals(service.getModel())) {
+    // return true; // 模型存在，服务可用
+    // }
+    // }
+    // }
+    //
+    // // 如果模型未找到，返回 false
+    // log.info("Model {} not found in service {}. Service might be unavailable.",
+    // service.getModel(),
+    // service.getOpenAIUrl());
+    // return false;
+    //
+    // }
+    // catch (Exception e) {
+    // log.error("Service check failed for {}: {}", service.getOpenAIUrl() + "-" +
+    // service.getModel(),
+    // e.getMessage());
+    // return false;
+    // }
+    // }
 
     private void registerNewChatService(String modelId, String baseUrl, String serviceName, String openaiApiKey) {
         ChatService newService = openAIChatServiceFactory.create(baseUrl + "/v1/chat/completions", modelId,

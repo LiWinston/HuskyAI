@@ -29,6 +29,8 @@ public class RemoteServiceConfig {
 
         private String apiKey; // 可选的 API 密钥
 
+        private List<String> allowedModels; // 可选的允许注册的模型ID列表
+
     }
 
 }

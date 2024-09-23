@@ -2,13 +2,11 @@ package com.AI.Budgerigar.chatbot.Services;
 
 import com.AI.Budgerigar.chatbot.AIUtil.TokenLimiter;
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
-import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.DTO.ChatRequestDTO;
 import com.AI.Budgerigar.chatbot.DTO.ChatResponseDTO;
 import com.AI.Budgerigar.chatbot.Services.impl.OpenAIChatServiceImpl;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
-import com.baidubce.qianfan.core.builder.ChatBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,14 +35,17 @@ public class GenerateTittle {
     @Value("${openai.model}")
     private String model;
 
+    @Value("${openai.api.key}")
+    private String apikey;
+
     @Autowired
     private ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices;
 
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
 
-    @Autowired
-    private BaiduConfig baiduConfig;
+    // @Autowired
+    // private BaiduConfig baiduConfig;
 
     @Autowired
     private ConversationMapper conversationMapper;
@@ -66,9 +67,10 @@ public class GenerateTittle {
         try {
             AtomicReference<String> _openAIUrl = new AtomicReference<>(openAIUrl);
             AtomicReference<String> _model = new AtomicReference<>(model);
+            AtomicReference<String> _apikey = new AtomicReference<>(apikey);
 
             if (escape) {
-                rollAndSetModelWithEscaping(_openAIUrl, _model, escapeUrl, escapeModel);
+                rollAndSetModelWithEscaping(_openAIUrl, _model, _apikey, escapeUrl, escapeModel);
             }
             else {
                 rollAndSetModel(_openAIUrl, _model);
@@ -82,25 +84,37 @@ public class GenerateTittle {
                 return Result.error(conversationId, "No messages found for the conversation.");
             }
 
-            // Step 2: Generate a summary using AI service
-            ChatBuilder chatCompletion = baiduConfig.getRandomChatBuilder();
-            recentMessages.add(new String[] { "assistant", null, "answering, please wait" }); // Add
-
+            // ChatBuilder chatCompletion = baiduConfig.getRandomChatBuilder();
+             recentMessages.add(new String[] { "assistant", null, "answering, please wait" }); // Add
+            //
             recentMessages.add(new String[] { "user", null,
                     "Generate a concise and relevant title for this conversation, matching the original content's language. No matter how the content changes, provide a title. Focus slightly more on recent messages. If the topic has significantly shifted, determine the title based on the updated subject. Please reply with only the title, without any pleasantries, introductions, or prefixes. Directly provide a subject-predicate, verb-object, or modifier-head structure. If it's an English title, ensure it follows a subject-predicate, or adjective-noun phrase. Avoid phrases like 'Recent message:' in the title. If there are multiple possible titles, choose the simplest one." });
-            // Align sequence of messages ensure valid
-            recentMessages = tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
-            // StringBuilder s = new StringBuilder();
-            for (String[] entry : recentMessages) {
-                chatCompletion.addMessage(entry[0], entry[2]);
-                // log.info(entry[0] + ": " + entry[2].substring(0, Math.min(30,
-                // entry[2].length())));
-            }
+            // // Align sequence of messages ensure valid
+            // recentMessages =
+             tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
+            // // StringBuilder s = new StringBuilder();
+            // for (String[] entry : recentMessages) {
+            // chatCompletion.addMessage(entry[0], entry[2]);
+            // // log.info(entry[0] + ": " + entry[2].substring(0, Math.min(30,
+            // // entry[2].length())));
+            // }
             // log.info(String.valueOf(s));
 
             // String summary = chatCompletion.execute().getResult();
-            ChatResponseDTO chatResponseDTO = restTemplate.postForObject(_openAIUrl.get(),
-                    ChatRequestDTO.fromStringTuples(_model.get(), recentMessages), ChatResponseDTO.class);
+
+            var restTemplate = new RestTemplate() {
+                {
+                    getInterceptors().add((request, body, execution) -> {
+                        request.getHeaders().add("Authorization", "Bearer " + _apikey.get());
+                        return execution.execute(request, body);
+                    });
+                }
+            };
+
+            ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringTuples(_model.get(), recentMessages);
+            log.info("ChatRequestDTO: " + chatRequestDTO.toString());
+            ChatResponseDTO chatResponseDTO = restTemplate.postForObject(_openAIUrl.get(), chatRequestDTO,
+                    ChatResponseDTO.class);
             String summary = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
             if (summary == null || summary.isEmpty()) {
@@ -135,7 +149,7 @@ public class GenerateTittle {
     }
 
     private void rollAndSetModelWithEscaping(AtomicReference<String> _openAIUrl, AtomicReference<String> _model,
-            String escapeUrl, String escapeModel) {
+            AtomicReference<String> _apikey, String escapeUrl, String escapeModel) {
 
         List<OpenAIChatServiceImpl> availableServices = new ArrayList<>();
 
@@ -143,20 +157,22 @@ public class GenerateTittle {
         chatServices.forEach((serviceName, serviceMap) -> {
             serviceMap.forEach((modelId, chatService) -> {
                 if (chatService instanceof OpenAIChatServiceImpl && !Objects.equals(modelId, "openai")) {
+                    // 非openai的OpenAIChatServiceImpl实例加入availableServices列表
                     availableServices.add((OpenAIChatServiceImpl) chatService);
                 }
             });
         });
 
-        // 如果只有一个模型，直接使用它，不进行避让
+        // 如果只有一个非openai的OpenAIChatServiceImpl实例，直接使用该实例
         if (availableServices.size() == 1) {
-            if (openAIUrl != null && model != null) {
-                // 预先注入了openAIUrl和model，则退行到该设定，否则使用唯一的可用模型
-                return;
-            }
+            // if (openAIUrl != null && model != null) {
+            // // 预先注入了openAIUrl和model，则退行到该设定，使用唯一的非openai模型
+            // return;
+            // }
             OpenAIChatServiceImpl singleService = availableServices.getFirst();
             _openAIUrl.set(singleService.getOpenAIUrl());
-            _model.set("openai:" + singleService.getModel());
+            _model.set(singleService.getModel());
+            _apikey.set(singleService.getOpenaiApiKey());
             return;
         }
 
@@ -167,7 +183,8 @@ public class GenerateTittle {
             }
             // 选择其他模型并设置
             _openAIUrl.set(service.getOpenAIUrl());
-            _model.set("openai:" + service.getModel());
+            _model.set(service.getModel());
+            _apikey.set(service.getOpenaiApiKey());
             return;
         }
 
@@ -175,7 +192,8 @@ public class GenerateTittle {
         if (_openAIUrl.get() == null || _model.get() == null) {
             OpenAIChatServiceImpl fallbackService = availableServices.get(0); // 回退到第一个可用模型
             _openAIUrl.set(fallbackService.getOpenAIUrl());
-            _model.set("openai:" + fallbackService.getModel());
+            _model.set(fallbackService.getModel());
+            _apikey.set(fallbackService.getOpenaiApiKey());
         }
     }
 
