@@ -6,15 +6,18 @@ import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
+import com.AI.Budgerigar.chatbot.Services.StreamChatService;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.baidubce.qianfan.core.builder.ChatBuilder;
 import com.baidubce.qianfan.model.chat.ChatResponse;
+import com.google.gson.Gson;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -26,7 +29,7 @@ import java.util.logging.Logger;
 @Service
 @Setter
 @Slf4j
-public class BaiduChatServiceImpl implements ChatService {
+public class BaiduChatServiceImpl implements ChatService, StreamChatService {
 
     private static final Logger logger = Logger.getLogger(BaiduChatServiceImpl.class.getName());
 
@@ -36,7 +39,7 @@ public class BaiduChatServiceImpl implements ChatService {
     DateTimeFormatter dateTimeFormatter;
 
     @Autowired
-    TokenLimitType tokenLimitType;
+    ChatService.TokenLimitType tokenLimitType;
 
     @Autowired
     private ExecutorService executorService;
@@ -61,6 +64,8 @@ public class BaiduChatServiceImpl implements ChatService {
 
     @Autowired
     private ConversationMapper conversationMapper;
+
+    private final Gson gson = new Gson();
 
     private List<ChatBuilder> chatBuilders = new ArrayList<>();
 
@@ -121,6 +126,77 @@ public class BaiduChatServiceImpl implements ChatService {
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
                     "Query failed. Please try again.");
             throw new RuntimeException("Error processing chat request", e);
+        }
+    }
+
+    @Override
+    public void logInfo(String message) {
+        ChatService.super.logInfo(message);
+    }
+
+    @Override
+    public void logError(String message, Throwable throwable) {
+        ChatService.super.logError(message, throwable);
+    }
+
+    @Override
+    public String getCallingClassName() {
+        return ChatService.super.getCallingClassName();
+    }
+
+    @Override
+    public Flux<Result<String>> chatFlux(String prompt, String conversationId) {
+        List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, prompt, conversationId);
+
+        ChatBuilder chatBuilder = baiduConfig.getRandomChatBuilder();
+        for (String[] entry : conversationHistory) {
+            chatBuilder.addMessage(entry[0], entry[2]);
+        }
+
+        StringBuilder contentBuilder = new StringBuilder();
+
+        return Flux.<Result<String>>create(emitter -> {
+            chatBuilder.executeStream().forEachRemaining(chunk -> {
+                ChatResponse response = gson.fromJson(gson.toJson(chunk), ChatResponse.class);
+                String content = response.getResult();
+
+                if (content != null && !content.isEmpty()) {
+                    log.info("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m",
+                            baiduConfig.getCurrentModel(), content
+                    // .substring(0, Math.min(40, content.length()))
+                    );
+
+                    contentBuilder.append(content);
+                    emitter.next(Result.success(content));
+                }
+
+                if (response.getEnd()) {
+                    updateConversationHistory(conversationId, contentBuilder.toString());
+                    log.info("Conversation finished: \u001B[32m{}\u001B[0m",
+                            contentBuilder.substring(0, Math.min(30, contentBuilder.length())));
+                    emitter.next(Result.success(content, "From " + baiduConfig.getCurrentModel() + ", Referenced "
+                            + conversationHistory.size() + " messages."));
+                    emitter.complete();
+                }
+            });
+        }).onErrorResume(e -> {
+            log.error("Error occurred in {}: {}", BaiduChatServiceImpl.class.getName(), e.getMessage());
+            chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
+                    "Query failed due to " + e.getMessage());
+            return Flux.error(new RuntimeException("Error processing chat request: " + e.getLocalizedMessage(), e));
+        });
+    }
+
+    private void updateConversationHistory(String conversationId, String response) {
+        chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(), response);
+
+        int redisLength = chatMessagesRedisDAO.getConversationHistory(conversationId).size();
+        int mongoLength = chatMessagesMongoDAO.getConversationLengthById(conversationId);
+        int diff = redisLength - mongoLength;
+        log.info("Redis length: {}, MongoDB length: {}, diff: {} FROM {}", redisLength, mongoLength, diff,
+                BaiduChatServiceImpl.class.getName());
+        if (Math.abs(diff) > 5) {
+            executorService.submit(() -> chatSyncService.updateHistoryFromRedis(conversationId));
         }
     }
 

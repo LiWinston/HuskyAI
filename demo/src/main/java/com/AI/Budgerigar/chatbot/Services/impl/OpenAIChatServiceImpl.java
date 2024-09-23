@@ -148,8 +148,8 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
             .flatMap(this::parseJsonChunk)
             .map(chatResponseDTO -> {
                 String content = extractContentFromFirstChoice(chatResponseDTO);
-                log.info("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m",
-                        chatResponseDTO.getModel(), content.substring(0, Math.min(40, content.length())));
+                log.info("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m", chatResponseDTO.getModel(),
+                        content.substring(0, Math.min(40, content.length())));
                 contentBuilder.append(content);
                 var finishReason = chatResponseDTO.getChoices().get(0).getFinish_reason();
                 if (finishReason != null && !finishReason.isEmpty()) {

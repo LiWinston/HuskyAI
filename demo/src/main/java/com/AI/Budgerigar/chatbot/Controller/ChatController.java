@@ -343,7 +343,7 @@ public class ChatController {
         try {
             String model = body.get("model");
             if (model == null) {
-                model = "baidu:baidu";
+                model = "baidu上的baidu";
             }
 
             String[] modelParts = model.split("上的");
