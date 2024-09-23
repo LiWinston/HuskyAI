@@ -1,5 +1,6 @@
 package com.AI.Budgerigar.chatbot.Config;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -19,18 +20,12 @@ public class RemoteServiceConfig {
         this.services = services;
     }
 
+    @Data
     public static class ServiceConfig {
 
         private String url;
 
-        // getters and setters
-        public String getUrl() {
-            return url;
-        }
-
-        public void setUrl(String url) {
-            this.url = url;
-        }
+        private String name; // 可选的别名
 
     }
 

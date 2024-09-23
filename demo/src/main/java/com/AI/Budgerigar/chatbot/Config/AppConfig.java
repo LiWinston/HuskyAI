@@ -77,7 +77,7 @@ public class AppConfig {
 
     @Bean
     @Qualifier("chatServices")
-    protected ConcurrentHashMap<String, ChatService> chatServices() {
+    protected ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices() {
         return new ConcurrentHashMap<>();
     }
 

@@ -37,7 +37,7 @@ public class GenerateTittle {
     private String model;
 
     @Autowired
-    private ConcurrentHashMap<String, ChatService> chatServices;
+    private ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices;
 
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
@@ -54,13 +54,17 @@ public class GenerateTittle {
     // @Transactional
     public Result<String> generateAndSetConversationTitle(String conversationId) {
         try {
-            AtomicReference<String> _openAIUrl = new AtomicReference<String>();
-            AtomicReference<String> _model = new AtomicReference<String>();
-            chatServices.forEach((key, value) -> {
-                if (value instanceof OpenAIChatServiceImpl && !Objects.equals(key, "openai")) {
-                    _openAIUrl.set(((OpenAIChatServiceImpl) value).getOpenAIUrl());
-                    _model.set(key);
-                }
+            AtomicReference<String> _openAIUrl = new AtomicReference<>();
+            AtomicReference<String> _model = new AtomicReference<>();
+
+            // 遍历服务和模型
+            chatServices.forEach((serviceName, serviceMap) -> {
+                serviceMap.forEach((modelId, chatService) -> {
+                    if (chatService instanceof OpenAIChatServiceImpl && !Objects.equals(modelId, "openai")) {
+                        _openAIUrl.set(((OpenAIChatServiceImpl) chatService).getOpenAIUrl());
+                        _model.set(serviceName + ":" + modelId);
+                    }
+                });
             });
 
             // Step 1: Get the last 15 messages of the conversation
