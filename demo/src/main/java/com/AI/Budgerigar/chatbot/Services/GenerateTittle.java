@@ -54,8 +54,8 @@ public class GenerateTittle {
     // @Transactional
     public Result<String> generateAndSetConversationTitle(String conversationId) {
         try {
-            AtomicReference<String> _openAIUrl = new AtomicReference<>();
-            AtomicReference<String> _model = new AtomicReference<>();
+            AtomicReference<String> _openAIUrl = new AtomicReference<>(openAIUrl);
+            AtomicReference<String> _model = new AtomicReference<>(model);
 
             // 遍历服务和模型
             chatServices.forEach((serviceName, serviceMap) -> {
@@ -99,8 +99,9 @@ public class GenerateTittle {
             if (summary == null || summary.isEmpty()) {
                 return Result.error(conversationId, "Failed to generate a title.");
             }
-            log.info("Generated title: " + "\u001B[32m" + summary + "\u001B[0m" + " \u001B[35mBased on "
-                    + recentMessages.size() + " messages.\u001B[0m");
+            log.info("Generated title: " + "\u001B[32;1m" + summary + "\u001B[0m" + " \u001B[35mBased on "
+                    + recentMessages.size() + " messages.\u001B[0m" + " \u001B[34m" + _openAIUrl.get() + "\u001B[0m"
+                    + " \u001B[36m" + _model.get() + "\u001B[0m");
             // Step 3: Update the 'firstmessage' field in the database
             conversationMapper.setMessageForShort(conversationId, summary);
 

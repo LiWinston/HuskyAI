@@ -31,7 +31,8 @@ public class ChatGenerateSummaryAspect {
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
 
     @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.impl.preChatBehaviour.getHistoryPreChat(..))")
-    public void getHistoryPreChatMethod() {}
+    public void getHistoryPreChatMethod() {
+    }
 
     // 修改切入点，匹配所有实现 ChatService 接口的类的 chat 方法
     @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.ChatService.chat(..))")

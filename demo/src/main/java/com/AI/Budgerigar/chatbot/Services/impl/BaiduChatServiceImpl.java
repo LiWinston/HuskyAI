@@ -76,7 +76,6 @@ public class BaiduChatServiceImpl implements ChatService {
     @Autowired
     private preChatBehaviour preChatBehaviour;
 
-
     @Override
     public Result<String> chat(String input, String conversationId) {
         try {

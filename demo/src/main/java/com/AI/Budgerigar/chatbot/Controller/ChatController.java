@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Flux;
 
@@ -80,15 +81,21 @@ public class ChatController {
 
     @PostConstruct
     public void init() {
-        chatServices.put("baidu", new ConcurrentHashMap<>() {{
-            put("baidu", baiduChatService);
-        }});
-        chatServices.put("doubao", new ConcurrentHashMap<>() {{
-            put("doubao", doubaoChatService);
-        }});
-        chatServices.put("openai", new ConcurrentHashMap<>() {{
-            put("openai", openaiChatService);
-        }});
+        chatServices.put("baidu", new ConcurrentHashMap<>() {
+            {
+                put("baidu", baiduChatService);
+            }
+        });
+        chatServices.put("doubao", new ConcurrentHashMap<>() {
+            {
+                put("doubao", doubaoChatService);
+            }
+        });
+        chatServices.put("openai", new ConcurrentHashMap<>() {
+            {
+                put("openai", openaiChatService);
+            }
+        });
         // 从配置中读取根路径并动态注册服务
         for (RemoteServiceConfig.ServiceConfig service : remoteServiceConfig.getServices()) {
             fetchAndRegisterModelsFromService(service);
@@ -104,7 +111,8 @@ public class ChatController {
             ResponseEntity<Map> response = restTemplate.getForEntity(modelsEndpoint, Map.class);
             if (response.getStatusCode().is2xxSuccessful()) {
                 List<Map<String, Object>> models = (List<Map<String, Object>>) response.getBody().get("data");
-                ConcurrentHashMap<String, ChatService> modelServices = chatServices.getOrDefault(serviceName, new ConcurrentHashMap<>());
+                ConcurrentHashMap<String, ChatService> modelServices = chatServices.getOrDefault(serviceName,
+                        new ConcurrentHashMap<>());
                 for (Map<String, Object> modelData : models) {
                     String modelId = (String) modelData.get("id");
                     if (!modelServices.containsKey(modelId)) {
@@ -112,11 +120,17 @@ public class ChatController {
                     }
                 }
                 chatServices.put(serviceName, modelServices);
-            } else {
+            }
+            else {
                 log.warn("Failed to fetch models from {}: {}", modelsEndpoint, response.getStatusCode());
             }
-        } catch (Exception e) {
-            log.error("Error fetching models from {}", modelsEndpoint, e);
+        }
+        catch (HttpServerErrorException e) {
+            log.error("Failed to fetch models from {}: {} {}", modelsEndpoint, e.getStatusCode(),
+                    e.getResponseBodyAsString());
+        }
+        catch (Exception e) {
+            log.error("Failed to fetch models from {}: {}", modelsEndpoint, e.getMessage());
         }
     }
 
@@ -130,7 +144,8 @@ public class ChatController {
                 List<String> availableModels = fetchModelsFromService(serviceUrl);
                 log.info("Available models from {}: {}", serviceName, availableModels);
 
-                ConcurrentHashMap<String, ChatService> registeredModels = chatServices.getOrDefault(serviceName, new ConcurrentHashMap<>());
+                ConcurrentHashMap<String, ChatService> registeredModels = chatServices.getOrDefault(serviceName,
+                        new ConcurrentHashMap<>());
 
                 for (String modelId : availableModels) {
                     if (!registeredModels.containsKey(modelId)) {
@@ -140,7 +155,8 @@ public class ChatController {
 
                 for (String modelId : registeredModels.keySet()) {
                     if (!availableModels.contains(modelId)) {
-                        log.info("Model {} is no longer available in service {}, removing service.", modelId, serviceName);
+                        log.info("Model {} is no longer available in service {}, removing service.", modelId,
+                                serviceName);
                         registeredModels.remove(modelId);
                     }
                 }
@@ -170,7 +186,15 @@ public class ChatController {
                 }
             }
             return modelIds;
-        } catch (Exception e) {
+        }
+        catch (HttpServerErrorException e) {
+            // 只记录HTTP状态码和错误信息
+            log.error("Failed to fetch models from service: {}, HTTP status: {}, Error message: {}", serviceUrl,
+                    e.getStatusCode(), e.getResponseBodyAsString());
+            return Collections.emptyList();
+        }
+        catch (Exception e) {
+            // 捕获其他异常
             log.error("Failed to fetch models from service: {}", serviceUrl, e);
             return Collections.emptyList();
         }
@@ -216,7 +240,8 @@ public class ChatController {
 
     private void registerNewChatService(String modelId, String baseUrl, String serviceName) {
         ChatService newService = openAIChatServiceFactory.create(baseUrl + "/v1/chat/completions", modelId);
-        ConcurrentHashMap<String, ChatService> modelServices = chatServices.getOrDefault(serviceName, new ConcurrentHashMap<>());
+        ConcurrentHashMap<String, ChatService> modelServices = chatServices.getOrDefault(serviceName,
+                new ConcurrentHashMap<>());
         modelServices.put(modelId, newService);
         chatServices.put(serviceName, modelServices);
         log.info("Registered new ChatService with model: {} from {}", modelId, serviceName);
@@ -323,14 +348,14 @@ public class ChatController {
 
             String[] modelParts = model.split("上的");
             if (modelParts.length != 2) {
-                return Flux.just(Result.error("Invalid model format. Expected serviceName:modelId"))
-                        .map(result -> {
-                            try {
-                                return objectMapper.writeValueAsString(result) + "\n";
-                            } catch (JsonProcessingException e) {
-                                throw new RuntimeException("Error serializing result", e);
-                            }
-                        });
+                return Flux.just(Result.error("Invalid model format. Expected serviceName:modelId")).map(result -> {
+                    try {
+                        return objectMapper.writeValueAsString(result) + "\n";
+                    }
+                    catch (JsonProcessingException e) {
+                        throw new RuntimeException("Error serializing result", e);
+                    }
+                });
             }
 
             String serviceName = modelParts[0];
@@ -338,50 +363,54 @@ public class ChatController {
 
             ConcurrentHashMap<String, ChatService> serviceModels = chatServices.get(serviceName);
             if (serviceModels == null) {
-                return Flux.just(Result.error("Service not found: " + serviceName))
-                        .map(result -> {
-                            try {
-                                return objectMapper.writeValueAsString(result) + "\n";
-                            } catch (JsonProcessingException e) {
-                                throw new RuntimeException("Error serializing result", e);
-                            }
-                        });
+                return Flux.just(Result.error("Service not found: " + serviceName)).map(result -> {
+                    try {
+                        return objectMapper.writeValueAsString(result) + "\n";
+                    }
+                    catch (JsonProcessingException e) {
+                        throw new RuntimeException("Error serializing result", e);
+                    }
+                });
             }
 
             ChatService chatService = serviceModels.get(modelId);
             if (chatService == null) {
                 return Flux.just(Result.error("Model not found: " + modelId + " in service: " + serviceName))
-                        .map(result -> {
-                            try {
-                                return objectMapper.writeValueAsString(result) + "\n";
-                            } catch (JsonProcessingException e) {
-                                throw new RuntimeException("Error serializing result", e);
-                            }
-                        });
+                    .map(result -> {
+                        try {
+                            return objectMapper.writeValueAsString(result) + "\n";
+                        }
+                        catch (JsonProcessingException e) {
+                            throw new RuntimeException("Error serializing result", e);
+                        }
+                    });
             }
 
             // 检查是否支持流式调用
             if (chatService instanceof StreamChatService) {
                 return ((StreamChatService) chatService).chatFlux(body.get("prompt"), body.get("conversationId"))
-                        .map(result -> {
-                            // 将Result对象转换为JSON字符串并添加换行符
-                            try {
-                                return objectMapper.writeValueAsString(result) + "\n";
-                            } catch (JsonProcessingException e) {
-                                throw new RuntimeException("Error serializing result", e);
-                            }
-                        });
-            } else {
-                return Flux.just(Result.error("Model does not support streaming: " + model))
-                        .map(result -> {
-                            try {
-                                return objectMapper.writeValueAsString(result) + "\n";
-                            } catch (JsonProcessingException e) {
-                                throw new RuntimeException("Error serializing result", e);
-                            }
-                        });
+                    .map(result -> {
+                        // 将Result对象转换为JSON字符串并添加换行符
+                        try {
+                            return objectMapper.writeValueAsString(result) + "\n";
+                        }
+                        catch (JsonProcessingException e) {
+                            throw new RuntimeException("Error serializing result", e);
+                        }
+                    });
             }
-        } catch (Exception e) {
+            else {
+                return Flux.just(Result.error("Model does not support streaming: " + model)).map(result -> {
+                    try {
+                        return objectMapper.writeValueAsString(result) + "\n";
+                    }
+                    catch (JsonProcessingException e) {
+                        throw new RuntimeException("Error serializing result", e);
+                    }
+                });
+            }
+        }
+        catch (Exception e) {
             return Flux.error(e);
         }
     }
@@ -411,16 +440,20 @@ public class ChatController {
             });
 
             // 对其余服务源的模型按模型名排序，并加入结果
-            chatServices.keySet().stream()
-                    .filter(serviceName -> !prioritizedModels.contains(serviceName))
-                    .forEach(serviceName -> {
-                        chatServices.get(serviceName).keySet().stream()
-                                .sorted()
-                                .forEach(modelId -> result.add(serviceName + "上的" + modelId));
-                    });
+            chatServices.keySet()
+                .stream()
+                .filter(serviceName -> !prioritizedModels.contains(serviceName))
+                .forEach(serviceName -> {
+                    chatServices.get(serviceName)
+                        .keySet()
+                        .stream()
+                        .sorted()
+                        .forEach(modelId -> result.add(serviceName + "上的" + modelId));
+                });
 
             return Result.success(result);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return Result.error(chatServices.keySet(), e.getMessage());
         }
     }

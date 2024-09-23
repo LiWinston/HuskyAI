@@ -16,7 +16,8 @@ public interface ChatService {
 
     Logger logger = Logger.getLogger(ChatService.class.getName());
 
-//    List<String[]> getHistoryPreChat(String prompt, String conversationId) throws Exception;
+    // List<String[]> getHistoryPreChat(String prompt, String conversationId) throws
+    // Exception;
 
     Result<String> chat(String prompt, String conversationId) throws Exception;
 

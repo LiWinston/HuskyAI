@@ -15,6 +15,7 @@ import java.util.List;
 @Slf4j
 @Component
 public class preChatBehaviour {
+
     @Autowired
     private ChatSyncService chatSyncService;
 
@@ -58,4 +59,5 @@ public class preChatBehaviour {
             throw new RuntimeException("Error processing chat request", e);
         }
     }
+
 }
