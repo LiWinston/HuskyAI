@@ -193,12 +193,9 @@ public class ChatGenerateSummaryAspect {
                         return Mono.just(result);
                     });
                 }
-                return Mono.just(result); // 如果不需要生成标题，直接返回原始结果
+                log.info("不需要生成标题，直接返回原始结果");
             }
-            else {
-                // 如果不是最后一条消息，直接返回
-                return Mono.just(result);
-            }
+            return Mono.just(result); // 如果不需要生成标题，直接返回原始结果
         });
     }
 
