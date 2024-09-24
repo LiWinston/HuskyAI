@@ -571,92 +571,82 @@ code {
 
 
 }
+/* 重写移动端适配 - 最大宽度 768px */
 @media (max-width: 768px) {
-    .notification-banner {
-        padding: 8px 16px;
-        font-size: 16px;
-        bottom: 70px; /* 避免在小屏幕上遮挡输入区域 */
-        min-width: 150px;
-        max-width: 85%; /* 使用相对宽度以适应窄屏幕 */
+    .chat-interface {
+        flex-direction: column; /* 垂直布局 */
+    }
+
+    .conversation-list {
+        width: 100%; /* 让会话列表占满宽度 */
+        height: auto;
+        max-height: 15vh; /* 限制会话列表高度 */
+        border-right: none;
+        border-bottom: 1px solid #d2d2d7; /* 改为底部分割线 */
+        padding: 5px;  /* 减少边距 */
+        overflow-y: auto;
+    }
+
+    .conversation-item {
+        font-size: 14px; /* 减小字体大小 */
+        padding: 8px;
+    }
+
+    .chat-container {
+        height: calc(100vh - 20vh); /* 调整聊天容器的高度 */
+    }
+
+    .message {
+        max-width: 100%;
+        font-size: 14px; /* 调整消息字体大小 */
+        padding: 8px 12px; /* 减小消息内边距 */
     }
 
     .input-container {
-        display: flex;
-        align-items: center; /* 垂直居中对齐 */
-        padding: 6px;
-        background-color: rgba(245, 245, 247, 0.75);
-        border-top: 1px solid #d2d2d7;
+        padding: 8px;
     }
 
     textarea {
-        flex: 1;
-        border: none;
-        background-color: #ffffff;
-        border-radius: 20px;
-        padding: 12px 16px;
-        font-size: 16px;
-        resize: none;
-        outline: none;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        transition: box-shadow 1s ease, height 1s ease;
-        max-width: calc(100% - 80px);
-        max-height: calc(90%);
-        min-height: 42px;
-        overflow-y: hidden;
-    }
-
-    button {
-        display: flex;
-        align-self: center; /* 垂直居中 */
-        justify-content: center;
-        align-items: center;
-        margin-left: 10px;
-        padding: 0 10px;  /* 减小按钮的内边距 */
-        background-color: #007aff;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-        height: 60px;  /* 增加高度 */
-        width: 30px;   /* 减小宽度 */
-        box-sizing: border-box;
+        font-size: 14px; /* 缩小输入框字体 */
+        padding: 10px 12px;
+        max-height: calc(80vh); /* 限制文本框的最大高度 */
     }
 
     .new-conversation-btn {
-        width: 13px;
-        height: 13px;
-    /*    确保加号正确跟随缩放*/
-        padding: 4px;
+        width: 30px; /* 缩小按钮 */
+        height: 30px;
     }
 }
 
+/* 超小屏幕 - 最大宽度 480px */
 @media (max-width: 480px) {
-    .notification-banner {
-        padding: 6px 12px;
-        font-size: 12px;
-        bottom: 60px;
-        min-width: 120px;
-        max-width: 90%; /* 确保在最小屏幕上也能居中显示 */
+    .conversation-list {
+        max-height: 12vh; /* 限制会话列表高度 */
+        padding: 4px;
+    }
+
+    .conversation-item {
+        font-size: 12px; /* 进一步缩小字体 */
+        padding: 6px;
+    }
+
+    .message {
+        font-size: 12px; /* 缩小消息字体 */
+        padding: 6px 10px;
+    }
+
+    .input-container {
+        padding: 6px;
     }
 
     textarea {
-        min-height: 28px; /* 更小屏幕上进一步缩小最小高度 */
-        padding: 6px 10px; /* 减小内边距 */
+        font-size: 12px; /* 更小字体 */
+        padding: 8px;
+        min-height: 32px; /* 限制输入框最小高度 */
     }
 
-}
-
-/* 更大的屏幕 */
-@media (min-width: 1080px) {
-    .message {
-        max-height: none;
-    }
-
-    .chat-interface {
-
-        margin: 0 auto;
+    .new-conversation-btn {
+        width: 25px; /* 更小的按钮 */
+        height: 25px;
     }
 }

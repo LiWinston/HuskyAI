@@ -2,7 +2,6 @@ package com.AI.Budgerigar.chatbot.Controller;
 
 import com.AI.Budgerigar.chatbot.AIUtil.Message;
 import com.AI.Budgerigar.chatbot.Config.RemoteServiceConfig;
-import com.AI.Budgerigar.chatbot.Constant.ApplicationConstant;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
 import com.AI.Budgerigar.chatbot.Services.Factory.OpenAIChatServiceFactory;
@@ -53,12 +52,6 @@ public class ChatController {
 
     @Autowired
     private RemoteServiceConfig remoteServiceConfig;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private ApplicationConstant applicationConstant;
 
     @Autowired
     private OpenAIChatServiceFactory openAIChatServiceFactory;
