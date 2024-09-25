@@ -72,7 +72,10 @@ function Chat() {
 
     const fetchModels = async () => {
         try {
-            const response = await axios.get(`${window.API_BASE_URL}/chat/models`);
+            const response = await axios.post(`${window.API_BASE_URL}/chat/models`, {
+                uuid: localStorage.getItem('userUUID')
+                }
+            );
             if (response.data.code === 1) {
                 setModels(response.data.data); // Set models from response
                 setSelectedModel(response.data.data[response.data.data.length - 1]);
@@ -401,7 +404,6 @@ function Chat() {
     };
 
 
-
     const animateTitleUpdate = (conversationId, newTitle) => {
         setAnimatingTitle({
             id: conversationId,
@@ -435,7 +437,7 @@ function Chat() {
                     setConversations(prevConversations =>
                         prevConversations.map(conv =>
                             conv.id === animatingTitle.id
-                                ? { ...conv, title: animatingTitle.targetTitle }
+                                ? {...conv, title: animatingTitle.targetTitle}
                                 : conv
                         )
                     );

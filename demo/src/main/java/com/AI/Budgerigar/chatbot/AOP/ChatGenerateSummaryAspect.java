@@ -201,19 +201,19 @@ public class ChatGenerateSummaryAspect {
 
     // Method to determine if title generation should occur
     private boolean shouldGenerateTitle(String conversationId) {
-        return true;
-        // if (RANDOM.nextDouble() > 1) {
-        // // new conversation must generate title
-        // if (chatMessagesRedisDAO.getMessageCount(conversationId) <= 3) {
         // return true;
-        // }
-        // log.info("Not generating title.");
-        // return false;
-        // }
-        // else {
-        // log.info("Generating title.");
-        // return true;
-        // }
+        if (RANDOM.nextDouble() > 0.6) {
+            // new conversation must generate title
+            if (chatMessagesRedisDAO.getMessageCount(conversationId) <= 3) {
+                return true;
+            }
+            log.info("Not generating title.");
+            return false;
+        }
+        else {
+            log.info("Generating title.");
+            return true;
+        }
 
         // // 通过随机数实现60%的概率控制
         // double probability = Math.random(); // 生成一个0到1之间的随机数

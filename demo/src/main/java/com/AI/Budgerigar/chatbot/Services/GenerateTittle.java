@@ -10,6 +10,7 @@ import com.AI.Budgerigar.chatbot.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -39,6 +40,7 @@ public class GenerateTittle {
     private String apikey;
 
     @Autowired
+    @Lazy
     private ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices;
 
     @Autowired
