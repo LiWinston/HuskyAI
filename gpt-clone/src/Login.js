@@ -2,6 +2,13 @@ import React, {useState, useRef, useEffect} from 'react';
 import axios from 'axios';
 import {useLocation, useNavigate} from 'react-router-dom';
 import './login.css';
+import {
+    showSweeetChoice,
+    showSweetAlert,
+    showSweetError,
+    showSweetAlertWithRetVal
+} from './Component/sweetAlertUtil';
+import Swal from "sweetalert2";
 
 function Login() {
     const [isLogin, setIsLogin] = useState(true);
@@ -97,14 +104,41 @@ function Login() {
 
                 // 检查用户角色和管理员验证状态
                 if (role === 'admin' && confirmedAdmin) {
-                    // 已验证的管理员，跳转到管理员面板
-                    navigate('/adminBoard');
+                    Swal.fire({
+                        title: 'Admin Login',
+                        text: 'Where to go?',
+                        icon: 'success',
+                        confirmButtonText: 'Chat',
+                        showCancelButton: true,
+                        cancelButtonText: 'Dashboard',
+                        showDenyButton: true,
+                        denyButtonText: 'Logout',
+                        showCloseButton: true,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            localStorage.removeItem("selectedConversation");  // 清除选中的用户"
+                            localStorage.removeItem("conversations");  // 清除会话列表
+                            navigate('/chat');
+                        } else if (result.isDenied) {
+                            localStorage.removeItem("token");
+                            localStorage.removeItem("userUUID");
+                            navigate('/');
+                        }else{
+                            navigate('/admin');
+                        }
+                    });
                 } else if (role === 'admin' && !confirmedAdmin) {
                     // 未确认的管理员，显示独特的提示
-                    setErrorMessage(result.msg || 'Admin not yet verified. Please contact support.');
-                    localStorage.removeItem("selectedConversation");  // 清除选中的用户"
-                    localStorage.removeItem("conversations");  // 清除会话列表
-                    navigate('/chat');
+                    showSweetAlertWithRetVal('Admin not yet verified. Please contact support.', {
+                        title: 'Admin Verification',
+                        icon: 'warning',
+                        confirmButtonText: 'Go to Chat',
+                    }).then(() => {
+                        setErrorMessage(result.msg || 'Admin not yet verified. Please contact support.');
+                        localStorage.removeItem("selectedConversation");  // 清除选中的用户"
+                        localStorage.removeItem("conversations");  // 清除会话列表
+                        navigate('/chat');
+                    });
                 } else {
                     // 普通用户，跳转到聊天页面
                     localStorage.removeItem("selectedConversation");  // 清除选中的用户"
@@ -113,8 +147,13 @@ function Login() {
                 }
             } else {
                 // 登录失败，显示错误消息
-                setErrorMessage(result.msg || 'Login failed. Please try again.');
-                navigate('/');
+                showSweetAlertWithRetVal(result.msg || 'Login failed. Please try again.', {
+                    title: 'Login Failed',
+                    icon: 'error',
+                    confirmButtonText: 'Try Again',
+                }).then(() => {
+                    setErrorMessage(result.msg || 'Login failed. Please try again.');
+                });
             }
         } catch (error) {
             // 捕获异常，设置错误消息
@@ -136,13 +175,20 @@ function Login() {
             const result = response.data;
 
             if (result.code === 1) {
-                alert(result.msg);
+                // alert(result.msg);
+                showSweetAlert(result.msg, {
+                    title: 'Registration Success',
+                    icon: 'success',
+                    confirmButtonText: 'Go to Login',
+                });
                 setIsLogin(true);
             }  else {
-                setErrorMessage(result.msg || 'Unknown err, Registration failed. Please try again.');
+                showSweetError(result.msg || 'Unknown err, Registration failed. Please try again.');
+                setErrorMessage('Please try again.');
             }
         } catch (error) {
-            setErrorMessage('Registration failed due to network error. Please try again.');
+            showSweetError('Registration failed due to network error. Please try again.');
+            setErrorMessage(error);
         }
     };
 

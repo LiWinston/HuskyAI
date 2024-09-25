@@ -9,6 +9,13 @@ import {getWindowFromNode} from "@testing-library/dom/dist/helpers";
 import {FaPlus} from 'react-icons/fa';
 import ConversationItem from "./ConversationItem"; // 引入加号图标
 
+import {
+    showSweeetChoice,
+    showSweetAlert,
+    showSweetError,
+    showSweetAlertWithRetVal
+} from "./Component/sweetAlertUtil";
+
 const CONVERSATION_SUMMARY_GENERATED = "#CVSG##CVSG##CVSG#";
 
 function Chat() {
@@ -260,7 +267,20 @@ function Chat() {
             });
             const shareLink = window.location.origin + '/chat/share/' + response.data.data;
             setShowShareModal(false);  // 关闭分享弹窗
-            alert(`Share link generated: ${shareLink}`);  // 显示分享链接
+            // alert(`Share link generated: ${shareLink}`);  // 显示分享链接
+            showSweetAlertWithRetVal(`Share link generated: ${shareLink}`, {
+                title: 'Share Link',
+                icon: 'success',
+                confirmButtonText: 'Copy Link',
+                confirmButtonColor: '#3085d6'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    navigator.clipboard.writeText(shareLink);
+                    setNotification('Link copied to clipboard');
+                    setTimeout(() => setNotification(null), 2000);
+                }
+            });
+
         } catch (error) {
             console.error('Error sharing conversation', error);
         }
