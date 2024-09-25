@@ -451,44 +451,48 @@ code {
 .chat-interface .model-selector {
     position: fixed;
     top: 20px;
-    /*right: 20px;*/
-    z-index: 998; /* 确保在其他元素之上 */
+    z-index: 998;
+    width: auto;
+    height: auto;
 }
 
 .chat-interface .floating-model-btn {
-    background-color: #007bff; /* 改为页面内的主色调，统一风格 */
+    background-color: #007bff;
     color: white;
     padding: 10px 20px;
     border: none;
-    border-radius: 20px; /* 改为圆角矩形 */
+    border-radius: 20px;
     cursor: pointer;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* 增加一点阴影深度，显得更现代 */
-    z-index: 1000; /* 确保悬浮按钮始终在顶层 */
-    transition: background-color 0.3s ease;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: background-color 0.8s ease;
 }
 
 .chat-interface .floating-model-btn:hover {
-    background-color: #0056b3; /* hover时颜色变化 */
+    background-color: #0056b3;
 }
 
 .chat-interface .model-options {
-    position: relative;
-    background-color: rgba(0, 0, 0, 0.75); /* 半透明深色背景，避免过于显眼 */
+    position: absolute;
+    top: 100%;
+    left: 50%; /* 将左边缘设置为父元素的中心 */
+    transform: translateX(-50%); /* 向左移动自身宽度的一半 */
+    background-color: rgba(255, 255, 255, 0.95); /* 设置为几乎不透明的白色背景 */
     border: none;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15); /* 更深的阴影，突出效果 */
-    border-radius: 10px; /* 统一为圆角 */
-    padding: 10px 10px; /* 减小内边距，使其更紧凑 */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    padding: 10px;
     z-index: 100;
-    transition: transform 0.3s ease-in-out, opacity 0.2s ease;
+    transition: transform 0.75s ease-in-out, opacity 0.25s ease;
     transform-origin: top;
-    transform: scale(0);
     opacity: 0;
     visibility: hidden;
-    margin-top: 1px; /* 给按钮和选项之间一点间隔 */
+    margin-top: 5px;
+    width: max-content;
 }
 
 .chat-interface .model-options.show {
-    transform: scale(1);
+    transform: translateX(-50%) scale(1);
     opacity: 1;
     visibility: visible;
 }
@@ -496,18 +500,24 @@ code {
 .chat-interface .model-options button {
     background: none;
     border: none;
-    padding: 8px 12px; /* 增加一些内边距，使其更易点击 */
+    padding: 8px 12px;
     width: 100%;
     text-align: left;
     cursor: pointer;
-    border-radius: 10px; /* 选项按钮也统一为圆角 */
-    color: white;
-    transition: background-color 0.3s ease; /* 平滑的hover效果 */
+    border-radius: 10px;
+    color: black; /* 设置为黑色文本 */
+    transition: background-color 0.3s ease;
+    white-space: nowrap;
+    display: block;
+    margin: 0;
+    box-sizing: border-box;
 }
 
 .chat-interface .model-options button:hover {
-    background-color: rgba(255, 255, 255, 0.1); /* hover时柔和变化 */
+    transition: background-color 0.125s ease;
+    background-color: rgba(0, 0, 0, 0.1); /* 悬停时背景为浅黑 */
 }
+
 
 /* 移动端适配 */
 @media (max-width: 1079px) {

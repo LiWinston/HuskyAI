@@ -78,10 +78,18 @@ function Chat() {
             );
             if (response.data.code === 1) {
                 setModels(response.data.data); // Set models from response
-                setSelectedModel(response.data.data[response.data.data.length - 1]);
+                if((selectedModel === '' && response.data.data.length > 0)
+                || !response.data.data.includes(selectedModel)
+                ) {
+                    setSelectedModel(response.data.data[0]);
+                }
             } else if (response.data.code === 0 && response.data.data) {
                 setModels(response.data.data);
-                setSelectedModel(response.data.data[response.data.data.length - 1]);
+                if ((selectedModel === '' && response.data.data.length > 0)
+                    || !response.data.data.includes(selectedModel)
+                ) {
+                    setSelectedModel(response.data.data[0]);
+                }
                 setNotification("Fail to update models, list remains the same");
                 setTimeout(() => setNotification(null), 1000);
             } else {
