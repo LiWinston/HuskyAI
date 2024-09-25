@@ -1,6 +1,8 @@
 package com.AI.Budgerigar.chatbot.Config;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -9,19 +11,13 @@ import java.util.List;
 /**
  * 读取Spring Boot配置文件中的远程服务配置
  */
+@Setter
+@Getter
 @Component
 @ConfigurationProperties(prefix = "remote-services")
 public class RemoteServiceConfig {
 
-    private List<ServiceConfig> services;
-
-    public List<ServiceConfig> getServices() {
-        return services;
-    }
-
-    public void setServices(List<ServiceConfig> services) {
-        this.services = services;
-    }
+    private List<ServiceConfig> serviceConfigs;
 
     /**
      * 服务器视角的模型访问配置，此处不配置的模型不注册、不可访问

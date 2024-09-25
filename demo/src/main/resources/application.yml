@@ -1,7 +1,9 @@
 remote-services:
-  services:
+  serviceConfigs:
     - url: https://ai.bitsleep.cn
       name: PCLMStudio
+      allowed-models:
+        - suibianxiede
 
 
     - url: https://ai2.bitsleep.cn

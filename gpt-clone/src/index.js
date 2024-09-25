@@ -5,6 +5,7 @@ import Chat from './Chat';
 import Login from './Login';
 import Confirm from './Confirm';
 import axios from 'axios';
+import AdminDashboard from './Pages/AdminDashboard';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 import {AnimatePresence} from "framer-motion";
@@ -144,6 +145,22 @@ function AnimatedRoutes() {
                     path="/chat/share/:shareCode"
                     element={<SharePage />}  // 修正为 element 属性，渲染 SharePage 组件
                 />
+
+                <Route
+                    path="/admin"
+                    element={
+                        <motion.div
+                            initial="initial"
+                            animate="in"
+                            exit="out"
+                            variants={pageVariants}
+                            transition={pageTransition}
+                        >
+                            <AdminDashboard /> {/* 管理员页面 */}
+                        </motion.div>
+                    }
+                />
+
             </Routes>
         </AnimatePresence>
     );

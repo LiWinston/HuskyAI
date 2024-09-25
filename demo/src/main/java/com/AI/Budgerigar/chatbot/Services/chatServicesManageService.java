@@ -73,7 +73,7 @@ public class chatServicesManageService {
             }
         });
         // 从配置中读取根路径并动态注册服务
-        for (RemoteServiceConfig.ServiceConfig service : remoteServiceConfig.getServices()) {
+        for (RemoteServiceConfig.ServiceConfig service : remoteServiceConfig.getServiceConfigs()) {
             fetchAndRegisterModelsFromService(service);
         }
     }
@@ -141,7 +141,7 @@ public class chatServicesManageService {
     @SchedulerLock(name = "checkRemoteServicesHealth", lockAtMostFor = "15s", lockAtLeastFor = "15s")
     public void checkRemoteServicesHealth() {
         executorService.submit(() -> {
-            for (RemoteServiceConfig.ServiceConfig serviceConfig : remoteServiceConfig.getServices()) {
+            for (RemoteServiceConfig.ServiceConfig serviceConfig : remoteServiceConfig.getServiceConfigs()) {
                 String serviceUrl = serviceConfig.getUrl();
                 String serviceName = serviceConfig.getName() != null ? serviceConfig.getName() : serviceUrl;
                 String openaiApiKey = serviceConfig.getApiKey() != null ? serviceConfig.getApiKey() : "";
@@ -174,7 +174,7 @@ public class chatServicesManageService {
     private List<String> fetchModelsFromService(String serviceUrl, RemoteServiceConfig.ServiceConfig serviceConfig) {
         try {
             String modelEndpoint = serviceUrl + "/v1/models";
-            String apikey = remoteServiceConfig.getServices()
+            String apikey = remoteServiceConfig.getServiceConfigs()
                 .stream()
                 .filter(service -> service.getUrl().equals(serviceUrl))
                 .findFirst()
