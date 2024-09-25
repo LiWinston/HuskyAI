@@ -229,8 +229,8 @@ public class ChatController {
     @PostMapping("/models")
     public Result<?> getModels(@RequestBody Map<String, String> body) {
         String userUUID = body.get("uuid");
-//        // 检查远程服务的健康状况
-//        chatServicesManageService.checkRemoteServicesHealth();
+        // // 检查远程服务的健康状况
+        // chatServicesManageService.checkRemoteServicesHealth();
 
         ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices = chatServicesManageService
             .getChatServices();

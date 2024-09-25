@@ -32,7 +32,6 @@ public class chatServicesManageService {
     // 使用双层 Map：外层 Map 以服务的 URL 或别名作为 key，内层 Map 以模型 ID 作为 key
     @Autowired
     @Getter
-    @Qualifier("chatServices")
     private ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices;
 
     @Autowired

@@ -10,14 +10,12 @@ import com.AI.Budgerigar.chatbot.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -40,8 +38,7 @@ public class GenerateTittle {
     private String apikey;
 
     @Autowired
-    @Lazy
-    private ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices;
+    private chatServicesManageService chatServicesManageService;
 
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
@@ -140,6 +137,7 @@ public class GenerateTittle {
 
     private void rollAndSetModel(AtomicReference<String> _openAIUrl, AtomicReference<String> _model,
             AtomicReference<String> _apikey) {
+        var chatServices = chatServicesManageService.getChatServices();
         // 遍历服务和模型
         chatServices.forEach((serviceName, serviceMap) -> {
             serviceMap.forEach((modelId, chatService) -> {
@@ -154,6 +152,7 @@ public class GenerateTittle {
 
     private void rollAndSetModelWithEscaping(AtomicReference<String> _openAIUrl, AtomicReference<String> _model,
             AtomicReference<String> _apikey, String escapeUrl, String escapeModel) {
+        var chatServices = chatServicesManageService.getChatServices();
 
         List<OpenAIChatServiceImpl> availableServices = new ArrayList<>();
 

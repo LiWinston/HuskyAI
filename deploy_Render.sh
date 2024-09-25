@@ -1,5 +1,5 @@
 #Run this script to build the docker image and push to hub, then trigger the render deploy
-#Use windows shell, WSL, or git bash to run this script, may need chmod 777 deploy.sh on Mac
+#Use windows shell, WSL, or git bash to run this script, may need chmod 777 deploy_Render.sh on Mac
 #Run this script in the root directory of the project
 
 # 设定 Docker Hub 用户名和镜像名称

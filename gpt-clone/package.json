@@ -44,7 +44,7 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "https://lms-gpt-latest.onrender.com",
+  "proxy": "https://lmsgpt.bitsleep.cn",
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@babel/preset-env": "^7.25.4",
