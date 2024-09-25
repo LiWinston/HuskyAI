@@ -2,6 +2,7 @@ package com.AI.Budgerigar.chatbot.Controller;
 
 import com.AI.Budgerigar.chatbot.DTO.UserRegisterDTO;
 import com.AI.Budgerigar.chatbot.DTO.loginResponseDTO;
+import com.AI.Budgerigar.chatbot.Services.UserModelAccessService;
 import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.mapper.UserMapper;
 import com.AI.Budgerigar.chatbot.model.UserPw;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import static com.AI.Budgerigar.chatbot.Controller.Utils.UsernameSuggestionUtil.generateUsernameSuggestions;
 
@@ -27,6 +29,12 @@ public class UserController {
     @Autowired
     private UserMapper userMapper; // Maps database queries related to user operations
                                    // 映射与用户操作相关的数据库查询
+
+    @Autowired
+    private ExecutorService excecutorService;
+
+    @Autowired
+    private UserModelAccessService userModelAccessService;
 
     @Autowired
     private userService userService; // Provides services for user operations 提供用户操作的服务
@@ -106,6 +114,10 @@ public class UserController {
                 lginRspDto.msg(msg.toString());
                 // lginRspDto.msg(lginRspDto.getMsg() + " Admin: " + res.getData());
             }
+
+            excecutorService.execute(() -> {
+                userModelAccessService.grantAllAvailiableModels(user.getUuid());
+            });
             return lginRspDto.build();
         }
         catch (Exception e) {

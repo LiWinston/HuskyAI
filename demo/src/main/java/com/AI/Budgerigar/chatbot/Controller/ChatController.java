@@ -1,67 +1,31 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
 import com.AI.Budgerigar.chatbot.AIUtil.Message;
-import com.AI.Budgerigar.chatbot.Config.RemoteServiceConfig;
-import com.AI.Budgerigar.chatbot.Constant.ApplicationConstant;
-import com.AI.Budgerigar.chatbot.Services.ChatService;
-import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
-import com.AI.Budgerigar.chatbot.Services.Factory.OpenAIChatServiceFactory;
-import com.AI.Budgerigar.chatbot.Services.StreamChatService;
-import com.AI.Budgerigar.chatbot.Services.userService;
+import com.AI.Budgerigar.chatbot.Services.*;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.model.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Flux;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/chat")
 @Slf4j
 public class ChatController {
-
-    // 使用双层 Map：外层 Map 以服务的 URL 或别名作为 key，内层 Map 以模型 ID 作为 key
-    @Autowired
-    @Qualifier("chatServices")
-    private ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices;
-
-    @Autowired
-    @Qualifier("baidu")
-    private ChatService baiduChatService;
-
-    @Autowired
-    @Qualifier("doubao")
-    private ChatService doubaoChatService;
-
-    @Autowired
-    @Qualifier("openai")
-    private ChatService openaiChatService;
-
-    @Autowired
-    private RemoteServiceConfig remoteServiceConfig;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private ApplicationConstant applicationConstant;
-
-    @Autowired
-    private OpenAIChatServiceFactory openAIChatServiceFactory;
 
     @Autowired
     private userService userService;
@@ -70,232 +34,17 @@ public class ChatController {
     private ChatSyncService chatSyncService;
 
     @Autowired
-    private ExecutorService executorService;// 线程池 thread pool
-
-    @Autowired
     private ConversationMapper conversationMapper;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    @PostConstruct
-    public void init() {
-        chatServices.put("baidu", new ConcurrentHashMap<>() {
-            {
-                put("baidu", baiduChatService);
-            }
-        });
-        chatServices.put("doubao", new ConcurrentHashMap<>() {
-            {
-                put("doubao", doubaoChatService);
-            }
-        });
-        chatServices.put("openai", new ConcurrentHashMap<>() {
-            {
-                put("openai", openaiChatService);
-            }
-        });
-        // 从配置中读取根路径并动态注册服务
-        for (RemoteServiceConfig.ServiceConfig service : remoteServiceConfig.getServices()) {
-            fetchAndRegisterModelsFromService(service);
-        }
-    }
+    @Autowired
+    @Lazy
+    private com.AI.Budgerigar.chatbot.Services.chatServicesManageService chatServicesManageService;
 
-    private void fetchAndRegisterModelsFromService(RemoteServiceConfig.ServiceConfig serviceConfig) {
-        String baseUrl = serviceConfig.getUrl();
-        String modelsEndpoint = baseUrl + "/v1/models";
-        String serviceName = serviceConfig.getName() != null ? serviceConfig.getName() : baseUrl;
-        String openaiApiKey = serviceConfig.getApiKey() != null ? serviceConfig.getApiKey() : "";
-
-        try {
-            var restTemplate = new RestTemplate() {
-                {
-                    getInterceptors().add((request, body, execution) -> {
-                        request.getHeaders().add("Authorization", "Bearer " + openaiApiKey);
-                        return execution.execute(request, body);
-                    });
-                }
-            };
-
-            ResponseEntity<Map> response = restTemplate.getForEntity(modelsEndpoint, Map.class);
-            if (response.getStatusCode().is2xxSuccessful()) {
-                List<Map<String, Object>> models = (List<Map<String, Object>>) response.getBody().get("data");
-                ConcurrentHashMap<String, ChatService> modelServices = chatServices.getOrDefault(serviceName,
-                        new ConcurrentHashMap<>());
-
-                // 获取允许注册的模型列表
-                List<String> allowedModels = serviceConfig.getAllowedModels();
-
-                for (Map<String, Object> modelData : models) {
-                    String modelId = (String) modelData.get("id");
-
-                    // 如果 allowedModels 不为空，且 modelId 不在列表中，跳过
-                    if (allowedModels != null && !allowedModels.isEmpty() && !allowedModels.contains(modelId)) {
-                        log.info("Model {} is not in the allowed list for service {}, skipping registration.", modelId,
-                                serviceName);
-                        continue;
-                    }
-                    // 如果模型不存在，则注册新的 ChatService
-                    if (!modelServices.containsKey(modelId)) {
-                        registerNewChatService(modelId, baseUrl, serviceName, openaiApiKey);
-                    }
-                }
-                chatServices.put(serviceName, modelServices);
-            }
-            else {
-                log.warn("Failed to fetch models from {}: {}", modelsEndpoint, response.getStatusCode());
-            }
-        }
-        catch (HttpServerErrorException e) {
-            log.error("Failed to fetch models from {}: {} {}", modelsEndpoint, e.getStatusCode(),
-                    e.getResponseBodyAsString());
-        }
-        catch (Exception e) {
-            log.error("Failed to fetch models from {}: {}", modelsEndpoint, e.getMessage());
-        }
-    }
-
-    // @Scheduled(fixedDelay = 600000) // check every 10 minutes
-    public void checkRemoteServicesHealth() {
-        executorService.submit(() -> {
-            for (RemoteServiceConfig.ServiceConfig serviceConfig : remoteServiceConfig.getServices()) {
-                String serviceUrl = serviceConfig.getUrl();
-                String serviceName = serviceConfig.getName() != null ? serviceConfig.getName() : serviceUrl;
-                String openaiApiKey = serviceConfig.getApiKey() != null ? serviceConfig.getApiKey() : "";
-
-                List<String> availableModels = fetchModelsFromService(serviceUrl, serviceConfig);
-                log.info("Available models from {}: {}", serviceName, availableModels);
-
-                ConcurrentHashMap<String, ChatService> registeredModels = chatServices.getOrDefault(serviceName,
-                        new ConcurrentHashMap<>());
-
-                for (String modelId : availableModels) {
-                    if (!registeredModels.containsKey(modelId)) {
-                        registerNewChatService(modelId, serviceUrl, serviceName, openaiApiKey);
-                    }
-                }
-
-                for (String modelId : registeredModels.keySet()) {
-                    if (!availableModels.contains(modelId)) {
-                        log.info("Model {} is no longer available in service {}, removing service.", modelId,
-                                serviceName);
-                        registeredModels.remove(modelId);
-                    }
-                }
-
-                chatServices.put(serviceName, registeredModels);
-            }
-        });
-    }
-
-    private List<String> fetchModelsFromService(String serviceUrl, RemoteServiceConfig.ServiceConfig serviceConfig) {
-        try {
-            String modelEndpoint = serviceUrl + "/v1/models";
-            String apikey = remoteServiceConfig.getServices()
-                .stream()
-                .filter(service -> service.getUrl().equals(serviceUrl))
-                .findFirst()
-                .get()
-                .getApiKey();
-
-            var restTemplate = new RestTemplate() {
-                {
-                    getInterceptors().add((request, body, execution) -> {
-                        request.getHeaders().add("Authorization", "Bearer " + apikey);
-                        return execution.execute(request, body);
-                    });
-                }
-            };
-            ResponseEntity<String> response = restTemplate.getForEntity(modelEndpoint, String.class);
-
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                return Collections.emptyList();
-            }
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonResponse = objectMapper.readTree(response.getBody());
-
-            List<String> allowedModels = serviceConfig.getAllowedModels();
-
-            // 获取模型ID
-            List<String> modelIds = new ArrayList<>();
-            JsonNode dataNode = jsonResponse.get("data");
-            if (dataNode != null && dataNode.isArray()) {
-                for (JsonNode modelNode : dataNode) {
-                    if (allowedModels != null && !allowedModels.isEmpty()
-                            && !allowedModels.contains(modelNode.get("id").asText())) {
-                        log.info("Model {} is not in the allowed list for service {}, skipping registration.",
-                                modelNode.get("id").asText(), serviceUrl);
-                        continue;
-                    }
-                    modelIds.add(modelNode.get("id").asText());
-                }
-            }
-            return modelIds;
-        }
-        catch (HttpServerErrorException e) {
-            // 只记录HTTP状态码和错误信息
-            log.error("Failed to fetch models from service: {}, HTTP status: {}, Error message: {}", serviceUrl,
-                    e.getStatusCode(), e.getResponseBodyAsString());
-            return Collections.emptyList();
-        }
-        catch (Exception e) {
-            // 捕获其他异常
-            log.error("Failed to fetch models from service: {}", serviceUrl, e);
-            return Collections.emptyList();
-        }
-    }
-
-    // private boolean isServiceAvailable(OpenAIChatServiceImpl service) {
-    // try {
-    // String chatUrl = service.getOpenAIUrl();
-    // String checkUrl = chatUrl.replace("/v1/chat/completion", "/v1/models");
-    //
-    // ResponseEntity<String> response = restTemplate.getForEntity(checkUrl,
-    // String.class);
-    //
-    // if (!response.getStatusCode().is2xxSuccessful()) {
-    // return false;
-    // }
-    //
-    // // 使用 Jackson 解析 JSON 响应
-    // ObjectMapper objectMapper = new ObjectMapper();
-    // JsonNode jsonResponse = objectMapper.readTree(response.getBody());
-    //
-    // // 检查 "data" 数组中是否包含指定的模型 ID
-    // JsonNode dataNode = jsonResponse.get("data");
-    // if (dataNode != null && dataNode.isArray()) {
-    // for (JsonNode modelNode : dataNode) {
-    // if (modelNode.get("id").asText().equals(service.getModel())) {
-    // return true; // 模型存在，服务可用
-    // }
-    // }
-    // }
-    //
-    // // 如果模型未找到，返回 false
-    // log.info("Model {} not found in service {}. Service might be unavailable.",
-    // service.getModel(),
-    // service.getOpenAIUrl());
-    // return false;
-    //
-    // }
-    // catch (Exception e) {
-    // log.error("Service check failed for {}: {}", service.getOpenAIUrl() + "-" +
-    // service.getModel(),
-    // e.getMessage());
-    // return false;
-    // }
-    // }
-
-    private void registerNewChatService(String modelId, String baseUrl, String serviceName, String openaiApiKey) {
-        ChatService newService = openAIChatServiceFactory.create(baseUrl + "/v1/chat/completions", modelId,
-                openaiApiKey);
-        ConcurrentHashMap<String, ChatService> modelServices = chatServices.getOrDefault(serviceName,
-                new ConcurrentHashMap<>());
-        modelServices.put(modelId, newService);
-        chatServices.put(serviceName, modelServices);
-        log.info("Registered new ChatService with model: {} from {}", modelId, serviceName);
-    }
+    @Autowired
+    private UserModelAccessService userModelAccessService;
 
     // 获取DB中所有对话清单，以备用户选取.每个对话清单包含对话ID和对话节选
     // get all conversation list from DB for user to choose.
@@ -319,9 +68,12 @@ public class ChatController {
         }
     }
 
-    // 用get传输ConversationId，表达获取历史记录之义
-    // use get to transfer ConversationId, express the meaning of getting history
-    // restfully
+    /**
+     * 用get传输ConversationId，表达获取历史记录之义
+     * @param uuid 用户ID
+     * @param conversationId 对话ID
+     * @return 对话历史记录
+     */
     @GetMapping("/{uuid}/{conversationId}")
     public Result<?> chat(@PathVariable String uuid, @PathVariable String conversationId) {
         if (!conversationMapper.checkConversationExistsByUuid(uuid, conversationId)) {
@@ -352,14 +104,15 @@ public class ChatController {
 
     @PostMapping
     public Result<String> chatPost(@RequestBody Map<String, String> body) {
+        var chatServices = chatServicesManageService.getChatServices();
         try {
             String model = body.get("model");
             if (model == null) {
                 model = "baidu";
             }
-            String[] modelParts = model.split("上的");
+            String[] modelParts = model.split("");
             if (modelParts.length != 2) {
-                return Result.error("Invalid model format. Expected serviceName:modelId");
+                return Result.error("Invalid model format. Expected serviceName上的modelId");
             }
 
             String serviceName = modelParts[0];
@@ -390,6 +143,7 @@ public class ChatController {
 
     @PostMapping("/stream")
     public Flux<String> chatPostStream(@RequestBody Map<String, String> body) {
+        var chatServices = chatServicesManageService.getChatServices();
         try {
             String model = body.get("model");
             if (model == null) {
@@ -472,24 +226,40 @@ public class ChatController {
     }
 
     // 保持前三个模型不变，并对其他模型按服务源内部的模型名排序
-    @GetMapping("/models")
-    public Result<?> getModels() {
-        try {
-            // 检查远程服务的健康状况
-            checkRemoteServicesHealth();
+    @PostMapping("/models")
+    public Result<?> getModels(@RequestBody Map<String, String> body) {
+        String userUUID = body.get("uuid");
+//        // 检查远程服务的健康状况
+//        chatServicesManageService.checkRemoteServicesHealth();
 
+        ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices = chatServicesManageService
+            .getChatServices();
+        try {
             // 优先模型列表
             List<String> prioritizedModels = Arrays.asList("openai", "doubao", "baidu");
-            // 初始化返回列表大小，避免不必要的扩容
-            List<String> result = new ArrayList<>(chatServices.size());
 
-            // 直接使用Stream过滤出优先模型，并按优先顺序排序
+            List<ChatService> allowedChatServices = userModelAccessService.getUserAllowedChatServices(userUUID);
+            log.info("Allowed chat services: " + allowedChatServices);
+
+            // 最多也就这些了，还可能筛掉服务器现在不可用的服务
+            List<String> result = new ArrayList<>(allowedChatServices.size());
+
+            /*
+             * 优先对 openai、doubao、baidu 三个服务源的模型进行排序，并加入结果。这些必有 不参与筛选
+             */
             prioritizedModels.stream().filter(chatServices::containsKey).forEach(serviceName -> {
-                chatServices.get(serviceName).keySet().forEach(modelId -> {
-                    result.add(serviceName + "上的" + modelId);
-                });
+                chatServices.get(serviceName)
+                    .keySet()
+                    .stream()
+                    .filter(modelId -> allowedChatServices.stream()
+                        .anyMatch(cs -> cs.equals(chatServices.get(serviceName).get(modelId))))
+                    .forEach(modelId -> {
+                        result.add(serviceName + "上的" + modelId);
+                    });
             });
 
+            // List<UserModelAccessConfig.ModelAccess> allowedMA = userModelAccessService
+            // .getUserAllowedModelAccess(userUUID);
             // 对其余服务源的模型按模型名排序，并加入结果
             chatServices.keySet()
                 .stream()
@@ -498,13 +268,19 @@ public class ChatController {
                     chatServices.get(serviceName)
                         .keySet()
                         .stream()
+                        .filter(modelId -> allowedChatServices.stream()
+                            .anyMatch(cs -> cs.equals(chatServices.get(serviceName).get(modelId))))
                         .sorted()
                         .forEach(modelId -> result.add(serviceName + "上的" + modelId));
                 });
 
             return Result.success(result);
         }
+        catch (AccessDeniedException e) {
+            return Result.error(List.of(), e.getMessage());
+        }
         catch (Exception e) {
+            log.error("Failed to get models", e);
             return Result.error(chatServices.keySet(), e.getMessage());
         }
     }
