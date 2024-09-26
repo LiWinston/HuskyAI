@@ -14,10 +14,11 @@ remote-services:
       name: MBP15LMStudio
 
 
-    # Spark服务被注释
-    # - url: https://spark-api-open.xf-yun.com
-    #   name: Spark
-    #   api-key: jsZovfrQnTJxncJTOPyX:nvXIgNpvJxxVuZhYxzWB
+    - url: https://spark-api-open.xf-yun.com
+      name: Spark
+      api-key: XGHZSZkhaMuSPcOWKwAU:joDYvyjLLCIxTzWZmRsf
+      allowed-models:
+        - Lite
 
 
     - url: https://dashscope.aliyuncs.com/compatible-mode

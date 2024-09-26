@@ -1,7 +1,10 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
+import com.AI.Budgerigar.chatbot.DTO.LoginDTO;
 import com.AI.Budgerigar.chatbot.DTO.UserRegisterDTO;
 import com.AI.Budgerigar.chatbot.DTO.loginResponseDTO;
+import com.AI.Budgerigar.chatbot.Nosql.UserIpInfo;
+import com.AI.Budgerigar.chatbot.Services.LoginIpService;
 import com.AI.Budgerigar.chatbot.Services.UserModelAccessService;
 import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.mapper.UserMapper;
@@ -16,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 import static com.AI.Budgerigar.chatbot.Controller.Utils.UsernameSuggestionUtil.generateUsernameSuggestions;
@@ -51,6 +53,8 @@ public class UserController {
 
     private static final LevenshteinDistance levenshteinDistance = new LevenshteinDistance();
 
+    @Autowired
+    private LoginIpService loginIpService;
     // Levenshtein Distance algorithm for suggesting similar usernames
     // 用于建议类似用户名的Levenshtein距离算法
 
@@ -87,9 +91,11 @@ public class UserController {
      * 成功登录时返回带有UUID和JWT令牌的结果对象
      */
     @PostMapping("/login")
-    public loginResponseDTO login(@RequestBody Map<String, String> userDetails) {
-        String username = userDetails.get("username");
-        String password = userDetails.get("password");
+    public loginResponseDTO login(@RequestBody LoginDTO userDetails) {
+        String username = userDetails.getUsername();
+        String password = userDetails.getPassword();
+        UserIpInfo userIpInfo = userDetails.getUserIpInfo();
+
 
         try {
             UserPw user = userMapper.getUserByUsername(username);
@@ -99,6 +105,23 @@ public class UserController {
             else if (!passwordEncoder.matches(password, user.getPassword())) {
                 return loginResponseDTO.builder().code(0).msg("Incorrect password").build(); // 密码错误
             }
+
+            // Login IP check
+            // 登录IP检查
+            if(userIpInfo != null) {
+                LoginIpService.LoginIpStatus loginIpStatus = loginIpService.handleLoginIp(user.getUuid(), userIpInfo);
+                switch (loginIpStatus) {
+                    case NEW:
+                    case NO_CHANGE:
+                    case CHANGED:
+                        //report to admin
+                        loginIpService.reportToAdmin(user, userIpInfo);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
             String token = jwtTokenUtil.generateToken(user.getUuid());
             StringBuilder msg = new StringBuilder("Login successful");
             var lginRspDto = loginResponseDTO.builder()

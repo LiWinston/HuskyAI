@@ -110,10 +110,10 @@ function ModelManagement() {
             <ul className="model-list">
                 {models.map((modelService) => (
                     <li key={modelService.url} className="model-item">
-                        <div>
+                        <div className="model-header">
                             <h5 className="model-title">{modelService.name || "Unnamed"} | {modelService.url}</h5>
                             <button
-                                className="model-button"
+                                className="toggle-all-button"
                                 onClick={() => toggleMultiModels(modelService.name, modelService.mdList, modelService.mdList.some(md => md.availableFromServer) ? 'DISABLE' : 'ENABLE')}
                             >
                                 {modelService.mdList.some(md => md.availableFromServer) ? 'Disable All Models' : 'Enable All Models'}
@@ -122,9 +122,9 @@ function ModelManagement() {
                         <ul className="model-details">
                             {modelService.mdList.map((md) => (
                                 <li key={md.model}>
-                                    <div>
-                                        <strong>Model:</strong> {md.model}
-                                        <label>
+                                    <div className="model-info">
+                                        <span className="model-name">{md.model}</span>
+                                        <label className="checkbox-label">
                                             <input
                                                 type="checkbox"
                                                 checked={md.allowed}
@@ -132,7 +132,7 @@ function ModelManagement() {
                                             />
                                             Allowed
                                         </label>
-                                        <label>
+                                        <label className="checkbox-label">
                                             <input
                                                 type="checkbox"
                                                 checked={md.availableFromServer}

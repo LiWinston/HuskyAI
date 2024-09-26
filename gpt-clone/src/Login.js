@@ -9,6 +9,7 @@ import {
     showSweetAlertWithRetVal
 } from './Component/sweetAlertUtil';
 import Swal from "sweetalert2";
+import detectIP from "./Component/ip";
 
 function Login() {
     const [isLogin, setIsLogin] = useState(true);
@@ -87,8 +88,12 @@ function Login() {
 
     const handleLogin = async () => {
         try {
+            let UserIpInfo = await detectIP();  // 检测 IP 地址
+            console.log(UserIpInfo);
             // 发送登录请求
-            const response = await axios.post(`${window.API_BASE_URL}/user/login`, { username, password });
+            const response = await axios.post(`${window.API_BASE_URL}/user/login`,
+                { username, password, UserIpInfo},
+                { headers: { 'Content-Type': 'application/json' } });
             const result = response.data;
 
             if (result.code === 1) {
