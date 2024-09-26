@@ -1,6 +1,6 @@
 package com.AI.Budgerigar.chatbot.AOP;
 
-import com.AI.Budgerigar.chatbot.DTO.LoginDTO;
+import com.AI.Budgerigar.chatbot.DTO.UserIpInfoDTO;
 import com.AI.Budgerigar.chatbot.Services.LoginIpService;
 import com.AI.Budgerigar.chatbot.model.UserPw;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class NotifyUserIssueAspect {
     @AfterReturning(
             pointcut = "execution(* com.AI.Budgerigar.chatbot.Services.LoginIpService.handleLoginIp(..)) && args(usr, loginIpInfo)",
             returning = "result", argNames = "usr,loginIpInfo,result")
-    private void reportToAdmin(UserPw usr, LoginDTO.UserIpInfoDTO loginIpInfo, LoginIpService.LoginIpStatus result) {
+    private void reportToAdmin(UserPw usr, UserIpInfoDTO loginIpInfo, LoginIpService.LoginIpStatus result) {
         switch (result) {
             case NEW, CHANGED:
                 SimpleMailMessage message = new SimpleMailMessage();
@@ -42,7 +42,7 @@ public class NotifyUserIssueAspect {
                 message.setTo(SudoAlertEmail);
                 message.setSubject("User" + usr.getUsername() + " logged in from a new IP");
                 message.setText("User: " + usr.getUsername() + "\n" + "UUID: " + usr.getUuid() + "\n" + "Role: "
-                        + usr.getRole() + "\n" + "Logged in from a new IP:\n" + loginIpInfo.toText());
+                        + usr.getRole() + "\n" + "Logged in from a new IP:\n" + loginIpInfo.getIpInfoDTO().toText());
                 log.info("Reported to admin. User: {} logged in from a new IP.", usr.getUsername());
                 mailSender.send(message);
                 break;

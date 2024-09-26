@@ -1,6 +1,6 @@
 package com.AI.Budgerigar.chatbot.Services;
 
-import com.AI.Budgerigar.chatbot.DTO.LoginDTO;
+import com.AI.Budgerigar.chatbot.DTO.UserIpInfoDTO;
 import com.AI.Budgerigar.chatbot.Nosql.UserIpInfo;
 import com.AI.Budgerigar.chatbot.Nosql.UserIpInfoRepository;
 import com.AI.Budgerigar.chatbot.model.UserPw;
@@ -16,45 +16,29 @@ public class LoginIpService {
     private UserIpInfoRepository userIpInfoRepository;
 
     // 判断两个 IP 信息是否有变化，并返回变化字段数量
-    public int countIpChanges(UserIpInfo oldIpInfo, LoginDTO.UserIpInfoDTO newIpInfo) {
+    public int countIpChanges(UserIpInfo oldIpInfo, UserIpInfoDTO.IpInfoDTO newIpInfo) {
         int changes = 0;
-        if (!oldIpInfo.getAreaCode().equals(newIpInfo.getAreaCode()))
-            changes++;
-        if (!oldIpInfo.getCity().equals(newIpInfo.getCity()))
-            changes++;
-        if (!oldIpInfo.getCityCode().equals(newIpInfo.getCityCode()))
-            changes++;
-        if (!oldIpInfo.getContinent().equals(newIpInfo.getContinent()))
-            changes++;
-        if (!oldIpInfo.getCountry().equals(newIpInfo.getCountry()))
-            changes++;
-        if (!oldIpInfo.getCountryEnglish().equals(newIpInfo.getCountryEnglish()))
-            changes++;
-        if (!oldIpInfo.getDistrict().equals(newIpInfo.getDistrict()))
-            changes++;
-        if (!oldIpInfo.getElevation().equals(newIpInfo.getElevation()))
-            changes++;
-        if (!oldIpInfo.getIp().equals(newIpInfo.getIp()))
-            changes++;
-        if (!oldIpInfo.getIsp().equals(newIpInfo.getIsp()))
-            changes++;
-        if (!oldIpInfo.getLat().equals(newIpInfo.getLat()))
-            changes++;
-        if (!oldIpInfo.getLng().equals(newIpInfo.getLng()))
-            changes++;
-        if (!oldIpInfo.getProv().equals(newIpInfo.getProv()))
-            changes++;
-        if (!oldIpInfo.getTimeZone().equals(newIpInfo.getTimeZone()))
-            changes++;
-        if (!oldIpInfo.getWeatherStation().equals(newIpInfo.getWeatherStation()))
-            changes++;
-        if (!oldIpInfo.getZipCode().equals(newIpInfo.getZipCode()))
-            changes++;
+        changes += !oldIpInfo.getAreaCode().equals(newIpInfo.getAreaCode()) ? 1 : 0;
+        changes += !oldIpInfo.getCity().equals(newIpInfo.getCity()) ? 1 : 0;
+        changes += !oldIpInfo.getCityCode().equals(newIpInfo.getCityCode()) ? 1 : 0;
+        changes += !oldIpInfo.getContinent().equals(newIpInfo.getContinent()) ? 1 : 0;
+        changes += !oldIpInfo.getCountry().equals(newIpInfo.getCountry()) ? 1 : 0;
+        changes += !oldIpInfo.getCountryEnglish().equals(newIpInfo.getCountryEnglish()) ? 1 : 0;
+        changes += !oldIpInfo.getDistrict().equals(newIpInfo.getDistrict()) ? 1 : 0;
+        changes += !oldIpInfo.getElevation().equals(newIpInfo.getElevation()) ? 1 : 0;
+        changes += !oldIpInfo.getIp().equals(newIpInfo.getIp()) ? 1 : 0;
+        changes += !oldIpInfo.getIsp().equals(newIpInfo.getIsp()) ? 1 : 0;
+        changes += !oldIpInfo.getLat().equals(newIpInfo.getLat()) ? 1 : 0;
+        changes += !oldIpInfo.getLng().equals(newIpInfo.getLng()) ? 1 : 0;
+        changes += !oldIpInfo.getProv().equals(newIpInfo.getProv()) ? 1 : 0;
+        changes += !oldIpInfo.getTimeZone().equals(newIpInfo.getTimeZone()) ? 1 : 0;
+        changes += !oldIpInfo.getWeatherStation().equals(newIpInfo.getWeatherStation()) ? 1 : 0;
+        changes += !oldIpInfo.getZipCode().equals(newIpInfo.getZipCode()) ? 1 : 0;
         return changes;
     }
 
     // 将 LoginDTO.UserIpInfoDTO 映射到 UserIpInfo
-    private UserIpInfo mapToUserIpInfo(String userUuid, LoginDTO.UserIpInfoDTO newIpInfo) {
+    private UserIpInfo mapToUserIpInfo(String userUuid, UserIpInfoDTO.IpInfoDTO newIpInfo) {
         return UserIpInfo.builder()
             .userUuid(userUuid)
             .areaCode(newIpInfo.getAreaCode())
@@ -76,8 +60,7 @@ public class LoginIpService {
             .build();
     }
 
-    public LoginIpStatus handleLoginIp(UserPw user, LoginDTO.UserIpInfoDTO newIpInfo) {
-        log.info("Handling login IP for user: {} {}", user.getUuid(), newIpInfo);
+    public LoginIpStatus handleLoginIp(UserPw user, UserIpInfoDTO.IpInfoDTO newIpInfo) {
         UserIpInfo oldIpInfo = userIpInfoRepository.findByUserUuid(user.getUuid()).orElse(null);
 
         if (oldIpInfo == null) {

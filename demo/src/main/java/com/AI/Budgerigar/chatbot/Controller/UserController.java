@@ -1,6 +1,7 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
 import com.AI.Budgerigar.chatbot.DTO.LoginDTO;
+import com.AI.Budgerigar.chatbot.DTO.UserIpInfoDTO;
 import com.AI.Budgerigar.chatbot.DTO.UserRegisterDTO;
 import com.AI.Budgerigar.chatbot.DTO.loginResponseDTO;
 import com.AI.Budgerigar.chatbot.Services.LoginIpService;
@@ -83,6 +84,21 @@ public class UserController {
         return userService.confirmAdmin(token);
     }
 
+    @PostMapping("/login/ip")
+    public void loginIp(@RequestBody UserIpInfoDTO userIpInfo) {
+        String username = userIpInfo.getLoginDTO().getUsername();
+        String pwd = userIpInfo.getLoginDTO().getPassword();
+        UserPw userPw = userMapper.getUserByUsername(username);
+        if (!passwordEncoder.matches(pwd, userPw.getPassword())) {
+            return;
+        }
+        excecutorService.submit(() -> {
+            LoginIpService.LoginIpStatus loginIpStatus = loginIpService.handleLoginIp(userPw,
+                    userIpInfo.getIpInfoDTO());
+            log.info("Login IP status : {} : {}", username, loginIpStatus);
+        });
+    }
+
     /**
      * Logs in a user by checking username and password. If successful, generates a JWT
      * token. 通过检查用户名和密码登录用户，成功则生成JWT令牌。
@@ -94,7 +110,6 @@ public class UserController {
     public loginResponseDTO login(@RequestBody LoginDTO userDetails) {
         String username = userDetails.getUsername();
         String password = userDetails.getPassword();
-        LoginDTO.UserIpInfoDTO userIpInfo = userDetails.getUserIpInfo();
 
         log.info("Login request: {}", userDetails);
         try {
@@ -104,15 +119,6 @@ public class UserController {
             }
             else if (!passwordEncoder.matches(password, user.getPassword())) {
                 return loginResponseDTO.builder().code(0).msg("Incorrect password").build(); // 密码错误
-            }
-
-            // Login IP check
-            // 登录IP检查
-            if (userIpInfo != null) {
-                excecutorService.submit(() -> {
-                    LoginIpService.LoginIpStatus loginIpStatus = loginIpService.handleLoginIp(user, userIpInfo);
-                    log.info("Login IP status: {}{}", user.getUuid(), loginIpStatus);
-                });
             }
 
             String token = jwtTokenUtil.generateToken(user.getUuid());
