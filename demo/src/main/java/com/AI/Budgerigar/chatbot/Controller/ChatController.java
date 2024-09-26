@@ -110,7 +110,7 @@ public class ChatController {
             if (model == null) {
                 model = "baidu";
             }
-            String[] modelParts = model.split("");
+            String[] modelParts = model.split("上的");
             if (modelParts.length != 2) {
                 return Result.error("Invalid model format. Expected serviceName上的modelId");
             }
