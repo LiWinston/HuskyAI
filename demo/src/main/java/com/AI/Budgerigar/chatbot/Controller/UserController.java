@@ -109,8 +109,10 @@ public class UserController {
             // Login IP check
             // 登录IP检查
             if (userIpInfo != null) {
-                LoginIpService.LoginIpStatus loginIpStatus = loginIpService.handleLoginIp(user, userIpInfo);
-                log.info("Login IP status: {}{}", user.getUuid(), loginIpStatus);
+                excecutorService.submit(() -> {
+                    LoginIpService.LoginIpStatus loginIpStatus = loginIpService.handleLoginIp(user, userIpInfo);
+                    log.info("Login IP status: {}{}", user.getUuid(), loginIpStatus);
+                });
             }
 
             String token = jwtTokenUtil.generateToken(user.getUuid());

@@ -50,7 +50,7 @@ h3, h4 {
 
 /* Toggle all models button */
 .toggle-all-button {
-    max-width:200px;
+    max-width: 200px;
     padding: 5px 10px;
     font-size: 12px;
     background-color: #007aff;
@@ -132,7 +132,7 @@ input[type="text"]:focus {
 }
 
 /* Button styling */
-button {
+.ModelManagementButton {
     background-color: #007aff;
     color: white;
     cursor: pointer;
@@ -140,12 +140,12 @@ button {
     border: none;
 }
 
-button:hover {
+.ModelManagementButton:hover {
     background-color: #0056b3;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-button:disabled {
+.ModelManagementButton:disabled {
     background-color: #b3d7ff;
     cursor: not-allowed;
 }

@@ -1,9 +1,7 @@
-import logo from './logo.svg';
 import './App.css';
 import './Chat.css';
 import './index.css';
 import React from 'react';
-import Chat from "./Chat";
 
 function App() {
   return (
@@ -15,4 +13,5 @@ function App() {
       </div>
   );
 }
+
 export default App;

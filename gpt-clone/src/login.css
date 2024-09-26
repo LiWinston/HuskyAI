@@ -69,10 +69,12 @@
 .admin-checkbox input[type="checkbox"]:focus {
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* 聚焦时的阴影效果 */
 }
+
 /* 显示管理员邮箱输入框 */
 .admin-email-container input {
     border: 1px solid #4CAF50; /* 邮箱输入框绿色边框 */
 }
+
 .admin-email-container input:focus {
     border-color: #333; /* 邮箱输入框获得焦点时边框颜色 */
 }
@@ -211,7 +213,6 @@
 }
 
 
-
 .loading-spinner {
     position: absolute;
     right: 10px; /* 根据需要调整位置 */
@@ -219,6 +220,7 @@
     transform: translateY(-50%);
     font-size: 20px; /* 图标大小 */
 }
+
 .suggestion-popup {
     position: absolute;
     top: 40px;
@@ -237,7 +239,7 @@
     padding: 5px;
     cursor: pointer;
     font-size: 14px;
-    position: relative;  /* 添加这一行 */
+    position: relative; /* 添加这一行 */
 }
 
 .suggestion-item:hover {
@@ -258,7 +260,7 @@
 .suggestion-item.clicked {
     animation: flyToInput 0.25s ease-in-out forwards;
     position: absolute;
-    z-index: 20;  /* 确保动画过程中在其他元素之上 */
+    z-index: 20; /* 确保动画过程中在其他元素之上 */
 }
 
 /* 新增的关闭按钮样式 */

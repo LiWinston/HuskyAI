@@ -66,6 +66,7 @@
     opacity: 1; /* 当菜单显示时，设置为完全不透明 */
     visibility: visible; /* 确保显示 */
 }
+
 /*.conversation-item:hover .options-menu {*/
 /*    !*display: none; !* 禁用悬停时显示菜单的效果 *!*!*/
 /*}*/
@@ -82,6 +83,7 @@
     flex-shrink: 0; /* 确保按钮不缩小 */
     transition: color 0.18s ease; /*加动态变色*/
 }
+
 .conversation-item:hover .options-icon {
     display: flex; /* 当鼠标悬停在 .conversation-item 上时显示图标 */
 }
@@ -108,6 +110,7 @@
     background-color: #f5f5f7;
     color: #1d1d1f; /* 悬停时文字仍为黑色 */
 }
+
 /*******************************************************************************************/
 
 .chat-container {
@@ -215,7 +218,7 @@
     height: 1px;
     /*background-color: #ccc;*/
     margin: 0 10px;
-/*    虚短的分割线*/
+    /*    虚短的分割线*/
     background-image: linear-gradient(to right, #ccc, #f5f5f7, #ccc);
     background-size: 100% 1px;
     background-repeat: no-repeat;
@@ -261,7 +264,15 @@
     padding: 8px;
     background-color: rgba(245, 245, 247, 0.75);
     border-top: 1px solid #d2d2d7;
+}
 
+.inputButtonContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    align-self: flex-end;
+    flex-direction: column;
 }
 
 textarea {
@@ -286,12 +297,12 @@ textarea:focus {
 }
 
 .chat-container button {
-    display: flex;  /* 使用 Flexbox 布局 */
+    display: flex; /* 使用 Flexbox 布局 */
     align-self: flex-end;
-    justify-content: center;  /* 水平居中对齐内容 */
-    align-items: center;  /* 垂直居中对齐内容 */
+    justify-content: center; /* 水平居中对齐内容 */
+    align-items: center; /* 垂直居中对齐内容 */
     margin-left: 10px;
-    padding: 10px 20px;  /* 增加内边距，使按钮看起来更大 */
+    padding: 10px 20px; /* 增加内边距，使按钮看起来更大 */
     background-color: #007aff;
     color: white;
     border: none;
@@ -300,8 +311,25 @@ textarea:focus {
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    height: 42px;  /* Match the min-height of textarea */
-    box-sizing: border-box;  /* 使内边距和边框计入总高度 */
+    height: 42px; /* Match the min-height of textarea */
+    box-sizing: border-box; /* 使内边距和边框计入总高度 */
+}
+
+.chat-container .sendButton {
+    background-color: #007aff;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    align-self: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    font-size: x-small;
+    max-width: 80px; /* 固定宽度，防止缩放时变形 */
+    height: 30px; /* 固定高度，保持圆形比例 */
 }
 
 .chat-container button:hover {
@@ -309,7 +337,7 @@ textarea:focus {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.chat-container  button:disabled {
+.chat-container button:disabled {
     background-color: #b3d7ff;
     cursor: not-allowed;
 }
@@ -370,7 +398,7 @@ code {
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s ease;
-    width: 40px;  /* 固定宽度，防止缩放时变形 */
+    width: 40px; /* 固定宽度，防止缩放时变形 */
     height: 40px; /* 固定高度，保持圆形比例 */
 }
 
@@ -536,7 +564,7 @@ code {
         overflow-y: auto;
         border-right: none;
         border-bottom: 1px solid #d2d2d7;
-        padding: 5px;  /* 减小内边距，适应较小屏幕 */
+        padding: 5px; /* 减小内边距，适应较小屏幕 */
     }
 
     .conversation-item {
@@ -581,6 +609,7 @@ code {
 
 
 }
+
 /* 重写移动端适配 - 最大宽度 768px */
 @media (max-width: 768px) {
     .chat-interface {
@@ -593,7 +622,7 @@ code {
         max-height: 15vh; /* 限制会话列表高度 */
         border-right: none;
         border-bottom: 1px solid #d2d2d7; /* 改为底部分割线 */
-        padding: 5px;  /* 减少边距 */
+        padding: 5px; /* 减少边距 */
         overflow-y: auto;
     }
 
