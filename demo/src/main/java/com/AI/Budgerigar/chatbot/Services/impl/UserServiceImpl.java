@@ -94,6 +94,7 @@ public class UserServiceImpl implements userService {
             }
 
             String uuid = UUID.randomUUID().toString();
+            //TODO: 优化加密，可使用 DigestUtils.md5DigestAsHex(password.getBytes())
             String encodedPassword = passwordEncoder.encode(password);
 
             // 注册普通用户
