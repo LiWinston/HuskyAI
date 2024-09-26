@@ -7,5 +7,7 @@ import java.util.Optional;
 
 @Repository
 public interface UserIpInfoRepository extends MongoRepository<UserIpInfo, String> {
+
     Optional<UserIpInfo> findByUserUuid(String userUuid);
+
 }

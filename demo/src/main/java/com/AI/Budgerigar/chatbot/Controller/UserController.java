@@ -3,7 +3,6 @@ package com.AI.Budgerigar.chatbot.Controller;
 import com.AI.Budgerigar.chatbot.DTO.LoginDTO;
 import com.AI.Budgerigar.chatbot.DTO.UserRegisterDTO;
 import com.AI.Budgerigar.chatbot.DTO.loginResponseDTO;
-import com.AI.Budgerigar.chatbot.Nosql.UserIpInfo;
 import com.AI.Budgerigar.chatbot.Services.LoginIpService;
 import com.AI.Budgerigar.chatbot.Services.UserModelAccessService;
 import com.AI.Budgerigar.chatbot.Services.userService;
@@ -55,6 +54,7 @@ public class UserController {
 
     @Autowired
     private LoginIpService loginIpService;
+
     // Levenshtein Distance algorithm for suggesting similar usernames
     // 用于建议类似用户名的Levenshtein距离算法
 
@@ -94,9 +94,9 @@ public class UserController {
     public loginResponseDTO login(@RequestBody LoginDTO userDetails) {
         String username = userDetails.getUsername();
         String password = userDetails.getPassword();
-        UserIpInfo userIpInfo = userDetails.getUserIpInfo();
+        LoginDTO.UserIpInfoDTO userIpInfo = userDetails.getUserIpInfo();
 
-
+        log.info("Login request: {}", userDetails);
         try {
             UserPw user = userMapper.getUserByUsername(username);
             if (user == null) {
@@ -108,18 +108,9 @@ public class UserController {
 
             // Login IP check
             // 登录IP检查
-            if(userIpInfo != null) {
-                LoginIpService.LoginIpStatus loginIpStatus = loginIpService.handleLoginIp(user.getUuid(), userIpInfo);
-                switch (loginIpStatus) {
-                    case NEW:
-                    case NO_CHANGE:
-                    case CHANGED:
-                        //report to admin
-                        loginIpService.reportToAdmin(user, userIpInfo);
-                        break;
-                    default:
-                        break;
-                }
+            if (userIpInfo != null) {
+                LoginIpService.LoginIpStatus loginIpStatus = loginIpService.handleLoginIp(user, userIpInfo);
+                log.info("Login IP status: {}{}", user.getUuid(), loginIpStatus);
             }
 
             String token = jwtTokenUtil.generateToken(user.getUuid());
