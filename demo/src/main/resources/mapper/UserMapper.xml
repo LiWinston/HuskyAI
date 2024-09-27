@@ -46,5 +46,9 @@
         WHERE uc.uuid = #{uuid}
         ORDER BY c.lastMessageAt DESC
     </select>
+    <select id="selectAll" resultType="com.AI.Budgerigar.chatbot.model.UserPw">
+        SELECT *
+        FROM userpw
+    </select>
 
 </mapper>

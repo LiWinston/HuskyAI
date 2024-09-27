@@ -5,13 +5,13 @@ import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.chatServicesManageService;
 import com.AI.Budgerigar.chatbot.chatbotAdmin.VO.ModelsStatusVO;
 import com.AI.Budgerigar.chatbot.result.Result;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -104,6 +104,32 @@ public class modelManageController {
             log.error("Error occurred in {}: {}", modelManageController.class.getName(), e.getMessage());
             return Result.error("获取模型列表失败");
         }
+    }
+
+    @PostMapping("/refresh")
+    public Result<refreshResultDTO> refreshModels() {
+        try {
+            Result<AbstractMap.SimpleEntry<Integer, Integer>> var = chatServicesManageService
+                .checkRemoteServicesHealth()
+                .get();
+            return var.getCode() == 1 ? Result
+                .success(new refreshResultDTO(var.getData().getKey(), var.getData().getValue()), var.getMsg())
+                    : Result.error(var.getMsg());
+        }
+        catch (Exception e) {
+            log.error("Error occurred in {}: {}", modelManageController.class.getName(), e.getMessage());
+            return Result.error(e.getMessage());
+        }
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class refreshResultDTO {
+
+        private Integer add;
+
+        private Integer remove;
+
     }
 
 }

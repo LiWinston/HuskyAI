@@ -3,12 +3,15 @@ package com.AI.Budgerigar.chatbot.mapper;
 import com.AI.Budgerigar.chatbot.model.AdminInfo;
 import com.AI.Budgerigar.chatbot.model.Conversation;
 import com.AI.Budgerigar.chatbot.model.UserPw;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
 @Mapper
-public interface UserMapper {
+public interface UserMapper extends BaseMapper<UserPw> {
+
+    List<UserPw> selectAll();
 
     /**
      * 根据用户的 UUID 获取用户信息 Retrieve user information by UUID

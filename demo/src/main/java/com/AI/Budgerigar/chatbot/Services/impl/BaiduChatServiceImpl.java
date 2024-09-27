@@ -7,7 +7,6 @@ import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;
 import com.AI.Budgerigar.chatbot.Services.StreamChatService;
-import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.baidubce.qianfan.core.StreamIterator;
 import com.baidubce.qianfan.core.builder.ChatBuilder;
@@ -63,9 +62,6 @@ public class BaiduChatServiceImpl implements ChatService, StreamChatService {
 
     @Autowired
     private ChatSyncService chatSyncService;
-
-    @Autowired
-    private ConversationMapper conversationMapper;
 
     private final Gson gson = new Gson();
 

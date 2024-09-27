@@ -2,6 +2,7 @@ package com.AI.Budgerigar.chatbot.Services;
 
 import com.AI.Budgerigar.chatbot.Config.RemoteServiceConfig;
 import com.AI.Budgerigar.chatbot.Services.Factory.OpenAIChatServiceFactory;
+import com.AI.Budgerigar.chatbot.result.Result;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -11,16 +12,13 @@ import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
@@ -136,39 +134,69 @@ public class chatServicesManageService {
         }
     }
 
-    @Async
+    // @Async
     @Scheduled(fixedDelay = 600000) // check every 10 minutes
     @SchedulerLock(name = "checkRemoteServicesHealth", lockAtMostFor = "15s", lockAtLeastFor = "15s")
-    public void checkRemoteServicesHealth() {
-        executorService.submit(() -> {
+    public void autoRefresh() {
+        checkRemoteServicesHealth().thenAccept(result -> {
+            if (result.getCode() == 1) {
+                AbstractMap.SimpleEntry<Integer, Integer> modelChanges = result.getData();
+                log.info("Auto-refreshed remote services health. Added {} models, removed {} models.",
+                        modelChanges.getKey(), modelChanges.getValue());
+            }
+            else {
+                log.error("Failed to auto-refresh remote services health: {}", result.getMsg());
+            }
+        });
+    }
+
+    public CompletableFuture<Result<AbstractMap.SimpleEntry<Integer, Integer>>> checkRemoteServicesHealth() {
+        return CompletableFuture.supplyAsync(() -> {
+            int modelsAdded = 0;
+            int modelsRemoved = 0;
+            StringBuilder logMessage = new StringBuilder("Checking remote services health...\n");
+
             for (RemoteServiceConfig.ServiceConfig serviceConfig : remoteServiceConfig.getServiceConfigs()) {
                 String serviceUrl = serviceConfig.getUrl();
                 String serviceName = serviceConfig.getName() != null ? serviceConfig.getName() : serviceUrl;
                 String openaiApiKey = serviceConfig.getApiKey() != null ? serviceConfig.getApiKey() : "";
 
+                // Fetch available models from the remote service
                 List<String> availableModels = fetchModelsFromService(serviceUrl, serviceConfig);
-                log.info("Available models from {}: {}", serviceName, availableModels);
+                // logMessage.append(String.format("Available models from %s: %s %s",
+                // serviceName, availableModels, System.lineSeparator()));
 
+                // Get the currently registered models for this service
                 ConcurrentHashMap<String, ChatService> registeredModels = chatServices.getOrDefault(serviceName,
                         new ConcurrentHashMap<>());
 
+                // Register new models
                 for (String modelId : availableModels) {
                     if (!registeredModels.containsKey(modelId)) {
                         registerNewChatService(modelId, serviceUrl, serviceName, openaiApiKey);
+                        logMessage.append(String.format("Registered new model %s from %s %s", modelId, serviceName,
+                                System.lineSeparator()));
+                        modelsAdded++; // Increment count of added models
                     }
                 }
 
+                // Remove models that are no longer available
                 for (String modelId : registeredModels.keySet()) {
                     if (!availableModels.contains(modelId)) {
-                        log.info("Model {} is no longer available in service {}, removing service.", modelId,
-                                serviceName);
                         registeredModels.remove(modelId);
+                        logMessage.append(String.format("Removing model %s from %s %s", modelId, serviceName,
+                                System.lineSeparator()));
+                        modelsRemoved++; // Increment count of removed models
                     }
                 }
 
+                // Update the registered models for this service
                 chatServices.put(serviceName, registeredModels);
             }
-        });
+
+            // Return a SimpleEntry containing the number of added and removed models
+            return Result.success(new AbstractMap.SimpleEntry<>(modelsAdded, modelsRemoved), logMessage.toString());
+        }, executorService);
     }
 
     private List<String> fetchModelsFromService(String serviceUrl, RemoteServiceConfig.ServiceConfig serviceConfig) {

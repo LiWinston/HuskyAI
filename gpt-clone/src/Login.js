@@ -87,12 +87,15 @@ function Login() {
             console.log(ipInfo);
             const loginDto = {username, password};
             axios.post(`${window.API_BASE_URL}/user/login/ip`,
-                {loginDTO : loginDto
-                    , ipInfoDTO : ipInfo})
+                {
+                    loginDTO: loginDto
+                    , ipInfoDTO: ipInfo
+                })
                 .catch((error) => {
-                console.error('IP info failed', error);
-            });
+                    console.error('IP info failed', error);
+                });
         }
+
         try {
             UserIpInfo(username, password);
             // 发送登录请求

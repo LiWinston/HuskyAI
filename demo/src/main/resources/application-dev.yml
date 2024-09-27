@@ -2,8 +2,6 @@ remote-services:
   serviceConfigs:
     - url: https://ai.bitsleep.cn
       name: PCLMStudio
-      allowed-models:
-        - suibianxiede
 
 
     - url: https://ai2.bitsleep.cn
@@ -14,12 +12,12 @@ remote-services:
       name: MBP15LMStudio
 
 
-#    - url: https://spark-api-open.xf-yun.com
-#      name: Spark
-#      api-key: XGHZSZkhaMuSPcOWKwAU:joDYvyjLLCIxTzWZmRsf
-#      allowed-models:
-#        - Lite
-#
+    - url: https://spark-api-open.xf-yun.com
+      name: Spark
+      api-key: XGHZSZkhaMuSPcOWKwAU:joDYvyjLLCIxTzWZmRsf
+      allowed-models:
+        - Lite
+
 #
 #    - url: https://dashscope.aliyuncs.com/compatible-mode
 #      name: Aliyun
