@@ -38,7 +38,7 @@ docker build -f LBDockerfile -t lms-gpt-backup .
 
 # 启动新的备份服务容器并将其添加到testnet网络中
 echo "Starting the LMS-GPT backup container on testnet network..."
-docker run -d --name lms-gpt-backup --network testnet --network-alias svc -p 8090:8090 -e SPRING_DATA_REDIS_HOST=redis lms-gpt-backup
+docker run -d --name lms-gpt-backup --network testnet --network-alias svc -p 8099:8090 -e SPRING_DATA_REDIS_HOST=redis lms-gpt-backup
 
 # 部署完成
-echo "Backup service is running on port 8090!"
+echo "Backup service is running on port 8099!"

@@ -13,33 +13,33 @@ import SharePage from './SharePage';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 const LOCAL_URLS = ['http://localhost:8090/health'];
-const REMOTE_URL = '/health';
+const REMOTE_URL = '/api/health';
 
 function detectEnvironment(updateStatus, setError, finishDetection) {
     let isLocalServiceAvailable = false;
 
     const checkServices = async () => {
-        for (const url of LOCAL_URLS) {
-            try {
-                updateStatus(`Trying to connect to local service: ${url}`);
-                await axios.get(url);
-                window.API_BASE_URL = url.replace('/health', '');
-                localStorage.setItem('API_BASE_URL', window.API_BASE_URL);
-                isLocalServiceAvailable = true;
-                updateStatus(`Connected to local service: ${url}`);
-                // await new Promise(resolve => setTimeout(resolve, 100));
-                finishDetection();
-                return;
-            } catch (error) {
-                updateStatus(`Failed to connect to local service: ${url}`);
-            }
-        }
+        // for (const url of LOCAL_URLS) {
+        //     try {
+        //         updateStatus(`Trying to connect to local service: ${url}`);
+        //         await axios.get(url);
+        //         window.API_BASE_URL = url.replace('/health', '');
+        //         localStorage.setItem('API_BASE_URL', window.API_BASE_URL);
+        //         isLocalServiceAvailable = true;
+        //         updateStatus(`Connected to local service: ${url}`);
+        //         // await new Promise(resolve => setTimeout(resolve, 100));
+        //         finishDetection();
+        //         return;
+        //     } catch (error) {
+        //         updateStatus(`Failed to connect to local service: ${url}`);
+        //     }
+        // }
 
         if (!isLocalServiceAvailable) {
             try {
                 updateStatus(`Trying to connect to remote server: ${REMOTE_URL}`);
                 await axios.get(REMOTE_URL);
-                window.API_BASE_URL = REMOTE_URL.replace('/health', '/api');
+                window.API_BASE_URL = REMOTE_URL.replace('/api/health', '/api');
                 localStorage.setItem('API_BASE_URL', window.API_BASE_URL);
                 updateStatus('Connected to remote server');
                 // await new Promise(resolve => setTimeout(resolve, 100));
