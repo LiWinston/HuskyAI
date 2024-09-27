@@ -1,0 +1,32 @@
+# 使用 Maven 构建环境
+FROM maven:3.9.9-amazoncorretto-21 AS build
+
+# 设置工作目录
+WORKDIR /app
+
+# 将 pom.xml 复制到容器中
+COPY demo/pom.xml .
+
+# 下载所有依赖（缓存）
+RUN mvn dependency:go-offline -B
+
+# 将项目源代码复制到容器中
+COPY demo/src ./src
+
+# 构建项目
+RUN mvn clean package -DskipTests
+
+# 运行时使用 eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre
+
+# 设置工作目录
+WORKDIR /app
+
+# 从构建阶段复制 jar 文件
+COPY --from=build /app/target/lms-gpt.jar /app/lms-gpt.jar
+
+# 暴露端口 8090
+EXPOSE 8090
+
+# 启动 Spring Boot 应用
+ENTRYPOINT ["java", "-jar", "/app/lms-gpt.jar"]
