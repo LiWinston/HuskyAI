@@ -156,7 +156,7 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
-    max-height: 100vh; /* 设置为一页半的高度 */
+    max-height: 400vh; /* 设置为一页半的高度 */
     overflow-y: auto;
 }
 

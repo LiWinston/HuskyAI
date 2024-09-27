@@ -156,6 +156,7 @@ public class GenerateTittle {
 
         List<OpenAIChatServiceImpl> availableServices = new ArrayList<>();
 
+        log.debug("escapeUrl: {}, escapeModel: {}", escapeUrl, escapeModel);
         // 先收集所有可用的OpenAIChatServiceImpl实例
         chatServices.forEach((serviceName, serviceMap) -> {
             serviceMap.forEach((modelId, chatService) -> {
@@ -166,12 +167,15 @@ public class GenerateTittle {
             });
         });
 
+        log.debug("availableServices: {}", availableServices);
+
         // 如果只有一个非openai的OpenAIChatServiceImpl实例，直接使用该实例
         if (availableServices.size() == 1) {
             // if (openAIUrl != null && model != null) {
             // // 预先注入了openAIUrl和model，则退行到该设定，使用唯一的非openai模型
             // return;
             // }
+            log.debug("只有一个非openai的OpenAIChatServiceImpl实例，直接使用该实例");
             OpenAIChatServiceImpl singleService = availableServices.getFirst();
             _openAIUrl.set(singleService.getOpenAIUrl());
             _model.set(singleService.getModel());
@@ -184,6 +188,7 @@ public class GenerateTittle {
             if (service.getOpenAIUrl().equals(escapeUrl) && service.getModel().equals(escapeModel)) {
                 continue; // 避让当前模型
             }
+            log.debug("避让成功 {}", service.getModel());
             // 选择其他模型并设置
             _openAIUrl.set(service.getOpenAIUrl());
             _model.set(service.getModel());
@@ -193,6 +198,7 @@ public class GenerateTittle {
 
         // 如果避让后没有可选模型，仍然使用原模型
         if (_openAIUrl.get() == null || _model.get() == null) {
+            log.debug("避让后没有可选模型，仍然使用原模型");
             OpenAIChatServiceImpl fallbackService = availableServices.get(0); // 回退到第一个可用模型
             _openAIUrl.set(fallbackService.getOpenAIUrl());
             _model.set(fallbackService.getModel());

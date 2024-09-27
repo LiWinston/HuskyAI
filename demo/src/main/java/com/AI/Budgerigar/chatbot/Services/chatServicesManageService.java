@@ -135,7 +135,7 @@ public class chatServicesManageService {
     }
 
     // @Async
-    @Scheduled(fixedDelay = 600000) // check every 10 minutes
+    @Scheduled(fixedDelayString = "${chatbot.model.health.refresh.rate}")
     @SchedulerLock(name = "checkRemoteServicesHealth", lockAtMostFor = "15s", lockAtLeastFor = "15s")
     public void autoRefresh() {
         checkRemoteServicesHealth().thenAccept(result -> {
