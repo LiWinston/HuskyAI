@@ -517,6 +517,8 @@ code {
     visibility: hidden;
     margin-top: 5px;
     width: max-content;
+    max-height: 60vh;
+    overflow-y: auto;
 }
 
 .chat-interface .model-options.show {

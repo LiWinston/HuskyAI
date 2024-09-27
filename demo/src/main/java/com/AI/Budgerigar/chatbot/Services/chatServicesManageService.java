@@ -41,10 +41,6 @@ public class chatServicesManageService {
     private ChatService doubaoChatService;
 
     @Autowired
-    @Qualifier("openai")
-    private ChatService openaiChatService;
-
-    @Autowired
     private RemoteServiceConfig remoteServiceConfig;
 
     @Autowired
@@ -63,11 +59,6 @@ public class chatServicesManageService {
         chatServices.put("doubao", new ConcurrentHashMap<>() {
             {
                 put("doubao", doubaoChatService);
-            }
-        });
-        chatServices.put("openai", new ConcurrentHashMap<>() {
-            {
-                put("openai", openaiChatService);
             }
         });
         // 从配置中读取根路径并动态注册服务

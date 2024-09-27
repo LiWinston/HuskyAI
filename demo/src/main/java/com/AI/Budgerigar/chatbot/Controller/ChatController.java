@@ -236,7 +236,8 @@ public class ChatController {
             .getChatServices();
         try {
             // 优先模型列表
-            List<String> prioritizedModels = Arrays.asList("openai", "doubao", "baidu");
+            List<String> prioritizedModels = Arrays.asList("HuskyGPT", "Aliyun", "baidu", "doubao", "PCLMStudio",
+                    "MBP14LMStudio");
 
             List<ChatService> allowedChatServices = userModelAccessService.getUserAllowedChatServices(userUUID);
             log.info("Allowed chat services: " + allowedChatServices);
@@ -245,7 +246,7 @@ public class ChatController {
             List<String> result = new ArrayList<>(allowedChatServices.size());
 
             /*
-             * 优先对 openai、doubao、baidu 三个服务源的模型进行排序，并加入结果。这些必有 不参与筛选
+             * 优先对 Aliyun, baidu, doubao 三个服务源的模型按模型名排序，并加入结果
              */
             prioritizedModels.stream().filter(chatServices::containsKey).forEach(serviceName -> {
                 chatServices.get(serviceName)

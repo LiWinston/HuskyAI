@@ -89,6 +89,8 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
 
     @Override
     public Result<String> chat(String prompt, String conversationId) {
+        log.info("Flux chat with \u001B[34m{}\u001B[0m using model \u001B[32m{}\u001B[0m FROM {}", openAIUrl, model,
+                OpenAIChatServiceImpl.class.getName());
         try {
             List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, prompt, conversationId);
 
@@ -105,7 +107,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
 
             String result = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
-            log.info("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m", chatResponseDTO.getModel(),
+            log.debug("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m", chatResponseDTO.getModel(),
                     result.substring(0, Math.min(40, result.length())));
 
             updateConversationHistory(conversationId, result);
@@ -142,6 +144,8 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
     }
 
     public Flux<Result<String>> chatFlux(String prompt, String conversationId) {
+        log.info("Flux chat with \u001B[34m{}\u001B[0m using model \u001B[32m{}\u001B[0m FROM {}", openAIUrl, model,
+                OpenAIChatServiceImpl.class.getName());
         List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, prompt, conversationId);
         ChatRequestDTO requestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
         requestDTO.setStream(true);
@@ -155,7 +159,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
             .flatMap(this::parseJsonChunk)
             .map(chatResponseDTO -> {
                 String content = extractContentFromFirstChoice(chatResponseDTO);
-                log.info("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m", chatResponseDTO.getModel(),
+                log.debug("Response from \u001B[34m{}\u001B[0m: \u001B[32m{}\u001B[0m", chatResponseDTO.getModel(),
                         content.substring(0, Math.min(40, content.length())));
                 contentBuilder.append(content);
                 var finishReason = chatResponseDTO.getChoices().get(0).getFinish_reason();
