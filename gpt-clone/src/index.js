@@ -19,21 +19,6 @@ function detectEnvironment(updateStatus, setError, finishDetection) {
     let isLocalServiceAvailable = false;
 
     const checkServices = async () => {
-        // for (const url of LOCAL_URLS) {
-        //     try {
-        //         updateStatus(`Trying to connect to local service: ${url}`);
-        //         await axios.get(url);
-        //         window.API_BASE_URL = url.replace('/health', '');
-        //         localStorage.setItem('API_BASE_URL', window.API_BASE_URL);
-        //         isLocalServiceAvailable = true;
-        //         updateStatus(`Connected to local service: ${url}`);
-        //         // await new Promise(resolve => setTimeout(resolve, 100));
-        //         finishDetection();
-        //         return;
-        //     } catch (error) {
-        //         updateStatus(`Failed to connect to local service: ${url}`);
-        //     }
-        // }
 
         if (!isLocalServiceAvailable) {
             try {
