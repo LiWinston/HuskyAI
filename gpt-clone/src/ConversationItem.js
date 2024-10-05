@@ -26,53 +26,112 @@ const ConversationItem = ({
     const [scrollDuration, setScrollDuration] = useState('15s');
 
     useEffect(() => {
+        let styleSheet;
+        let animationName;
+
         if (titleRef.current) {
             const titleElement = titleRef.current;
-            const lineHeight = parseFloat(getComputedStyle(titleElement).lineHeight);
-            const containerHeight = titleElement.clientHeight;
-            const scrollHeight = titleElement.scrollHeight;
+            const scrollContent = titleElement.querySelector('.scroll-content');
 
-            // 计算超出的行数
-            const totalLines = scrollHeight / lineHeight;
-            const visibleLines = containerHeight / lineHeight;
-            const extraLines = totalLines - visibleLines;
+            if (scrollContent) {
+                const lineHeight = parseFloat(getComputedStyle(scrollContent).lineHeight);
+                const containerHeight = titleElement.clientHeight;
+                const scrollHeight = scrollContent.scrollHeight;
 
-            // 是否超出三行
-            setIsLongTitle(extraLines > 0);
+                // 计算超出的行数
+                const totalLines = scrollHeight / lineHeight;
+                const visibleLines = containerHeight / lineHeight;
+                const extraLines = totalLines - visibleLines;
 
-            if (extraLines > 0) {
-                // 计算滚动时间
-                // 基础速度：2秒/行
-                const baseSpeed = 1.6;
-                // 最快速度：1秒/行
-                const maxSpeed = 0.6;
+                // 是否超出三行
+                setIsLongTitle(extraLines > 0);
 
-                // 计算理想滚动时间（秒）
-                let duration = Math.min(
-                    // 基础速度计算
-                    extraLines * baseSpeed,
-                    // 最大速度计算
-                    extraLines * maxSpeed
-                );
+                if (extraLines > 0) {
+                    // 定义最小和最大速度（秒/行）
+                    const minSpeedPerLine = 0.6; // 最快速度
+                    const maxSpeedPerLine = 1.6; // 最慢速度
 
-                // 添加非线性因素：使用对数函数让速度随内容增加而放缓
-                // 但仍然保持在最小和最大速度范围内
-                duration = Math.min(
-                    extraLines * baseSpeed,
-                    duration * (1 + Math.log10(extraLines) * 0.2)
-                );
+                    // 计算速度因子，使速度随行数线性变化
+                    const cappedExtraLines = Math.min(extraLines, 10); // 上限为10行
+                    const speedPerLine = maxSpeedPerLine - ((maxSpeedPerLine - minSpeedPerLine) * (cappedExtraLines / 10));
 
-                // 确保最小持续时间
-                duration = Math.max(duration, 2.1); // 至少4秒
+                    // 计算滚动持续时间
+                    let duration = extraLines * speedPerLine;
 
-                // 考虑动画中的停顿时间（开始5%和结束5%）
-                duration = duration * 1.1;
+                    // 确保最小持续时间
+                    duration = Math.max(duration, 2.1); // 至少2.1秒
 
-                // 设置滚动持续时间
-                setScrollDuration(`${duration}s`);
+                    // 计算关键帧的百分比
+                    const initialPauseTime = 0.1; // 初始停顿0.1秒
+                    const endPauseTime = 0.1; // 结束停顿0.1秒
+                    const scrollTime = duration - initialPauseTime - endPauseTime;
 
-                // 将duration设置为CSS变量
-                titleElement.style.setProperty('--scroll-duration', `${duration}s`);
+                    // 计算百分比
+                    const initialPausePercent = (initialPauseTime / duration) * 100;
+                    const endPausePercent = (endPauseTime / duration) * 100;
+                    const scrollPercent = ((scrollTime / 2) / duration) * 100; // 下滚和上滚各占一半时间
+
+                    const scrollDownStart = initialPausePercent;
+                    const scrollDownEnd = scrollDownStart + scrollPercent;
+                    const scrollUpStart = scrollDownEnd;
+                    const scrollUpEnd = scrollUpStart + scrollPercent;
+                    const finalPauseStart = scrollUpEnd;
+
+                    // 生成唯一的动画名称
+                    animationName = `smoothScroll_${Math.random().toString(36).substr(2, 9)}`;
+
+                    // 生成关键帧CSS代码
+                    const keyframes = `
+                    @keyframes ${animationName} {
+                        0% {
+                            transform: translateY(0);
+                        }
+                        ${scrollDownStart}% {
+                            transform: translateY(0);
+                        }
+                        ${scrollDownEnd}% {
+                            transform: translateY(calc(-${scrollHeight - containerHeight}px));
+                        }
+                        ${scrollUpStart}% {
+                            transform: translateY(calc(-${scrollHeight - containerHeight}px));
+                        }
+                        ${scrollUpEnd}% {
+                            transform: translateY(0);
+                        }
+                        100% {
+                            transform: translateY(0);
+                        }
+                    }
+                `;
+
+                    // 创建<style>元素并注入CSS代码
+                    styleSheet = document.createElement('style');
+                    styleSheet.type = 'text/css';
+                    styleSheet.innerHTML = keyframes;
+                    document.head.appendChild(styleSheet);
+
+                    // 添加鼠标事件监听器
+                    const handleMouseEnter = () => {
+                        scrollContent.style.animation = `${animationName} ${duration}s linear infinite`;
+                    };
+
+                    const handleMouseLeave = () => {
+                        scrollContent.style.animation = '';
+                    };
+
+                    titleElement.addEventListener('mouseenter', handleMouseEnter);
+                    titleElement.addEventListener('mouseleave', handleMouseLeave);
+
+                    // 在清理函数中移除事件监听器
+                    return () => {
+                        if (styleSheet && styleSheet.parentNode) {
+                            styleSheet.parentNode.removeChild(styleSheet);
+                        }
+                        titleElement.removeEventListener('mouseenter', handleMouseEnter);
+                        titleElement.removeEventListener('mouseleave', handleMouseLeave);
+                        scrollContent.style.animation = '';
+                    };
+                }
             }
         }
     }, [conversation.title]);

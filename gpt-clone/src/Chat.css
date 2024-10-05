@@ -112,8 +112,9 @@
 .conversation-item-title.long-title .scroll-content {
     position: relative;
     top: 0;
-    animation: none; /* 初始状态不滚动 */
     white-space: normal;
+    /* 确保内容可以正常滚动 */
+    will-change: transform;
 }
 
 /* 悬停时触发滚动，取消省略号效果 */
@@ -123,30 +124,30 @@
     overflow: hidden; /* 隐藏溢出 */
 }
 
-.conversation-item:hover .conversation-item-title.long-title .scroll-content {
-    animation: smoothScroll var(--scroll-duration, 15s) ease-in-out infinite;
-}
+/*.conversation-item:hover .conversation-item-title.long-title .scroll-content {*/
+/*    animation: smoothScroll var(--scroll-duration, 15s) ease-in-out infinite;*/
+/*}*/
 
-@keyframes smoothScroll {
-    0% {
-        transform: translateY(0);
-    }
-    5% { /* 添加初始停顿 */
-        transform: translateY(0);
-    }
-    45% {
-        transform: translateY(calc(-100% + 4.5em));
-    }
-    55% { /* 添加底部停顿 */
-        transform: translateY(calc(-100% + 4.5em));
-    }
-    95% {
-        transform: translateY(0);
-    }
-    100% {
-        transform: translateY(0);
-    }
-}
+/*@keyframes smoothScroll {*/
+/*    0% {*/
+/*        transform: translateY(0);*/
+/*    }*/
+/*    5% { !* 添加初始停顿 *!*/
+/*        transform: translateY(0);*/
+/*    }*/
+/*    45% {*/
+/*        transform: translateY(calc(-100% + 4.5em));*/
+/*    }*/
+/*    55% { !* 添加底部停顿 *!*/
+/*        transform: translateY(calc(-100% + 4.5em));*/
+/*    }*/
+/*    95% {*/
+/*        transform: translateY(0);*/
+/*    }*/
+/*    100% {*/
+/*        transform: translateY(0);*/
+/*    }*/
+/*}*/
 
 
 .options-menu {
