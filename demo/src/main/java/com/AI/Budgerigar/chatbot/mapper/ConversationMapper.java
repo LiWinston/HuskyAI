@@ -1,6 +1,6 @@
 package com.AI.Budgerigar.chatbot.mapper;
 
-import com.AI.Budgerigar.chatbot.model.Conversation;
+import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

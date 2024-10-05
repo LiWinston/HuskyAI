@@ -1,6 +1,6 @@
 package com.AI.Budgerigar.chatbot.Nosql;
 
-import com.AI.Budgerigar.chatbot.AIUtil.Message;
+import com.AI.Budgerigar.chatbot.Entity.Message;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;

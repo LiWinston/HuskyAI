@@ -8,7 +8,7 @@ import com.AI.Budgerigar.chatbot.Services.LoginIpService;
 import com.AI.Budgerigar.chatbot.Services.UserModelAccessService;
 import com.AI.Budgerigar.chatbot.Services.userService;
 import com.AI.Budgerigar.chatbot.mapper.UserMapper;
-import com.AI.Budgerigar.chatbot.model.UserPw;
+import com.AI.Budgerigar.chatbot.Entity.UserPw;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.AI.Budgerigar.chatbot.security.JwtTokenUtil;
 import jakarta.servlet.http.HttpServletRequest;

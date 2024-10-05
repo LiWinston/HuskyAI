@@ -1,6 +1,6 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
-import com.AI.Budgerigar.chatbot.AIUtil.Message;
+import com.AI.Budgerigar.chatbot.Entity.Message;
 import com.AI.Budgerigar.chatbot.Services.ShareService;
 import com.AI.Budgerigar.chatbot.result.Result;
 import jakarta.servlet.http.HttpServletRequest;

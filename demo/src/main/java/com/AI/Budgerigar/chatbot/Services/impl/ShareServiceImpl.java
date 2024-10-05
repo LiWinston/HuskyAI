@@ -1,6 +1,6 @@
 package com.AI.Budgerigar.chatbot.Services.impl;
 
-import com.AI.Budgerigar.chatbot.AIUtil.Message;
+import com.AI.Budgerigar.chatbot.Entity.Message;
 import com.AI.Budgerigar.chatbot.Nosql.ShareDAO;
 import com.AI.Budgerigar.chatbot.Nosql.ShareRecord;
 import com.AI.Budgerigar.chatbot.Services.ChatSyncService;

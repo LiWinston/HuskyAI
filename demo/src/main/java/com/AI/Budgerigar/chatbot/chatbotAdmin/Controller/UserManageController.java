@@ -2,7 +2,7 @@ package com.AI.Budgerigar.chatbot.chatbotAdmin.Controller;
 
 import com.AI.Budgerigar.chatbot.Services.UserModelAccessService;
 import com.AI.Budgerigar.chatbot.mapper.UserMapper;
-import com.AI.Budgerigar.chatbot.model.UserPw;
+import com.AI.Budgerigar.chatbot.Entity.UserPw;
 import com.AI.Budgerigar.chatbot.result.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

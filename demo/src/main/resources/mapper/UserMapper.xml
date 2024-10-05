@@ -30,13 +30,13 @@
         );
     </delete>
 
-    <select id="getUserByUuid" resultType="com.AI.Budgerigar.chatbot.model.UserPw">
+    <select id="getUserByUuid" resultType="com.AI.Budgerigar.chatbot.Entity.UserPw">
         SELECT *
         FROM userpw
         WHERE uuid = #{uuid}
     </select>
 
-    <select id="getConversationsByUserUuid" resultType="com.AI.Budgerigar.chatbot.model.Conversation">
+    <select id="getConversationsByUserUuid" resultType="com.AI.Budgerigar.chatbot.Entity.Conversation">
         SELECT c.conversationId,
                c.firstMessage,
                c.createdAt AT TIME ZONE 'UTC'     AS createdAt,
@@ -46,7 +46,7 @@
         WHERE uc.uuid = #{uuid}
         ORDER BY c.lastMessageAt DESC
     </select>
-    <select id="selectAll" resultType="com.AI.Budgerigar.chatbot.model.UserPw">
+    <select id="selectAll" resultType="com.AI.Budgerigar.chatbot.Entity.UserPw">
         SELECT *
         FROM userpw
     </select>

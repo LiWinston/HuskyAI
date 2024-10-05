@@ -1,4 +1,4 @@
-package com.AI.Budgerigar.chatbot.AIUtil;
+package com.AI.Budgerigar.chatbot.Entity;
 
 import lombok.AllArgsConstructor;
 

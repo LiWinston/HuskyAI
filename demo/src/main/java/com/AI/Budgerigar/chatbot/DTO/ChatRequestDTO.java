@@ -1,6 +1,6 @@
 package com.AI.Budgerigar.chatbot.DTO;
 
-import com.AI.Budgerigar.chatbot.AIUtil.Message;
+import com.AI.Budgerigar.chatbot.Entity.Message;
 import lombok.ToString;
 
 import java.time.Instant;
