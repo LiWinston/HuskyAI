@@ -85,14 +85,6 @@ public class ChatController {
                 return Result.error(e.getMessage());
             }
         }
-        // 先把当前对话缓存提交到DB: first submit current conversation cache to DB
-        // executorService.submit(() ->
-        // chatSyncService.updateHistoryFromRedis(chatService.getConversationId()));
-//        chatSyncService.updateHistoryFromRedis(conversationId);
-//        // 读取 ConversationId 并设置到 chatService 中: read ConversationId and set to
-//
-//        chatSyncService.updateRedisFromMongo(conversationId);
-        // get历史传给前端显示: get history to show in front end
         try {
             List<Message> messageList = chatSyncService.getHistory(conversationId);
             return Result.success(messageList);

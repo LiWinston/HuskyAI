@@ -85,6 +85,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
 
     @Autowired
     private preChatBehaviour preChatBehaviour;
+
     @Autowired
     private ConversationMapper conversationMapper;
 
@@ -233,7 +234,8 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
             if (conversation != null) {
                 conversation.setLastMessageAt(LocalDateTime.from(Instant.now()));
                 conversationMapper.updateById(conversation);
-            } else {
+            }
+            else {
                 log.warn("Conversation with id {} not found, unable to update lastMessageAt", conversationId);
             }
         });
