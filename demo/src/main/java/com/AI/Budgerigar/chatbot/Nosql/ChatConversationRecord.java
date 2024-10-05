@@ -1,6 +1,6 @@
 package com.AI.Budgerigar.chatbot.Nosql;
 
-import com.AI.Budgerigar.chatbot.AIUtil.Message;
+import com.AI.Budgerigar.chatbot.Entity.Message;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

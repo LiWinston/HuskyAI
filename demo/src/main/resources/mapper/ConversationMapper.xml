@@ -22,7 +22,7 @@
         WHERE conversationId = #{cid}
     </update>
 
-    <select id="getConversationsByUserUuid" resultType="com.AI.Budgerigar.chatbot.model.Conversation">
+    <select id="getConversationsByUserUuid" resultType="com.AI.Budgerigar.chatbot.Entity.Conversation">
         SELECT c.conversationId, c.firstMessage, c.createdAt AT TIME ZONE 'UTC' AS createdAt, c.lastMessageAt AT TIME ZONE 'UTC' AS lastMessageAt
         FROM cid c
                  INNER JOIN uidcid uc ON c.conversationId = uc.conversationId

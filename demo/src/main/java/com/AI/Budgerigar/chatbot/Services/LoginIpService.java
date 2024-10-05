@@ -3,7 +3,7 @@ package com.AI.Budgerigar.chatbot.Services;
 import com.AI.Budgerigar.chatbot.DTO.UserIpInfoDTO;
 import com.AI.Budgerigar.chatbot.Nosql.UserIpInfo;
 import com.AI.Budgerigar.chatbot.Nosql.UserIpInfoRepository;
-import com.AI.Budgerigar.chatbot.model.UserPw;
+import com.AI.Budgerigar.chatbot.Entity.UserPw;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

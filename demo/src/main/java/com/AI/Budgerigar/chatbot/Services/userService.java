@@ -1,7 +1,7 @@
 package com.AI.Budgerigar.chatbot.Services;
 
 import com.AI.Budgerigar.chatbot.DTO.UserRegisterDTO;
-import com.AI.Budgerigar.chatbot.model.Conversation;
+import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
 import jakarta.servlet.http.HttpServletRequest;
 

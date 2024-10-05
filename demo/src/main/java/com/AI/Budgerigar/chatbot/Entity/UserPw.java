@@ -1,4 +1,4 @@
-package com.AI.Budgerigar.chatbot.model;
+package com.AI.Budgerigar.chatbot.Entity;
 
 import lombok.Data;
 

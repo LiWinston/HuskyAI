@@ -1,9 +1,9 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
-import com.AI.Budgerigar.chatbot.AIUtil.Message;
+import com.AI.Budgerigar.chatbot.Entity.Message;
 import com.AI.Budgerigar.chatbot.Services.*;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
-import com.AI.Budgerigar.chatbot.model.Conversation;
+import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
