@@ -78,6 +78,25 @@
     overflow: hidden;
 }
 
+/* 为未选中状态下的悬停添加遮罩 */
+.conversation-item:hover .conversation-item-title.long-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0.45em;
+    background: linear-gradient(
+            to bottom,
+            transparent,
+            rgba(232, 232, 237, 0.3) 30%,
+            rgba(232, 232, 237, 0.7) 80%,
+            #e8e8ed 100%
+    );
+    pointer-events: none;
+    transition: background 0.3s ease;
+}
+
 /* 底部遮罩 - 使用 CSS 变量 */
 .conversation-item.selected:hover .conversation-item-title.long-title::after {
     content: '';
@@ -97,16 +116,16 @@
     transition: background 0.3s ease;
 }
 
-/* 选中状态时的遮罩 */
-.conversation-item.selected .conversation-item-title.long-title::after {
-    background: linear-gradient(
-            to bottom,
-            transparent,
-            rgba(0, 113, 227, 0.3) 20%,
-            rgba(0, 113, 227, 0.8) 60%,
-            #0071e3 100%
-    );
-}
+/*!* 选中状态时的遮罩 *!*/
+/*.conversation-item.selected .conversation-item-title.long-title::after {*/
+/*    background: linear-gradient(*/
+/*            to bottom,*/
+/*            transparent,*/
+/*            rgba(0, 113, 227, 0.3) 20%,*/
+/*            rgba(0, 113, 227, 0.8) 60%,*/
+/*            #0071e3 100%*/
+/*    );*/
+/*}*/
 
 /* 滚动容器 */
 .conversation-item-title.long-title .scroll-content {
