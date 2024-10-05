@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import axios from 'axios';
 import {FaEllipsisV} from 'react-icons/fa';
 import './Chat.css';
@@ -20,6 +20,121 @@ const ConversationItem = ({
     const [showOptions, setShowOptions] = useState(false);
     // eslint-disable-next-line no-unused-vars
     const [showShareModal, setShowShareModal] = useState(false);
+
+    const titleRef = useRef(null);
+    const [isLongTitle, setIsLongTitle] = useState(false);
+    const [scrollDuration, setScrollDuration] = useState('15s');
+
+    useEffect(() => {
+        let styleSheet;
+        let animationName;
+
+        if (titleRef.current) {
+            const titleElement = titleRef.current;
+            const scrollContent = titleElement.querySelector('.scroll-content');
+
+            if (scrollContent) {
+                const lineHeight = parseFloat(getComputedStyle(scrollContent).lineHeight);
+                const containerHeight = titleElement.clientHeight;
+                const scrollHeight = scrollContent.scrollHeight;
+
+                // 计算超出的行数
+                const totalLines = scrollHeight / lineHeight;
+                const visibleLines = containerHeight / lineHeight;
+                const extraLines = totalLines - visibleLines;
+
+                // 是否超出三行
+                setIsLongTitle(extraLines > 0);
+
+                if (extraLines > 0) {
+                    // 定义最小和最大速度（秒/行）
+                    const minSpeedPerLine = 0.6; // 最快速度
+                    const maxSpeedPerLine = 1.6; // 最慢速度
+
+                    // 计算速度因子，使速度随行数线性变化
+                    const cappedExtraLines = Math.min(extraLines, 10); // 上限为10行
+                    const speedPerLine = maxSpeedPerLine - ((maxSpeedPerLine - minSpeedPerLine) * (cappedExtraLines / 10));
+
+                    // 计算滚动持续时间
+                    let duration = extraLines * speedPerLine;
+
+                    // 确保最小持续时间
+                    duration = Math.max(duration, 2.1); // 至少2.1秒
+
+                    // 计算关键帧的百分比
+                    const initialPauseTime = 0.1; // 初始停顿0.1秒
+                    const endPauseTime = 0.1; // 结束停顿0.1秒
+                    const scrollTime = duration - initialPauseTime - endPauseTime;
+
+                    // 计算百分比
+                    const initialPausePercent = (initialPauseTime / duration) * 100;
+                    const endPausePercent = (endPauseTime / duration) * 100;
+                    const scrollPercent = ((scrollTime / 2) / duration) * 100; // 下滚和上滚各占一半时间
+
+                    const scrollDownStart = initialPausePercent;
+                    const scrollDownEnd = scrollDownStart + scrollPercent;
+                    const scrollUpStart = scrollDownEnd;
+                    const scrollUpEnd = scrollUpStart + scrollPercent;
+                    const finalPauseStart = scrollUpEnd;
+
+                    // 生成唯一的动画名称
+                    animationName = `smoothScroll_${Math.random().toString(36).substr(2, 9)}`;
+
+                    // 生成关键帧CSS代码
+                    const keyframes = `
+                    @keyframes ${animationName} {
+                        0% {
+                            transform: translateY(0);
+                        }
+                        ${scrollDownStart}% {
+                            transform: translateY(0);
+                        }
+                        ${scrollDownEnd}% {
+                            transform: translateY(calc(-${scrollHeight - containerHeight}px));
+                        }
+                        ${scrollUpStart}% {
+                            transform: translateY(calc(-${scrollHeight - containerHeight}px));
+                        }
+                        ${scrollUpEnd}% {
+                            transform: translateY(0);
+                        }
+                        100% {
+                            transform: translateY(0);
+                        }
+                    }
+                `;
+
+                    // 创建<style>元素并注入CSS代码
+                    styleSheet = document.createElement('style');
+                    styleSheet.type = 'text/css';
+                    styleSheet.innerHTML = keyframes;
+                    document.head.appendChild(styleSheet);
+
+                    // 添加鼠标事件监听器
+                    const handleMouseEnter = () => {
+                        scrollContent.style.animation = `${animationName} ${duration}s linear infinite`;
+                    };
+
+                    const handleMouseLeave = () => {
+                        scrollContent.style.animation = '';
+                    };
+
+                    titleElement.addEventListener('mouseenter', handleMouseEnter);
+                    titleElement.addEventListener('mouseleave', handleMouseLeave);
+
+                    // 在清理函数中移除事件监听器
+                    return () => {
+                        if (styleSheet && styleSheet.parentNode) {
+                            styleSheet.parentNode.removeChild(styleSheet);
+                        }
+                        titleElement.removeEventListener('mouseenter', handleMouseEnter);
+                        titleElement.removeEventListener('mouseleave', handleMouseLeave);
+                        scrollContent.style.animation = '';
+                    };
+                }
+            }
+        }
+    }, [conversation.title]);
 
     // 监听全局点击事件以关闭菜单
     useEffect(() => {
@@ -100,8 +215,13 @@ const ConversationItem = ({
             loadConversation(conversation.id);
         }}  // 将 onClick 绑定到整个对话项
     >
-        <div className="conversation-content">
-            {conversation.title}
+        <div
+            ref={titleRef}
+            className={`conversation-item-title ${isLongTitle ? 'long-title' : ''}`}
+        >
+            <div className="scroll-content">
+                {conversation.title}
+            </div>
         </div>
         <FaEllipsisV className="options-icon"
                      onClick={toggleOptionsMenu}/> {/* 阻止点击事件传播 */}

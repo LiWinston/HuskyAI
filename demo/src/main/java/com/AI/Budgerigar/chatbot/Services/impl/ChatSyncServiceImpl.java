@@ -34,7 +34,18 @@ public class ChatSyncServiceImpl implements ChatSyncService {
     // get历史传给前端显示，何尝不是一种同步捏
     @Override
     public List<Message> getHistory(String conversationId) {
-        return chatMessagesMongoDAO.getConversationHistory(conversationId);
+        List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
+        if (!conversationHistory.isEmpty()) {
+            return conversationHistory.stream().map(this::convertToMessage).toList();
+        }
+        // // 先把当前对话缓存提交到DB: first submit current conversation cache to DB
+        // updateHistoryFromRedis(conversationId);
+        updateRedisFromMongo(conversationId);
+        // get历史传给前端显示: get history to show in front end
+        return chatMessagesRedisDAO.getConversationHistory(conversationId)
+            .stream()
+            .map(this::convertToMessage)
+            .toList();
     }
 
     // 更新历史记录，从 Redis 获取最新消息并更新到 MongoDB
