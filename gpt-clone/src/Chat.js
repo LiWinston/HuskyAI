@@ -55,18 +55,22 @@ function Chat() {
     const adjustTextareaHeight = () => {
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto'; // 重置高度
-            let scrollHeight = textareaRef.current.scrollHeight; // 获取实际内容高度
+            const scrollHeight = textareaRef.current.scrollHeight; // 获取实际内容高度
+            const maxHeight = parseInt(getComputedStyle(textareaRef.current).maxHeight, 10);
 
-            // 确保高度不会超过定义的最大高度
-            const maxHeight = parseInt(getWindowFromNode(textareaRef.current).getComputedStyle(textareaRef.current).maxHeight);
+            // 如果高度达到最大限度，允许滚动
             if (scrollHeight > maxHeight) {
-                scrollHeight = maxHeight;
+                textareaRef.current.style.height = `${maxHeight}px`;
+                textareaRef.current.style.overflowY = 'auto'; // 允许滚动
+            } else {
+                textareaRef.current.style.height = `${scrollHeight}px`;
+                textareaRef.current.style.overflowY = 'hidden'; // 禁止滚动
             }
 
-            textareaRef.current.style.height = `${scrollHeight}px`;
-            setTextareaHeight(`${scrollHeight}px`);
+            setTextareaHeight(`${textareaRef.current.style.height}px`);
         }
     };
+
 
     useEffect(() => {
         adjustTextareaHeight();

@@ -287,7 +287,7 @@ textarea {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: box-shadow 1s ease, height 1s ease; /* 添加高度过渡效果 */
     max-width: calc(100% - 80px); /* 留出按钮的宽度 */
-    max-height: calc(90%); /* 限制文本框的最大高度 */
+    max-height: 40vh; /* 设置文本框的最大高度 */
     min-height: 22px; /* 设置文本框的最小高度 */
     overflow-y: hidden; /* 确保文本框自动扩展时没有滚动条 */
 }
