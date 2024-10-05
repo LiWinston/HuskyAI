@@ -38,19 +38,107 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    --item-bg-color: transparent;
 }
 
 .conversation-item:hover {
-    background-color: #e8e8ed; /* 恢复鼠标悬停的背景色 */
+    background-color: #e8e8ed;
+    --item-bg-color: #e8e8ed;
 }
 
 .conversation-item.selected {
     background-color: #0071e3;
     color: white;
+    --item-bg-color: #0071e3;
 }
 
 .conversation-item.selected:hover {
     background-color: #0056b3;
+    --item-bg-color: #0056b3;
+}
+
+/* 标题基本样式 */
+.conversation-item-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5em;
+    max-height: 4.5em;
+    width: calc(100% - 30px);
+}
+
+/* 超出三行的标题容器 */
+.conversation-item-title.long-title {
+    position: relative;
+    height: 4.5em;
+    overflow: hidden;
+}
+
+/* 底部遮罩 - 使用 CSS 变量 */
+.conversation-item.selected:hover .conversation-item-title.long-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0.45em;
+    background: linear-gradient(
+            to bottom,
+            transparent,
+            color-mix(in srgb, var(--item-bg-color) 30%, transparent),
+            color-mix(in srgb, var(--item-bg-color) 80%, transparent),
+            var(--item-bg-color)
+    );
+    pointer-events: none;
+    transition: background 0.3s ease;
+}
+
+/* 选中状态时的遮罩 */
+.conversation-item.selected .conversation-item-title.long-title::after {
+    background: linear-gradient(
+            to bottom,
+            transparent,
+            rgba(0, 113, 227, 0.3) 20%,
+            rgba(0, 113, 227, 0.8) 60%,
+            #0071e3 100%
+    );
+}
+
+/* 滚动容器 */
+.conversation-item-title.long-title .scroll-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    animation: none; /* 初始状态不滚动 */
+}
+
+/* 悬停时触发滚动 */
+.conversation-item:hover .conversation-item-title.long-title .scroll-content {
+    animation: smoothScroll var(--scroll-duration, 15s) ease-in-out infinite;
+}
+
+@keyframes smoothScroll {
+    0% {
+        transform: translateY(0);
+    }
+    5% { /* 添加初始停顿 */
+        transform: translateY(0);
+    }
+    45% {
+        transform: translateY(calc(-100% + 4.5em));
+    }
+    55% { /* 添加底部停顿 */
+        transform: translateY(calc(-100% + 4.5em));
+    }
+    95% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(0);
+    }
 }
 
 
