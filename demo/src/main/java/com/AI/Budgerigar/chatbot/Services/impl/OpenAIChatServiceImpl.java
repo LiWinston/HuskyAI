@@ -4,9 +4,11 @@ import com.AI.Budgerigar.chatbot.AIUtil.TokenLimiter;
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
 import com.AI.Budgerigar.chatbot.DTO.ChatRequestDTO;
 import com.AI.Budgerigar.chatbot.DTO.ChatResponseDTO;
+import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.AI.Budgerigar.chatbot.Nosql.ChatMessagesMongoDAO;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.StreamChatService;
+import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,6 +31,7 @@ import reactor.netty.resources.ConnectionProvider;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -82,6 +85,8 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
 
     @Autowired
     private preChatBehaviour preChatBehaviour;
+    @Autowired
+    private ConversationMapper conversationMapper;
 
     String getNowTimeStamp() {
         return Instant.now().toString().formatted(dateTimeFormatter);
@@ -221,6 +226,17 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
         if (Math.abs(diff) > 5) {
             executorService.submit(() -> chatSyncService.updateHistoryFromRedis(conversationId));
         }
+
+        // 更新SQL中的最后对话时间
+        executorService.submit(() -> {
+            Conversation conversation = conversationMapper.selectById(conversationId);
+            if (conversation != null) {
+                conversation.setLastMessageAt(LocalDateTime.from(Instant.now()));
+                conversationMapper.updateById(conversation);
+            } else {
+                log.warn("Conversation with id {} not found, unable to update lastMessageAt", conversationId);
+            }
+        });
     }
 
     // private int getMongoConversationLength(String conversationId) {
