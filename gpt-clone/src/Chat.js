@@ -5,7 +5,6 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
 import {vscDarkPlus} from 'react-syntax-highlighter/dist/esm/styles/prism';
-import {getWindowFromNode} from '@testing-library/dom/dist/helpers';
 import {FaPlus} from 'react-icons/fa';
 import ConversationItem from './ConversationItem'; // 引入加号图标
 import './Component/Toggle.css';
@@ -535,103 +534,192 @@ function Chat() {
         };
     }, []);
 
-    return (<div className="chat-interface">
-        <div className="conversation-list">
-            {/*<h3>Conversations</h3>*/}
-            <div className="conversation-header">
-                <h3>Conversations</h3>
-                <button className="new-conversation-btn"
-                        onClick={createNewConversation}>
-                    <FaPlus/>
-                </button>
-            </div>
-            {Array.isArray(conversations) &&
-                conversations.map((conv) => (<ConversationItem
-                    key={conv.id}  // 每个对话的唯一 ID
-                    conversation={{
-                        ...conv,
-                        title: animatingTitle && animatingTitle.id === conv.id
-                            ? animatingTitle.currentTitle
-                            : conv.title,
-                    }}  // 传递对话数据
-                    conversations={conversations}  // 传递对话列表数据
-                    messages={messages}  // 传递消息数据
-                    loadConversation={loadConversation}  // 传递加载对话的函数
-                    fetchConversations={fetchConversations}  // 传递刷新对话列表的函数
-                    selectedConversation={selectedConversation}  // 传递当前选中的对话 ID
-                    setSelectedConversation={setSelectedConversation}  // 传递设置对话状态的函数
-                    setMessages={setMessages}  // 传递设置消息状态的函数
-                    setNotification={setNotification}  // 传递设置通知状态的函数
-                    openShareModal={openShareModal}  // 传递打开分享弹窗的函数
-                    setShareMessages={setShareMessages}  // 传递设置分享消息状态的函数
-                    setSharedCid={setSharedCid}  // 传递设置分享对话 ID 的函数
-                />))}
-        </div>
+    const getTimeGroup = (timestamp) => {
+        const now = new Date();
+        const conversationDate = new Date(timestamp);
+        const oneDay = 24 * 60 * 60 * 1000;
+        const oneWeek = 7 * oneDay;
+        const oneMonth = 30 * oneDay;  // 近似一个月
+        const diffTime = now - conversationDate;
 
-        {/* 分享弹窗 */}
-        {showShareModal && (<div className="share-modal">
-            <h3>Select messages to share</h3>
-            <div className="message-list">
-                {shareMessages && shareMessages.length > 0 ? (shareMessages.map(
-                    (msg, index) => (<div key={index}>
-                        <input
-                            type="checkbox"
-                            checked={selectedMessages.includes(index)}
-                            onChange={() => handleSelectMessage(index)}
-                        />
-                        <span>{msg.content || msg.text}</span>
-                        {/* Fix for different message formats */
-                            // msg.content for GetResponse
-                            // msg.text for current messages in frontend
-                        }
-                    </div>))) : (<p>No messages available to share.</p>)}
-            </div>
-            <button onClick={handleShareConfirm}>Share</button>
-            <button onClick={() => setShowShareModal(false)}>Cancel</button>
-        </div>)}
+        // 检测用户语言，使用 navigator.language 或 navigator.userLanguage 来判断
+        const userLang = navigator.language || navigator.userLanguage;
 
-        <div className="chat-container">
-            <div className="chat-window" ref={chatWindowRef}
-                 style={{height: 'calc(100vh - 100px)', overflowY: 'scroll'}}>
-                {/*<h3>Chat</h3>*/}
-                <div className="model-selector" ref={modelSelectorRef}>
-                    <button className="floating-model-btn" onClick={() => {
-                        if (showModelOptions) {
-                            setShowModelOptions(false);
-                        } else {
-                            fetchModels().then(r => {
-                                setShowModelOptions(true);
-                            });
-                        }
-                    }}>
-                        Current Model: {selectedModel}
+        // 根据语言环境设置时间分组标签
+        const labels = {
+            en: {
+                today: "Today",
+                yesterday: "Yesterday",
+                withinWeek: "Within 7 Days",
+                withinMonth: "Within a Month",
+                earlier: "Earlier"
+            },
+            zh: {
+                today: "今天",
+                yesterday: "昨天",
+                withinWeek: "一周内",
+                withinMonth: "一月内",
+                earlier: "更早"
+            }
+        };
+
+        // 判断是中文还是英文，设置对应的标签
+        const languageLabels = userLang.startsWith('zh') ? labels.zh : labels.en;
+
+        // 时间分组逻辑
+        if (diffTime < oneDay && now.getDate() === conversationDate.getDate()) {
+            return languageLabels.today;
+        } else if (diffTime < 2 * oneDay && now.getDate() - conversationDate.getDate() === 1) {
+            return languageLabels.yesterday;
+        } else if (diffTime < oneWeek) {
+            return languageLabels.withinWeek;
+        } else if (diffTime < oneMonth) {
+            return languageLabels.withinMonth;
+        } else {
+            return languageLabels.earlier;
+        }
+    };
+
+// Function to group conversations by custom time groups
+    const groupConversationsByTimeGroup = (conversations) => {
+        const groupedConversations = [];
+        let currentTimeGroup = '';
+
+        conversations.forEach((conv) => {
+            const timeGroup = getTimeGroup(conv.timestampLast);
+
+            // Check if the conversation is from a new time group
+            if (timeGroup !== currentTimeGroup) {
+                groupedConversations.push({
+                    type: 'time-group-divider',
+                    group: timeGroup,
+                });
+                currentTimeGroup = timeGroup;
+            }
+
+            // Push the actual conversation
+            groupedConversations.push({
+                type: 'conversation-item',
+                ...conv,
+            });
+        });
+
+        return groupedConversations;
+    };
+
+    return (
+        <div className="chat-interface">
+            <div className="conversation-list">
+                {/* 头部 */}
+                <div className="conversation-header">
+                    <h3>Conversations</h3>
+                    <button className="new-conversation-btn" onClick={createNewConversation}>
+                        <FaPlus/>
                     </button>
-
-                    <div className={`model-options ${showModelOptions ? 'show' : ''}`}>
-                        {models.length > 0 ? (models.map(
-                            (model) => (<button key={model} onClick={() => {
-                                setSelectedModel(model);
-                                setShowModelOptions(false);
-                            }}>
-                                {model}
-                            </button>))) : (<p>No models available</p>)}
-                    </div>
                 </div>
 
+                {/* 按时间分组的对话 */}
+                {Array.isArray(conversations) &&
+                    groupConversationsByTimeGroup(conversations).map((item, index) => {
+                        // 渲染时间分隔符
+                        if (item.type === 'time-group-divider') {
+                            return (
+                                <div key={index} className="time-group-divider">
+                                    {item.group} {/* 显示分组标签，如"今天"、"昨天" */}
+                                </div>
+                            );
+                        }
 
-                <AnimatePresence>
-                    {messages.map((msg, index) => (
-                        <MessageComponent key={index} msg={msg} messages={messages}
-                                          index={index}/>))}
-                </AnimatePresence>
-                {streamingMessage && (
-                    <MessageComponent msg={streamingMessage} messages={messages}
-                                      index={messages.length}
-                                      isStreaming={true}/>)}
-
+                        // 渲染对话条目
+                        return (
+                            <ConversationItem
+                                key={item.id} // 每个对话的唯一 ID
+                                conversation={{
+                                    ...item,
+                                    title: animatingTitle && animatingTitle.id === item.id
+                                        ? animatingTitle.currentTitle
+                                        : item.title,
+                                }} // 传递对话数据
+                                conversations={conversations} // 传递对话列表数据
+                                messages={messages} // 传递消息数据
+                                loadConversation={loadConversation} // 传递加载对话的函数
+                                fetchConversations={fetchConversations} // 传递刷新对话列表的函数
+                                selectedConversation={selectedConversation} // 传递当前选中的对话 ID
+                                setSelectedConversation={setSelectedConversation} // 传递设置对话状态的函数
+                                setMessages={setMessages} // 传递设置消息状态的函数
+                                setNotification={setNotification} // 传递设置通知状态的函数
+                                openShareModal={openShareModal} // 传递打开分享弹窗的函数
+                                setShareMessages={setShareMessages} // 传递设置分享消息状态的函数
+                                setSharedCid={setSharedCid} // 传递设置分享对话 ID 的函数
+                            />
+                        );
+                    })}
             </div>
 
-            <div className="input-container">
+            {/* 分享弹窗 */}
+            {showShareModal && (<div className="share-modal">
+                <h3>Select messages to share</h3>
+                <div className="message-list">
+                    {shareMessages && shareMessages.length > 0 ? (shareMessages.map(
+                        (msg, index) => (<div key={index}>
+                            <input
+                                type="checkbox"
+                                checked={selectedMessages.includes(index)}
+                                onChange={() => handleSelectMessage(index)}
+                            />
+                            <span>{msg.content || msg.text}</span>
+                            {/* Fix for different message formats */
+                                // msg.content for GetResponse
+                                // msg.text for current messages in frontend
+                            }
+                        </div>))) : (<p>No messages available to share.</p>)}
+                </div>
+                <button onClick={handleShareConfirm}>Share</button>
+                <button onClick={() => setShowShareModal(false)}>Cancel</button>
+            </div>)}
+
+            <div className="chat-container">
+                <div className="chat-window" ref={chatWindowRef}
+                     style={{height: 'calc(100vh - 100px)', overflowY: 'scroll'}}>
+                    {/*<h3>Chat</h3>*/}
+                    <div className="model-selector" ref={modelSelectorRef}>
+                        <button className="floating-model-btn" onClick={() => {
+                            if (showModelOptions) {
+                                setShowModelOptions(false);
+                            } else {
+                                fetchModels().then(r => {
+                                    setShowModelOptions(true);
+                                });
+                            }
+                        }}>
+                            Current Model: {selectedModel}
+                        </button>
+
+                        <div className={`model-options ${showModelOptions ? 'show' : ''}`}>
+                            {models.length > 0 ? (models.map(
+                                (model) => (<button key={model} onClick={() => {
+                                    setSelectedModel(model);
+                                    setShowModelOptions(false);
+                                }}>
+                                    {model}
+                                </button>))) : (<p>No models available</p>)}
+                        </div>
+                    </div>
+
+
+                    <AnimatePresence>
+                        {messages.map((msg, index) => (
+                            <MessageComponent key={index} msg={msg} messages={messages}
+                                              index={index}/>))}
+                    </AnimatePresence>
+                    {streamingMessage && (
+                        <MessageComponent msg={streamingMessage} messages={messages}
+                                          index={messages.length}
+                                          isStreaming={true}/>)}
+
+                </div>
+
+                <div className="input-container">
                     <textarea
                         ref={textareaRef}
                         value={input}
@@ -646,42 +734,42 @@ function Chat() {
                         // rows={rows} // 根据输入内容动态调整行数
                         style={{height: textareaHeight}} // 动态调整高度
                     />
-                <div className="inputButtonContainer">
+                    <div className="inputButtonContainer">
 
-                    <label className="toggle-switch tooltip">
-                        <input
-                            type="checkbox"
-                            checked={useStream}
-                            onChange={() => setUseStream(!useStream)}
-                        />
-                        <span className="slider"></span>
-                        <span className="tooltip-text">{useStream
-                            ? 'Stream on'
-                            : 'Stream off'}</span>
-                    </label>
+                        <label className="toggle-switch tooltip">
+                            <input
+                                type="checkbox"
+                                checked={useStream}
+                                onChange={() => setUseStream(!useStream)}
+                            />
+                            <span className="slider"></span>
+                            <span className="tooltip-text">{useStream
+                                ? 'Stream on'
+                                : 'Stream off'}</span>
+                        </label>
 
 
-                    <button className=".chat-container sendButton"
-                            onClick={sendMessage} disabled={loading}>
-                        {loading ? 'Thinking' : 'Send'}
-                    </button>
+                        <button className=".chat-container sendButton"
+                                onClick={sendMessage} disabled={loading}>
+                            {loading ? 'Thinking' : 'Send'}
+                        </button>
+                    </div>
                 </div>
+
             </div>
+            {/* 浮动弹幕通知 */}
+            <AnimatePresence>
+                {notification && (<motion.div
+                    className="notification-banner"
+                    initial={{opacity: 0, y: 50}}
+                    animate={{opacity: 1, y: 0}}
+                    exit={{opacity: 0, y: 50}}
+                    transition={{duration: 0.5}}
+                >{notification}
+                </motion.div>)}
+            </AnimatePresence>
 
-        </div>
-        {/* 浮动弹幕通知 */}
-        <AnimatePresence>
-            {notification && (<motion.div
-                className="notification-banner"
-                initial={{opacity: 0, y: 50}}
-                animate={{opacity: 1, y: 0}}
-                exit={{opacity: 0, y: 50}}
-                transition={{duration: 0.5}}
-            >{notification}
-            </motion.div>)}
-        </AnimatePresence>
-
-    </div>);
+        </div>);
 }
 
 function MessageComponent({msg, messages, index, isStreaming = false}) {

@@ -21,6 +21,13 @@
     margin-bottom: 15px;
 }
 
+.time-group-divider {
+    font-weight: bold; /* 粗体 */
+    margin: 20px 0 10px 10px; /* 适当的上、下和左边距 */
+    font-size: 14px;
+    color: #1c1c1c; /* GPT风格的深色文字 */
+}
+
 .conversation-item {
     position: relative;
     padding: 10px;
