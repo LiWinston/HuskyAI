@@ -314,8 +314,20 @@ function Chat() {
             if (!cid) {
                 cid = new Date().getTime().toString();
                 setSelectedConversation(cid);
-                await axios.get(`${window.API_BASE_URL}/chat/${localStorage.getItem(
-                    'userUUID')}/${cid}`);
+                await axios.get(`${window.API_BASE_URL}/chat/${localStorage.getItem('userUUID')}/${cid}`);
+            }
+
+            const conversationIndex = conversations.findIndex(conv => conv.id === selectedConversation);
+            if (conversationIndex >= 0) {
+                const selectedConv = conversations[conversationIndex];
+                const timeGroup = getTimeGroup(selectedConv.timestampLast);
+                if (timeGroup !== "Today") {
+                    // 如果对话不在“今天”内，重排到最前
+                    const updatedConversations = [...conversations];
+                    updatedConversations.splice(conversationIndex, 1); // 从原位置移除
+                    updatedConversations.unshift({ ...selectedConv, timestampLast: timestamp }); // 插入到最前面
+                    setConversations(updatedConversations); // 更新对话列表
+                }
             }
 
             if (useStream) {
