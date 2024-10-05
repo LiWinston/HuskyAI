@@ -60,13 +60,15 @@
 /* 标题基本样式 */
 .conversation-item-title {
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 3; /* 限制为3行 */
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: ellipsis; /* 显示省略号 */
+    white-space: normal; /* 保持正常换行 */
     line-height: 1.5em;
-    max-height: 4.5em;
+    max-height: 4.5em; /* 三行的高度 */
     width: calc(100% - 30px);
+    transition: all 0.3s ease-in-out; /* 添加过渡效果 */
 }
 
 /* 超出三行的标题容器 */
@@ -108,14 +110,19 @@
 
 /* 滚动容器 */
 .conversation-item-title.long-title .scroll-content {
-    position: absolute;
+    position: relative;
     top: 0;
-    left: 0;
-    right: 0;
     animation: none; /* 初始状态不滚动 */
+    white-space: normal;
 }
 
-/* 悬停时触发滚动 */
+/* 悬停时触发滚动，取消省略号效果 */
+.conversation-item:hover .conversation-item-title.long-title {
+    -webkit-line-clamp: unset; /* 取消行数限制 */
+    max-height: none; /* 取消高度限制 */
+    overflow: hidden; /* 隐藏溢出 */
+}
+
 .conversation-item:hover .conversation-item-title.long-title .scroll-content {
     animation: smoothScroll var(--scroll-duration, 15s) ease-in-out infinite;
 }
