@@ -549,12 +549,16 @@ function Chat() {
     const getTimeGroup = (timestamp) => {
         const now = new Date();
         const conversationDate = new Date(timestamp);
+
+        // 获取本地时间偏移量，并应用到 conversationDate
+        const localConversationDate = new Date(conversationDate.getTime() - conversationDate.getTimezoneOffset() * 60000);
+
         const oneDay = 24 * 60 * 60 * 1000;
         const oneWeek = 7 * oneDay;
         const oneMonth = 30 * oneDay;  // 近似一个月
-        const diffTime = now - conversationDate;
+        const diffTime = now - localConversationDate;
 
-        // 检测用户语言，使用 navigator.language 或 navigator.userLanguage 来判断
+        // 检测用户语言
         const userLang = navigator.language || navigator.userLanguage;
 
         // 根据语言环境设置时间分组标签
@@ -579,9 +583,9 @@ function Chat() {
         const languageLabels = userLang.startsWith('zh') ? labels.zh : labels.en;
 
         // 时间分组逻辑
-        if (diffTime < oneDay && now.getDate() === conversationDate.getDate()) {
+        if (diffTime < oneDay && now.getDate() === localConversationDate.getDate()) {
             return languageLabels.today;
-        } else if (diffTime < 2 * oneDay && now.getDate() - conversationDate.getDate() === 1) {
+        } else if (diffTime < 2 * oneDay && now - localConversationDate < 2 * oneDay) {
             return languageLabels.yesterday;
         } else if (diffTime < oneWeek) {
             return languageLabels.withinWeek;
