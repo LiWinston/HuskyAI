@@ -37,7 +37,7 @@ public class AppConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // 使用BCrypt进行密码加密
+        return new BCryptPasswordEncoder(); // Use BCrypt for password encryption.
     }
 
     @Bean
@@ -88,7 +88,7 @@ public class AppConfig {
             return new OpenAIChatServiceImpl();
         }
         catch (Exception e) {
-            // 可以选择记录日志或进行其他处理
+            // May choose to log or perform other processing.
             e.printStackTrace();
             return null;
         }
@@ -105,9 +105,9 @@ public class AppConfig {
             return new DouBaoChatServiceImpl(arkService);
         }
         catch (Exception e) {
-            // 可以选择记录日志或进行其他处理
+            // May choose to log or perform other processing.
             e.printStackTrace();
-            // 如果 ArkService 初始化失败，则返回 OpenAIChatService 实现类
+            // If "ArkService" fails to initialize，return "OpenAIChatService" class.
             // return openAIChatService();
         }
         return null;
@@ -120,7 +120,7 @@ public class AppConfig {
             return new BaiduChatServiceImpl();
         }
         catch (Exception e) {
-            // 可以选择记录日志或进行其他处理
+            // May choose to log or perform other processing.
             e.printStackTrace();
             return null;
         }

@@ -86,7 +86,7 @@ public class UserModelAccessConfig {
      */
     @Data
     @AllArgsConstructor
-    @NoArgsConstructor // 添加无参构造函数
+    @NoArgsConstructor // Add a parameterless constructor.
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class ModelAccess {

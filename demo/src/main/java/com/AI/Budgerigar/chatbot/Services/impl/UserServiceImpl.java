@@ -85,38 +85,37 @@ public class UserServiceImpl implements userService {
         log.info(userRegisterDTO.toString());
         String username = userRegisterDTO.getUsername();
         String password = userRegisterDTO.getPassword();
-        String adminEmail = userRegisterDTO.getAdminEmail(); // 获取管理员邮箱，如果不是管理员注册则为null
+        String adminEmail = userRegisterDTO.getAdminEmail(); // Get the admin email, null if not registered as an admin.
 
         try {
-            // 检查用户名是否已存在
+            // Check if the username already exists.
             if (userMapper.getUserByUsername(username) != null) {
                 return Result.error("Username already exists.");
             }
 
             String uuid = UUID.randomUUID().toString();
-            // TODO: 优化加密，可使用 DigestUtils.md5DigestAsHex(password.getBytes())
             String encodedPassword = passwordEncoder.encode(password);
 
-            // 注册普通用户
+            // Register as a regular user.
             if (!userRegisterDTO.getIsAdmin()) {
                 userMapper.registerUser(uuid, username, encodedPassword, "USER");
                 return Result.success(null, "User registered successfully.");
             }
-            // 处理管理员注册
+            // Processing administrator registration.
             else {
                 if (adminEmail == null || adminEmail.isEmpty()) {
                     return Result.error("Admin email required.");
                 }
-                // //进一步检查邮箱格式
+                //
                 // if (!adminEmail.matches("^[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
                 // return Result.error("Invalid email format.");
                 // }
-                // 发送确认邮件
+                //
                 try {
-                    // 生成复杂的确认链接token
+                    // Generate a complex confirmation link token.
                     String inviteToken = UUID.randomUUID().toString();
 
-                    // 使用DAO将token和uuid存入Redis
+                    // Store the token and uuid in Redis using DAO.
                     adminWaitingListRedisDAO.addAdminToWaitingList(inviteToken, uuid);
 
                     log.info("Invite tk for" + username + ": " + inviteToken);
@@ -136,7 +135,7 @@ public class UserServiceImpl implements userService {
                     return Result.error("Failed to send confirmation email.");
                 }
 
-                // 在数据库中标记此管理员为“未确认”,先委屈你当会儿普通用户
+                // Mark this administrator as "unconfirmed" in the database.
                 userMapper.registerUser(uuid, username, encodedPassword, "USER");
                 userMapper.registerAdmin(uuid, username, encodedPassword, adminEmail, false);
                 return Result.success(null, "Please confirm your registration via email.");
@@ -156,13 +155,13 @@ public class UserServiceImpl implements userService {
             if (uuid == null) {
                 return Result.error("Link expired.");
             }
-            // 从数据库中获取用户信息
+            // Retrieve user information from the database.
             UserPw user = userMapper.getUserByUuid(uuid);
             if (user == null) {
                 return Result.error("Not registered or link expired.");
             }
 
-            // 获取管理员信息并检查是否已经验证
+            // Obtain administrator information and check if it has been verified.
             AdminInfo adminInfo = userMapper.getAdminInfoByUuid(user.getUuid());
             if (adminInfo == null) {
                 userMapper.downgradeAdminByUuid(user.getUuid());
@@ -172,7 +171,7 @@ public class UserServiceImpl implements userService {
                 return Result.error("Admin is already verified.");
             }
 
-            // 更新管理员状态为已验证
+            // Update admin status to verified.
             userMapper.confirmAdmin(user.getUuid());
             userMapper.promoteToAdminByUuid(user.getUuid());
             adminWaitingListRedisDAO.removeToken(token);

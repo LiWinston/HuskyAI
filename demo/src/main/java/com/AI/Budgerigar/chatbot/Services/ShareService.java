@@ -6,13 +6,13 @@ import java.util.List;
 
 public interface ShareService {
 
-    // 生成分享链接
+    // Generate share link.
     String generateShareLink(String uuid, String conversationId, List<Integer> messageIndexes);
 
-    // 根据分享码获取对话详情
+    // Obtain conversation details based on the share code.
     List<Message> getSharedConversation(String shareCode);
 
-    // 删除分享记录
+    // Delete sharing history.
     void deleteShare(String shareCode);
 
 }

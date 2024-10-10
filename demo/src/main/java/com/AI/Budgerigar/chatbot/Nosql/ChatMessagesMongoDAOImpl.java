@@ -46,7 +46,7 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
         catch (Exception e) {
             log.error("MongoDB_GET_LENGTH : Failed to get conversation length for conversation ID: {}", conversationId,
                     e);
-            // 用传统方法获取
+            // Obtain using traditional methods.
             ChatConversationRecord chatConversationRecord = mongoTemplate.findById(conversationId,
                     ChatConversationRecord.class);
             if (chatConversationRecord != null) {
@@ -66,7 +66,7 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
             ChatConversationRecord chatConversationRecord = mongoTemplate.findById(conversationId,
                     ChatConversationRecord.class);
             if (chatConversationRecord != null) {
-                chatConversationRecord.addStringMessages(messageArrays); // 使用字符串数组
+                chatConversationRecord.addStringMessages(messageArrays); // Use a string array.
                 mongoTemplate.save(chatConversationRecord);
             }
             else {
@@ -77,50 +77,50 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
             }
         }
         catch (Exception e) {
-            log.error("Mongo_UPD_Simple : Failed to update (简单方法) for conversation ID: {}", conversationId, e);
+            log.error("Mongo_UPD_Simple : Failed to update (Simple method) for conversation ID: {}", conversationId, e);
         }
     }
 
     @Override
     public List<Message> getConversationHistory(String conversationId) {
-        // Step 1: 尝试从MongoDB中获取会话记录
+        // Step 1: Attempting to retrieve session records from MongoDB.
         try {
             ChatConversationRecord chatConversationRecord = mongoTemplate.findById(conversationId,
                     ChatConversationRecord.class);
 
-            // Step 2: 检查会话记录是否存在
+            // Step 2: Check if session records exist.
             if (chatConversationRecord != null) {
                 List<String[]> messagesList = chatConversationRecord.getMessages();
 
-                // Step 3: 确认消息列表的结构和内容是否有效
+                // Step 3: Verify whether the structure and content of the message list are valid.
                 if (messagesList != null && !messagesList.isEmpty() && messagesList.get(0) != null) {
                     log.info("MongoDB_Get_History:Found {} history - {}. Returning {} messages.", messagesList.size(),
                             conversationId, messagesList.size());
 
-                    // Step 4: 转换消息列表为Message对象列表并返回
+                    // Step 4: Convert the message list to a list of Message objects and return.
                     return messagesList.stream().map(this::convertToMessage).collect(Collectors.toList());
                 }
                 else {
-                    // 错误: 消息结构无效
+                    // Error: The message structure is invalid.
                     log.error("MongoDB_Get_History:Invalid history - {}. Returning empty list.", conversationId);
-                    return new ArrayList<>(); // 返回一个可变的空列表
+                    return new ArrayList<>(); // Return a mutable empty list.
                 }
             }
             else {
-                // 错误: 没有找到对应的会话记录
+                // Error: No corresponding session record was found.
                 log.error("MongoDB_Get_History:No history - {}. Returning empty list.", conversationId);
-                return new ArrayList<>(); // 返回一个可变的空列表
+                return new ArrayList<>(); // Return a mutable empty list.
             }
         }
         catch (Exception e) {
-            // Step 5: 异常处理 - 捕获并记录错误信息
+            // Step 5: Exception Handling - Capture and log error information.
             log.error("Error fetching conversation history for ID: " + conversationId + ", Error: " + e.getMessage(),
                     e);
-            return new ArrayList<>(); // 返回一个可变的空列表以避免异常传播
+            return new ArrayList<>(); // Return a mutable empty list.
         }
     }
 
-    // 将 String[] 转换为 Message 对象的方法
+    // A method to convert String[] to Message objects.
     private Message convertToMessage(String[] messageArray) {
         if (messageArray.length == 3) {
             return new Message(messageArray[0], messageArray[1], messageArray[2]);
@@ -132,26 +132,26 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
 
     @Override
     public void replaceHistoryById(String conversationId, List<Message> newMessages) {
-        // 将 Message 对象列表转换为 String[] 的列表
+        // Convert a list of Message objects to a list of String[].
         List<String[]> messageArrays = newMessages.stream().map(this::convertToArray).collect(Collectors.toList());
 
-        // 查找现有的 ChatConversationRecord
+        // Find current ChatConversationRecord
         try {
             ChatConversationRecord chatConversationRecord = mongoTemplate.findById(conversationId,
                     ChatConversationRecord.class);
 
             if (chatConversationRecord != null) {
-                // 更新现有的消息列表
+                // Update the existing message list.
                 chatConversationRecord.setMessages(messageArrays);
             }
             else {
-                // 如果不存在，创建一个新的 ChatConversationRecord
+                // If not exist，create a new ChatConversationRecord
                 chatConversationRecord = new ChatConversationRecord();
                 chatConversationRecord.setConversationId(conversationId);
                 chatConversationRecord.setMessages(messageArrays);
             }
 
-            // 保存更新后的 ChatConversationRecord
+            // Save updated ChatConversationRecord
             mongoTemplate.save(chatConversationRecord);
             log.info("Replaced history for conversation ID: {} with {} messages.", conversationId, newMessages.size());
         }

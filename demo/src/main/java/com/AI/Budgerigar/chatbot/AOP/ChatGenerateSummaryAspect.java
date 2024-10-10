@@ -35,7 +35,7 @@ public class ChatGenerateSummaryAspect {
     public void getHistoryPreChatMethod() {
     }
 
-    // 修改切入点，匹配所有实现 ChatService 接口的类的 chat 方法
+    // Modify the pointcut to match the chat method of all classes implementing the ChatService interface.
     @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.ChatService.chat(..))")
     public void chatMethod() {
     }
@@ -54,7 +54,7 @@ public class ChatGenerateSummaryAspect {
     @Autowired
     private GenerateTittle generateTittle;
 
-    // 用于存储每个线程中异步任务的状态
+    // To store the state of asynchronous tasks in each thread.
     private final ConcurrentHashMap<Thread, CompletableFuture<Result<String>>> futureMap = new ConcurrentHashMap<>();
 
     public static final Result<String> DO_NOT_GEN = Result.error("DO_NOT_GEN");
@@ -62,23 +62,23 @@ public class ChatGenerateSummaryAspect {
     private static final CompletableFuture<Result<String>> NO_TITLE_GEN_Future = CompletableFuture
         .completedFuture(DO_NOT_GEN);
 
-    // 监控 getHistoryPreChat 方法的执行
+    // Monitor "getHistoryPreChat" method.
     @Around("getHistoryPreChatMethod()")
     public Object aroundGetHistoryPreChat(ProceedingJoinPoint joinPoint) throws Throwable {
-        log.info("开切：aroundGetHistoryPreChat");
+        log.info("Start：aroundGetHistoryPreChat");
 
-        List<String[]> result = (List<String[]>) joinPoint.proceed(); // 执行
+        List<String[]> result = (List<String[]>) joinPoint.proceed(); // execute
                                                                       // getHistoryPreChat
-                                                                      // 方法
-        // 提前准备好标题生成的异步任务
+                                                                      // method
+        // Prepare the asynchronous task (title generation) in advance.
         Object[] args = joinPoint.getArgs();
         Object caller = args[0];
-        String conversationId = args[2].toString(); // 假设 conversationId 是第二个参数
+        String conversationId = args[2].toString(); // Pretend conversationId is the second parameter.
 
         log.info("getHistoryPreChat completed for conversationId: {}", conversationId);
 
         if (shouldGenerateTitle(conversationId)) {
-            // 如果需要生成标题，启动异步任务并存储到 futureMap 中
+            // If a title needs to be generated, start an asynchronous task and store it in "futureMap".
             CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() -> {
                 try {
                     if (caller instanceof OpenAIChatServiceImpl openAIChatService) {
@@ -93,32 +93,32 @@ public class ChatGenerateSummaryAspect {
                     throw new RuntimeException(e);
                 }
             });
-            futureMap.put(Thread.currentThread(), future); // 存储异步任务到 futureMap
+            futureMap.put(Thread.currentThread(), future); // Store the asynchronous task in "futureMap".
         }
         else {
-            // 如果不需要生成标题，存储 null 到 futureMap
+            // If a title does not need to be generated, store null in "futureMap".
             futureMap.put(Thread.currentThread(), NO_TITLE_GEN_Future);
         }
 
         return result;
     }
 
-    // chat 方法的切面逻辑
+    // chat method logic
     @Around("chatMethod()")
     public Object aroundChat(ProceedingJoinPoint joinPoint) throws Throwable {
-        log.info("开切：aroundChat");
-        // 执行目标方法，即 chat 方法
+        log.info("Start：aroundChat");
+        // Execute the target method (chat).
         Object result = joinPoint.proceed();
 
-        // 获取异步任务，并等待其完成（如果存在）
-        CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // 从Map中获取并移除
+        // Retrieve the asynchronous task and wait for it to complete (if it exists).
+        CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // Retrieve and remove from the Map.
         if (future != null && future.get() != DO_NOT_GEN) {
             try {
-                // 等待异步标题生成完成
-                Result<String> titleResult = future.get(); // 等待任务完成
+                // Waiting for asynchronous title generation to complete.
+                Result<String> titleResult = future.get(); // Wait for the asynchronous task to complete.
 
                 Result<String> originalResult = (Result<String>) result;
-                // 合并标题结果到原有的返回值
+                // Merge the title results into the original return value.
                 if (titleResult.getCode() == 1) {
                     return Result.success(originalResult.getData(),
                             originalResult.getMsg() + CONVERSATION_SUMMARY_GENRATED + titleResult.getData());
@@ -129,31 +129,31 @@ public class ChatGenerateSummaryAspect {
                 }
             }
             catch (Exception e) {
-                log.error("Error waiting for title generation in chat: ", e); // 捕获等待过程中发生的异常
-                // 如果在生成标题的过程中出现异常，返回原始结果
+                log.error("Error waiting for title generation in chat: ", e); // Exceptions occurred during the capture waiting process.
+                // If an exception occurs during the title generation process, return the original result.
                 return result;
             }
         }
-        // 如果 future 是 null，表示不生成标题，直接返回原始结果
+        // If "future" is null, it means no title is generated and the original result is returned directly.
         return result;
     }
 
     @Around("chatFluxMethod()")
     public Object aroundChatFlux(ProceedingJoinPoint joinPoint) throws Throwable {
-        log.info("开切：aroundChatFlux");
-        // 执行目标方法 (即流式chat)
+        log.info("Start：aroundChatFlux");
+        // Execute the target method (chatFlux).
         Flux<Result<String>> resultFlux = (Flux<Result<String>>) joinPoint.proceed();
-        CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // 从Map中获取并移除
+        CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // Retrieve and remove from the Map.
         AtomicBoolean titleAppended = new AtomicBoolean(false);
 
-        // 监听流的每一条消息，并在最后一条（即 finishReason != null）时合并标题
+        // Listen to each message in the stream and merge the titles at the last one (i.e., when finishReason isn't equal to null).
         return resultFlux.concatMap(result -> {
             if (future != null && future.isDone() && !titleAppended.get()) {
-                // 如果 future 已经完成，尽早合并标题
+                // If "future" is done, merge the title as soon as possible.
                 return Mono.fromFuture(future).map(titleResult -> {
                     titleAppended.set(true);
                     if (titleResult.getCode() == 1) {
-                        // 合并生成的标题
+                        // Merged generated title.
                         String combinedMessage = result.getMsg() + " " + CONVERSATION_SUMMARY_GENRATED
                                 + titleResult.getData();
                         return Result.success(result.getData(), combinedMessage);
@@ -169,15 +169,15 @@ public class ChatGenerateSummaryAspect {
                     return Mono.just(result);
                 });
             }
-            // 检查 finishReason，判断是否为流的最后一条消息
+            // Check "finishReason" to determine if it is the last message of the stream.
             if (result.getMsg() != null && result.getData().isBlank() && !titleAppended.get()) {
                 if (future != null) {
-                    // 当是最后一条消息时，等待标题生成结果，并将其与原有的消息合并
+                    // When it's the last message, wait for the title generation result and merge it with the original message.
                     return Mono.fromFuture(future).map(titleResult -> {
 
                         titleAppended.set(true);
                         if (titleResult.getCode() == 1) {
-                            // 将生成的标题与原始返回的 finishReason 消息合并
+                            // Merge the generated title with the original "finishReason" message returned.
                             String combinedMessage = result.getMsg() + " " + CONVERSATION_SUMMARY_GENRATED
                                     + titleResult.getData();
                             return Result.success(result.getData(), combinedMessage);
@@ -188,14 +188,14 @@ public class ChatGenerateSummaryAspect {
                             return Result.success(result.getData(), combinedMessage);
                         }
                     }).onErrorResume(e -> {
-                        // 如果在生成标题的过程中出现异常，返回原始结果
+                        // If an exception occurs during the title generation process, return the original result.
                         log.error("Error waiting for title generation in chatFlux: ", e);
                         return Mono.just(result);
                     });
                 }
-                log.info("不需要生成标题，直接返回原始结果");
+                log.info("No need to generate a title，returning original result directly.");
             }
-            return Mono.just(result); // 如果不需要生成标题，直接返回原始结果
+            return Mono.just(result); // If no title needs to be generated, return the original result directly.
         });
     }
 
@@ -214,39 +214,6 @@ public class ChatGenerateSummaryAspect {
             log.info("Generating title.");
             return true;
         }
-
-        // // 通过随机数实现60%的概率控制
-        // double probability = Math.random(); // 生成一个0到1之间的随机数
-        // if (probability > 1) {
-        // log.info("Not generating title. Probability: {}", probability);
-        // return false;
-        // }
-        // // 仅有60%的概率继续判断
-        //
-        // var now = LocalDateTime.now();
-        // Conversation conversation = conversationMapper.selectById(conversationId);
-        //
-        // // 如果查询失败或生成时间为null，直接返回false
-        // if (conversation == null || conversation.getCreatedAt() == null) {
-        // return false;
-        // }
-        // log.info("conversation.getCreatedAt():{}", conversation.getCreatedAt());
-        //
-        // // 计算上次生成标题时间与当前时间的差距
-        // var lastGenerated = conversation.getCreatedAt();
-        // if (Duration.between(lastGenerated, now).toMinutes() <= 1) {
-        // return true;
-        // }
-        //
-        // // 如果总结等于conversationId，直接返回true
-        // if (Objects.equals(conversationMapper.getSummaryByCid(conversationId),
-        // conversationId)) {
-        // return true;
-        // }
-        //
-        // probability = Math.random();
-        // return probability < 1;// 若非新会话，最终概率为0.48
-
     }
 
 }

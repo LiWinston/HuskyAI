@@ -38,14 +38,14 @@ public class preChatBehaviour {
 
         chatMessagesRedisDAO.maintainMessageHistory(conversationId);
 
-        // 添加用户输入到 Redis 对话历史
+        // Add user input to Redis conversation history.
         chatMessagesRedisDAO.addMessage(conversationId, "user", getNowTimeStamp(), prompt);
 
-        // 从 Redis 中获取对话历史
+        // Retrieve conversation history from Redis.
         List<String[]> conversationHistory;
         try {
             conversationHistory = tokenLimiter.getAdaptiveConversationHistory(conversationId, 16000);
-            log.info("自适应缩放到" + conversationHistory.size() + "条消息");
+            log.info("Adaptive zoom to" + conversationHistory.size() + "message(s).");
             // for (String[] entry : conversationHistory) {
             // log.info("{} : {}", entry[0], entry[2].substring(0, Math.min(20,
             // entry[2].length())));

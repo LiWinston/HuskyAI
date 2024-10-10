@@ -30,7 +30,7 @@ public class BaiduConfig {
     private String apiSecret;
 
     @Value("${baidu.api.models}")
-    private String models; // 读取所有模型的配置，以逗号分隔
+    private String models; // Read the configuration of all models, separated by commas.
 
     private List<String> modelList = new ArrayList<>();
 
@@ -44,26 +44,26 @@ public class BaiduConfig {
     @Bean
     @Qualifier("qianfan")
     public Qianfan qianfan() {
-        // 初始化Qianfan配置
+        // Initialize Qianfan configuration.
         return new Qianfan(apiKey, apiSecret);
     }
 
     @PostConstruct
     public void init() {
         Random Random = new Random();
-        // 初始化模型列表
+        // Initialize the model list.
         modelList = Arrays.asList(models.split(","));
         currentModelIndex = Random.nextInt(modelList.size());
         log.info("INIT BaiduConfig currentModelIndex: {}{}", currentModelIndex, modelList.get(currentModelIndex));
     }
 
-    // 获取当前使用的模型
+    // Obtain the current model.
     public String getCurrentModel() {
         return modelList.get(currentModelIndex);
     }
 
     private String getRandomModel() {
-        int randomIndex = (int) (Math.random() * modelList.size());// 确保随机数在模型列表范围内
+        int randomIndex = (int) (Math.random() * modelList.size());// Ensure the random number is within the range of the model list.
         return modelList.get(randomIndex);
     }
 
@@ -75,7 +75,7 @@ public class BaiduConfig {
         return modelList.get(randomIndex);
     }
 
-    // 切换到下一个模型
+    // Change to the next model.
     public void switchToNextModel() {
         currentModelIndex = (currentModelIndex + 1) % modelList.size();
         currentChatBuilder = qianfan.chatCompletion().model(getCurrentModel());

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * 读取Spring Boot配置文件中的远程服务配置
+ * Read the remote service configuration from the Spring Boot configuration file.
  */
 @Setter
 @Getter
@@ -20,7 +20,7 @@ public class RemoteServiceConfig {
     private List<ServiceConfig> serviceConfigs;
 
     /**
-     * 服务器视角的模型访问配置，此处不配置的模型不注册、不可访问
+     * Model access configuration from the server's perspective; models not configured here will not be registered or accessible.
      */
     @Data
     public static class ServiceConfig {
@@ -28,17 +28,17 @@ public class RemoteServiceConfig {
         private String url;
 
         /**
-         * 可选的别名，用于View和控制器
+         * Optional alias for View and controller.
          */
         private String name;
 
         /**
-         * 可选的 API 密钥，当该url需要时设置
+         * Optional API key, set when the URL requires it.
          */
         private String apiKey;
 
         /**
-         * 服务器视角的模型访问限制，全局生效，例如： { "allowedModels": ["model1", "model2"] }
+         * Model access restrictions from the server's perspective, globally effective, e.g., { "allowedModels": ["model1", "model2"] }.
          */
         private List<String> allowedModels;
 

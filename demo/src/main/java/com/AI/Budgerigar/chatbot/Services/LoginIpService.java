@@ -14,22 +14,22 @@ import java.util.Map;
 @Slf4j
 public class LoginIpService {
 
-    // 权重配置，可以调整各字段的权重值
+    // Weight configuration allows adjusting the weight values of each field.
     private static final Map<String, Integer> FIELD_WEIGHTS = Map.ofEntries(Map.entry("AreaCode", 1),
-            Map.entry("City", 2), Map.entry("CityCode", 1), // 与City字段关联，权重较小
+            Map.entry("City", 2), Map.entry("CityCode", 1), // Associated with the City field, with a smaller weight.
             Map.entry("Continent", 3), Map.entry("Country", 3), Map.entry("CountryEnglish", 1),
-            Map.entry("District", 1), Map.entry("Elevation", 1), Map.entry("Ip", 5), // IP变化权重大
+            Map.entry("District", 1), Map.entry("Elevation", 1), Map.entry("Ip", 5), // IP changes are of great significance.
             Map.entry("Isp", 2), Map.entry("Lat", 1), Map.entry("Lng", 1), Map.entry("Prov", 2),
             Map.entry("TimeZone", 3), Map.entry("WeatherStation", 1), Map.entry("ZipCode", 1));
 
     @Autowired
     private UserIpInfoRepository userIpInfoRepository;
 
-    // 判断两个 IP 信息是否有变化，并返回变化字段数量
+    // Determine whether there are changes in the two IP information and return the number of changed fields.
     public int countIpChanges(UserIpInfo oldIpInfo, UserIpInfoDTO.IpInfoDTO newIpInfo) {
         int totalChangeWeight = 0;
 
-        // 按权重检查变化
+        // Check changes by weight.
         totalChangeWeight += !oldIpInfo.getAreaCode().equals(newIpInfo.getAreaCode()) ? FIELD_WEIGHTS.get("AreaCode")
                 : 0;
         totalChangeWeight += !oldIpInfo.getCity().equals(newIpInfo.getCity()) ? FIELD_WEIGHTS.get("City") : 0;
@@ -58,7 +58,7 @@ public class LoginIpService {
         return totalChangeWeight;
     }
 
-    // 将 LoginDTO.UserIpInfoDTO 映射到 UserIpInfo
+    // Map LoginDTO.UserIpInfoDTO to UserIpInfo
     private UserIpInfo mapToUserIpInfo(String userUuid, UserIpInfoDTO.IpInfoDTO newIpInfo) {
         return UserIpInfo.builder()
             .userUuid(userUuid)
@@ -85,7 +85,7 @@ public class LoginIpService {
         UserIpInfo oldIpInfo = userIpInfoRepository.findByUserUuid(user.getUuid()).orElse(null);
 
         if (oldIpInfo == null) {
-            // 第一次记录该用户的 IP 信息，保存到数据库
+            // Recording the user's IP information for the first time and saving it to the database.
             userIpInfoRepository.save(mapToUserIpInfo(user.getUuid(), newIpInfo));
             return LoginIpStatus.NEW;
         }
@@ -93,17 +93,17 @@ public class LoginIpService {
         int totalChangeWeight = countIpChanges(oldIpInfo, newIpInfo);
 
         if (totalChangeWeight > 10) {
-            // 变化权重大，认为是新的IP
+            // The change is significant, considered as a new IP.
             userIpInfoRepository.save(mapToUserIpInfo(user.getUuid(), newIpInfo));
             return LoginIpStatus.NEW;
         }
         else if (totalChangeWeight > 5) {
-            // 有显著变化，认为是已变动
+            // Significant changes are considered as having changed.
             userIpInfoRepository.save(mapToUserIpInfo(user.getUuid(), newIpInfo));
             return LoginIpStatus.CHANGED;
         }
 
-        // 变化权重较小，认为没有变化
+        // The change in weight is small, considered unchanged.
         return LoginIpStatus.NO_CHANGE;
     }
 

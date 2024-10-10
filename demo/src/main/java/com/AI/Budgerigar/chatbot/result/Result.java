@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 /**
- * 后端统一返回结果
+ * Unified backend return result.
  *
  * @param <T>
  */
@@ -17,11 +17,11 @@ import java.util.Map;
 @Setter
 public class Result<T> implements Serializable {
 
-    private Integer code; // 编码：1成功，0和其它数字为失败
+    private Integer code; // Code: 1 for success, 0 and other numbers for failure.
 
-    private String msg; // 错误信息
+    private String msg; // error message
 
-    private T data; // 数据
+    private T data; // data
 
     public static <T> Result<T> success() {
         Result<T> result = new Result<T>();
@@ -59,12 +59,12 @@ public class Result<T> implements Serializable {
         return result;
     }
 
-    // 新增方法：用于处理参数验证错误
+    // New method: for handling parameter validation errors.
     public static <T> Result<T> error(String msg, Map<String, String> errors) {
         Result<T> result = new Result<>();
         result.msg = msg;
         result.code = 0;
-        result.data = (T) errors; // 将错误详情作为数据返回
+        result.data = (T) errors; // Return the error details as data.
         return result;
     }
 

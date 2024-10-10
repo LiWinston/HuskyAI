@@ -13,9 +13,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class UserIpInfo {
 
     @Id
-    private String id; // MongoDB自带的唯一ID
+    private String id; // MongoDB only ID
 
-    private String userUuid; // 用户的唯一ID
+    private String userUuid; // user's only ID
 
     private String areaCode;
 

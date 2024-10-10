@@ -17,7 +17,7 @@ public class ShareDAO {
         this.mongoTemplate = mongoTemplate;
     }
 
-    // 保存分享记录
+    // Save share records.
     public void saveShare(String shareCode, String uuid, String conversationId, List<Integer> messageIndexes) {
         ShareRecord shareRecord = ShareRecord.builder()
             .shareCode(shareCode)
@@ -28,13 +28,13 @@ public class ShareDAO {
         mongoTemplate.save(shareRecord);
     }
 
-    // 根据分享码查询分享记录
+    // Query sharing records based on the sharing code.
     public ShareRecord findByShareCode(String shareCode) {
         Query query = new Query(Criteria.where("shareCode").is(shareCode));
         return mongoTemplate.findOne(query, ShareRecord.class);
     }
 
-    // 根据 UUID 查询分享的 conversationId 列表
+    // Query the list of shared conversationIds based on UUID.
     public List<String> findConversationIdsByUuid(String uuid) {
         Query query = new Query(Criteria.where("uuid").is(uuid));
         return mongoTemplate.find(query, ShareRecord.class)
@@ -43,7 +43,7 @@ public class ShareDAO {
             .collect(Collectors.toList());
     }
 
-    // 根据分享码删除分享记录
+    // Delete sharing record based on sharing code.
     public void deleteByShareCode(String shareCode) {
         Query query = new Query(Criteria.where("shareCode").is(shareCode));
         mongoTemplate.remove(query, ShareRecord.class);
