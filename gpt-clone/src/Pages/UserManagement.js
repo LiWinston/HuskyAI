@@ -87,6 +87,11 @@ function UserManagement() {
         });
     };
 
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().slice(0, 16); // 只保留到分钟
+    };
 
 
     const saveModelAccess = async (userId) => {
@@ -173,14 +178,14 @@ function UserManagement() {
                                                     <label>Start Time:
                                                         <input
                                                             type="datetime-local"
-                                                            value={modelAccess.accessRestriction?.startTime || ""}
+                                                            value={formatDateForInput(modelAccess.accessRestriction?.startTime)}
                                                             onChange={(e) => handleAccessRestrictionChange(user.uuid, index, 'startTime', e.target.value)}
                                                         />
                                                     </label>
                                                     <label>End Time:
                                                         <input
                                                             type="datetime-local"
-                                                            value={modelAccess.accessRestriction?.endTime || ""}
+                                                            value={formatDateForInput(modelAccess.accessRestriction?.endTime)}
                                                             onChange={(e) => handleAccessRestrictionChange(user.uuid, index, 'endTime', e.target.value)}
                                                         />
                                                     </label>
