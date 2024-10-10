@@ -232,8 +232,8 @@ function Chat() {
             setConversations(
                 prevConversations => [newConversation, ...prevConversations]);
             await loadConversation(newConversationId);
-            await axios.get(
-                `${window.API_BASE_URL}/chat/${uuid}/${newConversationId}`);
+            // await axios.get(
+            //     `${window.API_BASE_URL}/chat/${uuid}/${newConversationId}`);
         } catch (error) {
             console.error('Failed to create new conversation', error);
         }
@@ -553,10 +553,12 @@ function Chat() {
         // 获取本地时间偏移量，并应用到 conversationDate
         const localConversationDate = new Date(conversationDate.getTime() - conversationDate.getTimezoneOffset() * 60000);
 
+        // 设置 now 的时间为当天的 00:00:00
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
         const oneDay = 24 * 60 * 60 * 1000;
         const oneWeek = 7 * oneDay;
         const oneMonth = 30 * oneDay;  // 近似一个月
-        const diffTime = now - localConversationDate;
 
         // 检测用户语言
         const userLang = navigator.language || navigator.userLanguage;
@@ -583,13 +585,13 @@ function Chat() {
         const languageLabels = userLang.startsWith('zh') ? labels.zh : labels.en;
 
         // 时间分组逻辑
-        if (diffTime < oneDay && now.getDate() === localConversationDate.getDate()) {
+        if (localConversationDate >= todayStart) {
             return languageLabels.today;
-        } else if (diffTime < 2 * oneDay && now - localConversationDate < 2 * oneDay) {
+        } else if (localConversationDate >= new Date(todayStart - oneDay)) {
             return languageLabels.yesterday;
-        } else if (diffTime < oneWeek) {
+        } else if (localConversationDate >= new Date(todayStart - oneWeek)) {
             return languageLabels.withinWeek;
-        } else if (diffTime < oneMonth) {
+        } else if (localConversationDate >= new Date(todayStart - oneMonth)) {
             return languageLabels.withinMonth;
         } else {
             return languageLabels.earlier;
