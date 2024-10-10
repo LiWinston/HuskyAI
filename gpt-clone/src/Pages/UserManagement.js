@@ -91,28 +91,27 @@ function UserManagement() {
 
     const saveModelAccess = async (userId) => {
         try {
-            const updatedData = {
-                allowedModels: userModelAccess[userId].map(modelAccess => ({
-                    url: modelAccess.url,
-                    model: modelAccess.model,
-                    accessLevel: modelAccess.accessLevel,
-                    accessRestriction: modelAccess.accessRestriction || {
-                        startTime: null,
-                        endTime: null,
-                        timeRestricted: false,
-                        maxDailyAccess: 0
-                    },
-                    priority: modelAccess.priority,
-                    additionalAttributes: modelAccess.additionalAttributes || {}
-                }))
-            };
+            const updatedModelAccess = userModelAccess[userId].map(modelAccess => ({
+                url: modelAccess.url,
+                model: modelAccess.model,
+                accessLevel: modelAccess.accessLevel,
+                accessRestriction: modelAccess.accessRestriction || {
+                    startTime: null,
+                    endTime: null,
+                    timeRestricted: false,
+                    maxDailyAccess: 0
+                },
+                priority: modelAccess.priority,
+                additionalAttributes: modelAccess.additionalAttributes || {}
+            }));
 
-            await axios.put(`${window.API_BASE_URL}/admin/user/modelAccess/${userId}`, updatedData);
+            await axios.put(`${window.API_BASE_URL}/admin/user/modelAccess/${userId}`, updatedModelAccess);
             console.log('Model access saved for user:', userId);
         } catch (error) {
             console.error('Error saving model access:', error);
         }
     };
+
 
 
     const toggleUserExpansion = (userId) => {
