@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.AI.Budgerigar.chatbot.Constant.ApplicationConstant.MODELALIAS_MODELID_SEPARATOR;
+
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/chat")
@@ -102,9 +104,9 @@ public class ChatController {
             if (model == null) {
                 model = "baidu";
             }
-            String[] modelParts = model.split("上的");
+            String[] modelParts = model.split(MODELALIAS_MODELID_SEPARATOR);
             if (modelParts.length != 2) {
-                return Result.error("Invalid model format. Expected serviceName上的modelId");
+                return Result.error("Invalid model format. Expected serviceName " + MODELALIAS_MODELID_SEPARATOR + " modelId");
             }
 
             String serviceName = modelParts[0];
@@ -139,10 +141,10 @@ public class ChatController {
         try {
             String model = body.get("model");
             if (model == null) {
-                model = "baidu上的baidu";
+                model = "baidu" + MODELALIAS_MODELID_SEPARATOR + "baidu";
             }
 
-            String[] modelParts = model.split("上的");
+            String[] modelParts = model.split(MODELALIAS_MODELID_SEPARATOR);
             if (modelParts.length != 2) {
                 return Flux.just(Result.error("Invalid model format. Expected serviceName:modelId")).map(result -> {
                     try {
@@ -247,7 +249,7 @@ public class ChatController {
                     .filter(modelId -> allowedChatServices.stream()
                         .anyMatch(cs -> cs.equals(chatServices.get(serviceName).get(modelId))))
                     .forEach(modelId -> {
-                        result.add(serviceName + "上的" + modelId);
+                        result.add(serviceName + MODELALIAS_MODELID_SEPARATOR + modelId);
                     });
             });
 
@@ -264,7 +266,7 @@ public class ChatController {
                         .filter(modelId -> allowedChatServices.stream()
                             .anyMatch(cs -> cs.equals(chatServices.get(serviceName).get(modelId))))
                         .sorted()
-                        .forEach(modelId -> result.add(serviceName + "上的" + modelId));
+                        .forEach(modelId -> result.add(serviceName + MODELALIAS_MODELID_SEPARATOR + modelId));
                 });
 
             return Result.success(result);

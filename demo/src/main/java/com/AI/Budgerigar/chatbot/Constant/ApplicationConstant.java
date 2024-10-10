@@ -9,4 +9,6 @@ public final class ApplicationConstant {
 
     public static final String CONVERSATION_SUMMARY_GENRATED = "#CVSG##CVSG##CVSG#";
 
+    public static final String MODELALIAS_MODELID_SEPARATOR = "----";
+
 }
