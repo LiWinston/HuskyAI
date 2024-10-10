@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -32,13 +31,13 @@ public class chatServicesManageService {
     @Getter
     private ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices;
 
-    @Autowired
-    @Qualifier("baidu")
-    private ChatService baiduChatService;
-
-    @Autowired
-    @Qualifier("doubao")
-    private ChatService doubaoChatService;
+    // @Autowired
+    // @Qualifier("baidu")
+    // private ChatService baiduChatService;
+    //
+    // @Autowired
+    // @Qualifier("doubao")
+    // private ChatService doubaoChatService;
 
     @Autowired
     private RemoteServiceConfig remoteServiceConfig;
@@ -51,16 +50,16 @@ public class chatServicesManageService {
 
     @PostConstruct
     public void init() {
-        chatServices.put("baidu", new ConcurrentHashMap<>() {
-            {
-                put("baidu", baiduChatService);
-            }
-        });
-        chatServices.put("doubao", new ConcurrentHashMap<>() {
-            {
-                put("doubao", doubaoChatService);
-            }
-        });
+        // chatServices.put("baidu", new ConcurrentHashMap<>() {
+        // {
+        // put("baidu", baiduChatService);
+        // }
+        // });
+        // chatServices.put("doubao", new ConcurrentHashMap<>() {
+        // {
+        // put("doubao", doubaoChatService);
+        // }
+        // });
         // 从配置中读取根路径并动态注册服务
         for (RemoteServiceConfig.ServiceConfig service : remoteServiceConfig.getServiceConfigs()) {
             fetchAndRegisterModelsFromService(service);
