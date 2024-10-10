@@ -21,7 +21,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #E0E0E0; /* 滑块禁用时的淡灰色 */
+    background-color: #E0E0E0; /* Light gray when the slider is disabled. */
     transition: background-color 0.3s ease-in;
     border-radius: 24px;
 }
@@ -40,7 +40,7 @@
 
 /* When switch is active */
 input:checked + .slider {
-    background-color: #F9A825; /* 滑块启用时的橙色 */
+    background-color: #F9A825; /* Orange when the slider is enabled. */
     transition: background-color 0.5s cubic-bezier(0.68, -0.6, 0.32, 1.6); /* Elastic open */
 }
 
@@ -88,15 +88,15 @@ input:not(:checked) + .slider:before {
 .tooltip .tooltip-text {
     visibility: hidden;
     width: 100px;
-    background-color: #424242; /* 深灰色背景 */
-    color: #FFFFFF; /* 白色文字 */
+    background-color: #424242; /* Dark gray background. */
+    color: #FFFFFF; /* White word. */
     text-align: center;
     border-radius: 6px;
     padding: 5px;
     position: absolute;
     z-index: 1;
-    top: 50%; /* 垂直居中 */
-    left: -112.5px; /* 向左移动气泡 */
+    top: 50%; /* Vertical centering. */
+    left: -112.5px; /* Move the bubble to the left. */
     transform: translateY(-50%);
     opacity: 0;
     transition: opacity 0.3s;
@@ -109,11 +109,11 @@ input:not(:checked) + .slider:before {
     content: "";
     position: absolute;
     top: 50%;
-    right: -7.5px; /* 调整位置 */
+    right: -7.5px; /* Adjust position */
     transform: translateY(-50%);
     border-width: 5px;
     border-style: solid;
-    border-color: transparent transparent transparent #424242; /* 深灰色三角形 */
+    border-color: transparent transparent transparent #424242; /* Dark gray triangle. */
 }
 
 .tooltip:hover .tooltip-text {

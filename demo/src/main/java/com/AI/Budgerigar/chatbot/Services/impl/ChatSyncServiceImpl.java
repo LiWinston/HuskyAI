@@ -48,7 +48,8 @@ public class ChatSyncServiceImpl implements ChatSyncService {
             .toList();
     }
 
-    // Update the history log, fetch the latest messages from Redis, and update them to MongoDB.
+    // Update the history log, fetch the latest messages from Redis, and update them to
+    // MongoDB.
     public void updateHistoryFromRedis(String conversationId, int numberOfEntries) {
         List<Message> newEntries = chatMessagesRedisDAO.getConversationHistory(conversationId)
             .stream()
@@ -59,7 +60,8 @@ public class ChatSyncServiceImpl implements ChatSyncService {
     }
 
     @Transactional
-    // Update the history by retrieving all messages from Redis, compare and store, comprehensively process duplicate messages, and fully update to MongoDB.
+    // Update the history by retrieving all messages from Redis, compare and store,
+    // comprehensively process duplicate messages, and fully update to MongoDB.
     public void updateHistoryFromRedis(String conversationId) {
         log.info("Starting sync operation from Redis to MongoDB for conversation ID: {}", conversationId);
 
@@ -221,7 +223,8 @@ public class ChatSyncServiceImpl implements ChatSyncService {
                 && Instant.parse(userMessage.getTimestamp()).isBefore(Instant.parse(assistantMessage.getTimestamp()));
     }
 
-    // Update the history log, retrieve earlier messages from MongoDB, and update them to Redis.
+    // Update the history log, retrieve earlier messages from MongoDB, and update them to
+    // Redis.
     @Override
     public void updateRedisFromMongo(String conversationId) {
         log.info("Starting sync operation from MongoDB to Redis for conversation ID: {}", conversationId);
@@ -235,11 +238,13 @@ public class ChatSyncServiceImpl implements ChatSyncService {
 
         log.info("Redis message count: {}, MongoDB message count: {}", redisMessages.size(), mongoMessages.size());
 
-        // Merge the messages of MongoDB and Redis, avoiding overwriting newer Redis messages.
+        // Merge the messages of MongoDB and Redis, avoiding overwriting newer Redis
+        // messages.
         List<Message> mergedMessages = mergeMessages(redisMessages, mongoMessages);
 
         // Write the merged message back to Redis.
-        chatMessagesRedisDAO.clearConversation(conversationId); // Clear existing Redis data.
+        chatMessagesRedisDAO.clearConversation(conversationId); // Clear existing Redis
+                                                                // data.
         mergedMessages.forEach(message -> chatMessagesRedisDAO.addMessage(conversationId, message.getRole(),
                 message.getTimestamp(), message.getContent()));
 

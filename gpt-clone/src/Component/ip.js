@@ -1,4 +1,4 @@
-// 使用 fetch 实现 IP 检测模块
+// Implement an IP detection module using fetch.
 async function detectIP() {
     try {
         const response = await fetch('https://api.qjqq.cn/api/Local');
@@ -7,10 +7,10 @@ async function detectIP() {
         if (data.msg === 'success') {
             return data.data;
         } else {
-            console.error('查询失败:', data.msg);
+            console.error('Query failed:', data.msg);
         }
     } catch (error) {
-        console.error('请求出错:', error);
+        console.error('Request error:', error);
     }
 }
 

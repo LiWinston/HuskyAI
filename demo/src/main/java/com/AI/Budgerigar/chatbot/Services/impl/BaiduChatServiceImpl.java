@@ -90,7 +90,9 @@ public class BaiduChatServiceImpl implements ChatService, StreamChatService {
 
             // Add conversation history to the request object.
             for (String[] entry : conversationHistory) {
-                chatCompletion.addMessage(entry[0], entry[2]); // entry[0] is role，entry[2] is message.
+                chatCompletion.addMessage(entry[0], entry[2]); // entry[0] is
+                                                               // role，entry[2] is
+                                                               // message.
             }
 
             // Execute the request and get the response.

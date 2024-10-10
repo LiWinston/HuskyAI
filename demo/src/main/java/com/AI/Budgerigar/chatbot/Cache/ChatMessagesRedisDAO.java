@@ -28,7 +28,8 @@ public class ChatMessagesRedisDAO {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         try {
             Long count = redisTemplate.opsForList().size(key);
-            return Objects.requireNonNullElse(count, 0L); // If count is equal to null，return 0.
+            return Objects.requireNonNullElse(count, 0L); // If count is equal to
+                                                          // null，return 0.
         }
         catch (DataAccessException e) {
             log.error("Failed to get message count for conversation {}", conversationId, e);
@@ -77,8 +78,12 @@ public class ChatMessagesRedisDAO {
             }
             else {
                 return entries.stream()
-                    .map(entry -> entry.split("\\|", 3)) // Split using the ":" delimiter to get the timestamp.
-                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // Handle messages with timestamps.
+                    .map(entry -> entry.split("\\|", 3)) // Split using the ":" delimiter
+                                                         // to get the timestamp.
+                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // Handle
+                                                                                 // messages
+                                                                                 // with
+                                                                                 // timestamps.
                     .collect(Collectors.toList());
             }
         }
@@ -147,7 +152,8 @@ public class ChatMessagesRedisDAO {
                 uniqueEntries.add(entry);
 
                 // Check the interleaving order of messages.
-                if (adjustedEntries.size() % 2 == 0) { // Even indices should be user messages.
+                if (adjustedEntries.size() % 2 == 0) { // Even indices should be user
+                                                       // messages.
                     if (role.equals("user")) {
                         adjustedEntries.add(entry);
                         lastRole = role;
@@ -191,15 +197,23 @@ public class ChatMessagesRedisDAO {
     public List<String[]> getLastNMessages(String conversationId, int n) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         try {
-            List<String> entries = redisTemplate.opsForList().range(key, -n, -1); // Get the latest N messages.
+            List<String> entries = redisTemplate.opsForList().range(key, -n, -1); // Get
+                                                                                  // the
+                                                                                  // latest
+                                                                                  // N
+                                                                                  // messages.
             if (entries == null) {
                 log.info("No history found for {}", conversationId);
                 return Arrays.asList();
             }
             else {
                 return entries.stream()
-                    .map(entry -> entry.split("\\|", 3)) // Split using the ":" delimiter to get the timestamp.
-                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // Handle messages with timestamps.
+                    .map(entry -> entry.split("\\|", 3)) // Split using the ":" delimiter
+                                                         // to get the timestamp.
+                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // Handle
+                                                                                 // messages
+                                                                                 // with
+                                                                                 // timestamps.
                     .collect(Collectors.toList());
             }
         }
@@ -209,7 +223,8 @@ public class ChatMessagesRedisDAO {
         }
     }
 
-    // Obtain conversation history within a specified range, suitable for progressive loading or pagination. - Unchecked
+    // Obtain conversation history within a specified range, suitable for progressive
+    // loading or pagination. - Unchecked
     public List<String[]> getMessagesRange(String conversationId, int start, int end) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         try {
@@ -220,8 +235,12 @@ public class ChatMessagesRedisDAO {
             }
             else {
                 return entries.stream()
-                    .map(entry -> entry.split("\\|", 3)) // Split using the ":" delimiter to get the timestamp.
-                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // Handle messages with timestamps.
+                    .map(entry -> entry.split("\\|", 3)) // Split using the ":" delimiter
+                                                         // to get the timestamp.
+                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // Handle
+                                                                                 // messages
+                                                                                 // with
+                                                                                 // timestamps.
                     .collect(Collectors.toList());
             }
         }

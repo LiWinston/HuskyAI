@@ -1,5 +1,5 @@
 function detectLanguage(code) {
-    // 移除注释，以避免干扰检测
+    // Remove comments to avoid interference with detection.
     // code = code.replace(/\/\/.*|\/\*[\s\S]*?\*\//g, '');
 
     const languageRules = [
@@ -200,10 +200,10 @@ function detectLanguage(code) {
         });
     });
 
-    // 根据得分确定最可能的语言
+    // Determine the most probable language based on the score.
     const detectedLanguage = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
     const confidence = scores[detectedLanguage] /
         Object.values(scores).reduce((a, b) => a + b, 0);
 
-    return detectedLanguage;  // 只返回检测到的语言名称，不返回置信度
+    return detectedLanguage;  // Only return detected language names, not confidence.
 }

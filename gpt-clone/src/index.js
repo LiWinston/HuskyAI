@@ -78,7 +78,7 @@ function LoadingContainer() {
 }
 
 function AnimatedRoutes() {
-    const location = useLocation(); // 获取当前的路由信息
+    const location = useLocation();
 
     return (
         <AnimatePresence exitBeforeEnter>
@@ -142,7 +142,7 @@ function AnimatedRoutes() {
                 />
                 <Route
                     path="/chat/share/:shareCode"
-                    element={<SharePage/>}  // 修正为 element 属性，渲染 SharePage 组件
+                    element={<SharePage/>}
                 />
 
                 <Route
@@ -155,7 +155,7 @@ function AnimatedRoutes() {
                             variants={pageVariants}
                             transition={pageTransition}
                         >
-                            <AdminDashboard/> {/* 管理员页面 */}
+                            <AdminDashboard/> {/* Admin Page */}
                         </motion.div>
                     }
                 />
@@ -165,36 +165,36 @@ function AnimatedRoutes() {
     );
 }
 
-// 在 root 渲染中调用 AnimatedRoutes
+// Call AnimatedRoutes during root rendering.
 root.render(
     <BrowserRouter>
         <AnimatedRoutes/>
     </BrowserRouter>,
 );
 reportWebVitals();
-// 定义动画的参数
+// Define animation parameters.
 const pageVariants = {
     initial: {
         opacity: 0,
-        x: '-100vw', // 页面从左侧进入
+        x: '-100vw',
     },
     in: {
         opacity: 1,
-        x: 0, // 页面进入到正常位置
+        x: 0,
     },
     out: {
         opacity: 0,
-        x: '100vw', // 页面向右侧退出
+        x: '100vw',
     },
 };
 
 const pageTransition = {
     type: 'tween',
-    ease: [0.65, 0, 0.35, 1], // 自定义贝塞尔曲线
+    ease: [0.65, 0, 0.35, 1],
     duration: 0.21,
 };
 
-//login 独有的缩放动画 从大到设定大小
+// Unique login zoom animation from large to set size.
 const loginVariants = {
     initial: {
         opacity: 0,

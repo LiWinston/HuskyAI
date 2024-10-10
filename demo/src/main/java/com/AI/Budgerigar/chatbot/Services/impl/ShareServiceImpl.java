@@ -29,8 +29,10 @@ public class ShareServiceImpl implements ShareService {
     // Generate share link.
     @Override
     public String generateShareLink(String uuid, String conversationId, List<Integer> messageIndexes) {
-        String shareCode = UUID.randomUUID().toString(); // Generate a unique sharing code.
-        // chatSyncService.updateHistoryFromRedis(conversationId); // Ensure that the conversation history is up to date.
+        String shareCode = UUID.randomUUID().toString(); // Generate a unique sharing
+                                                         // code.
+        // chatSyncService.updateHistoryFromRedis(conversationId); // Ensure that the
+        // conversation history is up to date.
         shareDAO.saveShare(shareCode, uuid, conversationId, messageIndexes);
         return shareCode;
     }
@@ -49,7 +51,9 @@ public class ShareServiceImpl implements ShareService {
             List<Integer> messageIndexes = record.getMessageIndexes();
 
             return messageIndexes.stream()
-                .filter(index -> index >= 0 && index < allMessages.size()) // Avoid invalid indexes.
+                .filter(index -> index >= 0 && index < allMessages.size()) // Avoid
+                                                                           // invalid
+                                                                           // indexes.
                 .map(allMessages::get) // Get message by index.
                 .collect(Collectors.toList());
         }

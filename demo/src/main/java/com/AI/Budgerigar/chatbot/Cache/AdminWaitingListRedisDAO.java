@@ -17,7 +17,8 @@ public class AdminWaitingListRedisDAO {
     private static final long INVITE_EXPIRE_TIME = 60 * 60; // 1 hour
 
     /**
-     * Store the administrator's UUID and corresponding token in Redis and set an expiration time.
+     * Store the administrator's UUID and corresponding token in Redis and set an
+     * expiration time.
      * @param token generated unique identifier.
      * @param uuid admin's uuid.
      */

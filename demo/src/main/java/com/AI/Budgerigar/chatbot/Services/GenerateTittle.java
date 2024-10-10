@@ -161,7 +161,8 @@ public class GenerateTittle {
         chatServices.forEach((serviceName, serviceMap) -> {
             serviceMap.forEach((modelId, chatService) -> {
                 if (chatService instanceof OpenAIChatServiceImpl && !Objects.equals(modelId, "openai")) {
-                    // Instances of OpenAIChatServiceImpl that are not openai are added to the availableServices list.
+                    // Instances of OpenAIChatServiceImpl that are not openai are added to
+                    // the availableServices list.
                     availableServices.add((OpenAIChatServiceImpl) chatService);
                 }
             });
@@ -169,10 +170,12 @@ public class GenerateTittle {
 
         log.debug("availableServices: {}", availableServices);
 
-        // If there is only one non-OpenAI OpenAIChatServiceImpl instance, use that instance directly.
+        // If there is only one non-OpenAI OpenAIChatServiceImpl instance, use that
+        // instance directly.
         if (availableServices.size() == 1) {
             // if (openAIUrl != null && model != null) {
-            // // If openAIUrl and model are pre-injected, revert to that setting and use the only non-openai model.
+            // // If openAIUrl and model are pre-injected, revert to that setting and use
+            // the only non-openai model.
             // return;
             // }
             log.debug("There is only one non-openai OpenAIChatServiceImpl instance, use that instance directly.");
@@ -199,7 +202,10 @@ public class GenerateTittle {
         // If there is no alternative model after avoiding, still use the original model.
         if (_openAIUrl.get() == null || _model.get() == null) {
             log.debug("After yielding, there is no alternative model, still using the original model.");
-            OpenAIChatServiceImpl fallbackService = availableServices.get(0); // Revert to the first available model.
+            OpenAIChatServiceImpl fallbackService = availableServices.get(0); // Revert to
+                                                                              // the first
+                                                                              // available
+                                                                              // model.
             _openAIUrl.set(fallbackService.getOpenAIUrl());
             _model.set(fallbackService.getModel());
             _apikey.set(fallbackService.getOpenaiApiKey());

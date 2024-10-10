@@ -16,16 +16,24 @@ public class LoginIpService {
 
     // Weight configuration allows adjusting the weight values of each field.
     private static final Map<String, Integer> FIELD_WEIGHTS = Map.ofEntries(Map.entry("AreaCode", 1),
-            Map.entry("City", 2), Map.entry("CityCode", 1), // Associated with the City field, with a smaller weight.
+            Map.entry("City", 2), Map.entry("CityCode", 1), // Associated with the City
+                                                            // field, with a smaller
+                                                            // weight.
             Map.entry("Continent", 3), Map.entry("Country", 3), Map.entry("CountryEnglish", 1),
-            Map.entry("District", 1), Map.entry("Elevation", 1), Map.entry("Ip", 5), // IP changes are of great significance.
+            Map.entry("District", 1), Map.entry("Elevation", 1), Map.entry("Ip", 5), // IP
+                                                                                     // changes
+                                                                                     // are
+                                                                                     // of
+                                                                                     // great
+                                                                                     // significance.
             Map.entry("Isp", 2), Map.entry("Lat", 1), Map.entry("Lng", 1), Map.entry("Prov", 2),
             Map.entry("TimeZone", 3), Map.entry("WeatherStation", 1), Map.entry("ZipCode", 1));
 
     @Autowired
     private UserIpInfoRepository userIpInfoRepository;
 
-    // Determine whether there are changes in the two IP information and return the number of changed fields.
+    // Determine whether there are changes in the two IP information and return the number
+    // of changed fields.
     public int countIpChanges(UserIpInfo oldIpInfo, UserIpInfoDTO.IpInfoDTO newIpInfo) {
         int totalChangeWeight = 0;
 
@@ -85,7 +93,8 @@ public class LoginIpService {
         UserIpInfo oldIpInfo = userIpInfoRepository.findByUserUuid(user.getUuid()).orElse(null);
 
         if (oldIpInfo == null) {
-            // Recording the user's IP information for the first time and saving it to the database.
+            // Recording the user's IP information for the first time and saving it to the
+            // database.
             userIpInfoRepository.save(mapToUserIpInfo(user.getUuid(), newIpInfo));
             return LoginIpStatus.NEW;
         }

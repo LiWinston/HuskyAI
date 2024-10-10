@@ -18,7 +18,8 @@ public class RedisConfig {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         // Set the connection factory object for Redis.
         redisTemplate.setConnectionFactory(redisConnectionFactory);
-        // Set the serializer for the Redis key (default is JdkSerializationRedisSerializer).
+        // Set the serializer for the Redis key (default is
+        // JdkSerializationRedisSerializer).
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new StringRedisSerializer());
         return redisTemplate;

@@ -142,9 +142,13 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
         this.webClient = WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(HttpClient.create(provider).compress(true).keepAlive(true)))
             .baseUrl(openAIUrl)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // set the content type
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // set
+                                                                                       // the
+                                                                                       // content
+                                                                                       // type
             .defaultHeader(HttpHeaders.CACHE_CONTROL, "no-cache") // set the cache control
-            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + openaiApiKey) // set API key
+            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + openaiApiKey) // set API
+                                                                                // key
             .build();
     }
 
@@ -242,7 +246,8 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
 
     // private int getMongoConversationLength(String conversationId) {
     // // Logic to obtain session length from MongoDB.
-    // // Assume that ChatMessagesMongoDAO provides a method to get the conversation length.
+    // // Assume that ChatMessagesMongoDAO provides a method to get the conversation
+    // length.
     // return chatMessagesMongoDAO.getConversationLengthById(conversationId);
     // }
 

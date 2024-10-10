@@ -11,7 +11,7 @@ function UserManagement() {
     const [expandedUser, setExpandedUser] = useState(null); // Stores the user ID of the currently opened conversation
     const [userModelAccess, setUserModelAccess] = useState({}); // store user model access permissions
     const [expandedUsers, setExpandedUsers] = useState({});
-    // 获取用户状态
+    // Get user status.
     const fetchUsers = async () => {
         try {
             const response = await axios.get(window.API_BASE_URL + '/admin/user');
@@ -51,9 +51,9 @@ function UserManagement() {
     //Switch the user who expanded the conversation history
     const toggleConversationHistory = (userId) => {
         if (expandedUser === userId) {
-            setExpandedUser(null); // if currently expanded collapse when clicked
+            setExpandedUser(null); // If currently expanded, click to collapse.
         } else {
-            setExpandedUser(userId); // Expand the conversation history of the selected user
+            setExpandedUser(userId); // Expand the selected user's chat history.
         }
     };
 
@@ -72,15 +72,15 @@ function UserManagement() {
         });
     };
 
-// 处理 AccessRestriction 的更改
+// Handling changes to AccessRestriction.
     const handleAccessRestrictionChange = (userId, index, restrictionKey, value) => {
         setUserModelAccess(prevAccess => {
             const updatedAccess = [...(prevAccess[userId] || [])];
             const accessRestriction = updatedAccess[index].accessRestriction || {};
-            accessRestriction[restrictionKey] = value;  // update specified field
+            accessRestriction[restrictionKey] = value;  // Update specified fields.
             updatedAccess[index] = {
                 ...updatedAccess[index],
-                accessRestriction  // PutTheUpdatedAccessRestrictionBack
+                accessRestriction  // Put the updated accessRestriction back.
             };
             return {
                 ...prevAccess,

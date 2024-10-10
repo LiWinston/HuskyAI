@@ -123,7 +123,8 @@ public class TokenLimiter {
         return fixedHistory;
     }
 
-    // Ensure history starts with and ends with "user". User and assistant messages alternate.
+    // Ensure history starts with and ends with "user". User and assistant messages
+    // alternate.
     public List<String[]> adjustHistoryForAlternatingRoles(List<String[]> history) {
         if (history.isEmpty()) {
             return history;
@@ -132,7 +133,8 @@ public class TokenLimiter {
         LinkedList<String[]> adjustedHistory = new LinkedList<>();
         String expectedRole = "user";
 
-        // Start processing from the latest news, ensuring it ends with the user's message.
+        // Start processing from the latest news, ensuring it ends with the user's
+        // message.
         for (int i = history.size() - 1; i >= 0; i--) {
             String[] message = history.get(i);
             if (message[0].equals(expectedRole)) {
