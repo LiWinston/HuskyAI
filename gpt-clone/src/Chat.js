@@ -24,7 +24,6 @@ function Chat() {
     const [models, setModels] = useState([]); // List of models
     const [showModelOptions, setShowModelOptions] = useState(false); //
     const [useStream, setUseStream] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
     // 当 selectedConversation 改变时，自动更新到 localStorage
     useEffect(() => {
         if (selectedConversation !== null) {
@@ -767,10 +766,16 @@ function Chat() {
                         </label>
 
 
-                        <button className=".chat-container sendButton"
-                                onClick={sendMessage} disabled={loading}>
-                            {loading ? 'Thinking' : 'Send'}
+                        <button className=".chat-container sendButton" onClick={sendMessage} disabled={loading}>
+                            {loading ? (
+                                <div className="thinking-animation">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            ) : 'Send'}
                         </button>
+
                     </div>
                 </div>
 

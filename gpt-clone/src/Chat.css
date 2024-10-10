@@ -670,6 +670,47 @@ code {
     background-color: rgba(0, 0, 0, 0.1); /* 悬停时背景为浅黑 */
 }
 
+/*loading animation when ai is thinking*/
+.thinking-animation {
+    display: inline-block;
+    width: 30px;
+    height: 10px;
+    position: relative;
+}
+
+.thinking-animation span {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background-color: #007aff;
+    border-radius: 50%;
+    position: absolute;
+    animation: thinkingAnimation 1.5s infinite ease-in-out;
+}
+
+.thinking-animation span:nth-child(1) {
+    left: 0;
+    animation-delay: 0s;
+}
+
+.thinking-animation span:nth-child(2) {
+    left: 10px;
+    animation-delay: 0.2s;
+}
+
+.thinking-animation span:nth-child(3) {
+    left: 20px;
+    animation-delay: 0.4s;
+}
+
+@keyframes thinkingAnimation {
+    0%, 100% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1);
+    }
+}
 
 /* 移动端适配 */
 @media (max-width: 1079px) {
