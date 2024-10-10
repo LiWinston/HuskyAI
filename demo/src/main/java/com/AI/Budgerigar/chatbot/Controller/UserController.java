@@ -92,7 +92,8 @@ public class UserController {
     }
 
     /**
-     * Logs in a user by checking username and password. If successful, generates a JWT token.
+     * Logs in a user by checking username and password. If successful, generates a JWT
+     * token.
      * @param userDetails a map containing username and password
      * @return a Result object with the UUID and JWT token if login is successful
      */
@@ -105,10 +106,13 @@ public class UserController {
         try {
             UserPw user = userMapper.getUserByUsername(username);
             if (user == null) {
-                return loginResponseDTO.builder().code(0).msg("User not found").build(); // user not found.
+                return loginResponseDTO.builder().code(0).msg("User not found").build(); // user
+                                                                                         // not
+                                                                                         // found.
             }
             else if (!passwordEncoder.matches(password, user.getPassword())) {
-                return loginResponseDTO.builder().code(0).msg("Incorrect password").build(); // password incorrect.
+                return loginResponseDTO.builder().code(0).msg("Incorrect password").build(); // password
+                                                                                             // incorrect.
             }
 
             String token = jwtTokenUtil.generateToken(user.getUuid());
@@ -148,9 +152,12 @@ public class UserController {
         try {
             if (userMapper.getUserByUsername(username) != null) {
                 List<String> suggestions = generateUsernameSuggestions(userMapper, username);
-                return Result.error(suggestions, "Username already exists."); // username already exists
+                return Result.error(suggestions, "Username already exists."); // username
+                                                                              // already
+                                                                              // exists
             }
-            return Result.success(null, "Username is available."); // return success message
+            return Result.success(null, "Username is available."); // return success
+                                                                   // message
         }
         catch (Exception e) {
             log.error("Username check failed.", e); // username check failed

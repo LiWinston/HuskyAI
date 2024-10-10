@@ -13,10 +13,12 @@ public class OpenAIChatServiceFactory {
     private AutowireCapableBeanFactory beanFactory; // Automatic injection.
 
     /**
-     * Create an instance of OpenAIChatServiceImpl, let Spring automatically inject dependencies, and only set the URL and model ID of OpenAI.
+     * Create an instance of OpenAIChatServiceImpl, let Spring automatically inject
+     * dependencies, and only set the URL and model ID of OpenAI.
      * @param openAIUrl service URL
      * @param model model ID
-     * @return Return an instance of OpenAIChatServiceImpl with automatically injected dependencies.
+     * @return Return an instance of OpenAIChatServiceImpl with automatically injected
+     * dependencies.
      */
     public OpenAIChatServiceImpl create(String openAIUrl, String model) {
         OpenAIChatServiceImpl service = new OpenAIChatServiceImpl();
@@ -34,11 +36,13 @@ public class OpenAIChatServiceFactory {
     }
 
     /**
-     * Create an instance of OpenAIChatServiceImpl and let Spring automatically inject dependencies to create and modify OpenAI's URL, model ID, and API key.
+     * Create an instance of OpenAIChatServiceImpl and let Spring automatically inject
+     * dependencies to create and modify OpenAI's URL, model ID, and API key.
      * @param openAIUrl service URL
      * @param model model ID
      * @param openaiApiKey OpenAI API key
-     * @return Return an instance of OpenAIChatServiceImpl with automatically injected dependencies.
+     * @return Return an instance of OpenAIChatServiceImpl with automatically injected
+     * dependencies.
      */
     public OpenAIChatServiceImpl create(String openAIUrl, String model, String openaiApiKey) {
         OpenAIChatServiceImpl service = new OpenAIChatServiceImpl();

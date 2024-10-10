@@ -35,7 +35,8 @@ public class ChatGenerateSummaryAspect {
     public void getHistoryPreChatMethod() {
     }
 
-    // Modify the pointcut to match the chat method of all classes implementing the ChatService interface.
+    // Modify the pointcut to match the chat method of all classes implementing the
+    // ChatService interface.
     @Pointcut("execution(public * com.AI.Budgerigar.chatbot.Services.ChatService.chat(..))")
     public void chatMethod() {
     }
@@ -73,12 +74,14 @@ public class ChatGenerateSummaryAspect {
         // Prepare the asynchronous task (title generation) in advance.
         Object[] args = joinPoint.getArgs();
         Object caller = args[0];
-        String conversationId = args[2].toString(); // Pretend conversationId is the second parameter.
+        String conversationId = args[2].toString(); // Pretend conversationId is the
+                                                    // second parameter.
 
         log.info("getHistoryPreChat completed for conversationId: {}", conversationId);
 
         if (shouldGenerateTitle(conversationId)) {
-            // If a title needs to be generated, start an asynchronous task and store it in "futureMap".
+            // If a title needs to be generated, start an asynchronous task and store it
+            // in "futureMap".
             CompletableFuture<Result<String>> future = CompletableFuture.supplyAsync(() -> {
                 try {
                     if (caller instanceof OpenAIChatServiceImpl openAIChatService) {
@@ -93,7 +96,8 @@ public class ChatGenerateSummaryAspect {
                     throw new RuntimeException(e);
                 }
             });
-            futureMap.put(Thread.currentThread(), future); // Store the asynchronous task in "futureMap".
+            futureMap.put(Thread.currentThread(), future); // Store the asynchronous task
+                                                           // in "futureMap".
         }
         else {
             // If a title does not need to be generated, store null in "futureMap".
@@ -111,11 +115,17 @@ public class ChatGenerateSummaryAspect {
         Object result = joinPoint.proceed();
 
         // Retrieve the asynchronous task and wait for it to complete (if it exists).
-        CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // Retrieve and remove from the Map.
+        CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // Retrieve
+                                                                                             // and
+                                                                                             // remove
+                                                                                             // from
+                                                                                             // the
+                                                                                             // Map.
         if (future != null && future.get() != DO_NOT_GEN) {
             try {
                 // Waiting for asynchronous title generation to complete.
-                Result<String> titleResult = future.get(); // Wait for the asynchronous task to complete.
+                Result<String> titleResult = future.get(); // Wait for the asynchronous
+                                                           // task to complete.
 
                 Result<String> originalResult = (Result<String>) result;
                 // Merge the title results into the original return value.
@@ -129,12 +139,20 @@ public class ChatGenerateSummaryAspect {
                 }
             }
             catch (Exception e) {
-                log.error("Error waiting for title generation in chat: ", e); // Exceptions occurred during the capture waiting process.
-                // If an exception occurs during the title generation process, return the original result.
+                log.error("Error waiting for title generation in chat: ", e); // Exceptions
+                                                                              // occurred
+                                                                              // during
+                                                                              // the
+                                                                              // capture
+                                                                              // waiting
+                                                                              // process.
+                // If an exception occurs during the title generation process, return the
+                // original result.
                 return result;
             }
         }
-        // If "future" is null, it means no title is generated and the original result is returned directly.
+        // If "future" is null, it means no title is generated and the original result is
+        // returned directly.
         return result;
     }
 
@@ -143,10 +161,16 @@ public class ChatGenerateSummaryAspect {
         log.info("Start：aroundChatFlux");
         // Execute the target method (chatFlux).
         Flux<Result<String>> resultFlux = (Flux<Result<String>>) joinPoint.proceed();
-        CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // Retrieve and remove from the Map.
+        CompletableFuture<Result<String>> future = futureMap.remove(Thread.currentThread()); // Retrieve
+                                                                                             // and
+                                                                                             // remove
+                                                                                             // from
+                                                                                             // the
+                                                                                             // Map.
         AtomicBoolean titleAppended = new AtomicBoolean(false);
 
-        // Listen to each message in the stream and merge the titles at the last one (i.e., when finishReason isn't equal to null).
+        // Listen to each message in the stream and merge the titles at the last one
+        // (i.e., when finishReason isn't equal to null).
         return resultFlux.concatMap(result -> {
             if (future != null && future.isDone() && !titleAppended.get()) {
                 // If "future" is done, merge the title as soon as possible.
@@ -172,12 +196,14 @@ public class ChatGenerateSummaryAspect {
             // Check "finishReason" to determine if it is the last message of the stream.
             if (result.getMsg() != null && result.getData().isBlank() && !titleAppended.get()) {
                 if (future != null) {
-                    // When it's the last message, wait for the title generation result and merge it with the original message.
+                    // When it's the last message, wait for the title generation result
+                    // and merge it with the original message.
                     return Mono.fromFuture(future).map(titleResult -> {
 
                         titleAppended.set(true);
                         if (titleResult.getCode() == 1) {
-                            // Merge the generated title with the original "finishReason" message returned.
+                            // Merge the generated title with the original "finishReason"
+                            // message returned.
                             String combinedMessage = result.getMsg() + " " + CONVERSATION_SUMMARY_GENRATED
                                     + titleResult.getData();
                             return Result.success(result.getData(), combinedMessage);
@@ -188,14 +214,16 @@ public class ChatGenerateSummaryAspect {
                             return Result.success(result.getData(), combinedMessage);
                         }
                     }).onErrorResume(e -> {
-                        // If an exception occurs during the title generation process, return the original result.
+                        // If an exception occurs during the title generation process,
+                        // return the original result.
                         log.error("Error waiting for title generation in chatFlux: ", e);
                         return Mono.just(result);
                     });
                 }
                 log.info("No need to generate a title，returning original result directly.");
             }
-            return Mono.just(result); // If no title needs to be generated, return the original result directly.
+            return Mono.just(result); // If no title needs to be generated, return the
+                                      // original result directly.
         });
     }
 

@@ -1,6 +1,6 @@
-/* 设置全局背景 */
+/* Set global background. */
 body {
-    background: linear-gradient(135deg, #73a5ff, #5477f5); /* 背景渐变色 */
+    background: linear-gradient(135deg, #73a5ff, #5477f5); /* Background gradient color. */
     height: 100vh;
     margin: 0;
     display: flex;
@@ -13,14 +13,14 @@ body {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
-/* 加载和错误屏幕的样式 */
+/* Styles for loading and error screens. */
 .index-page.loading-screen, .index-page.error-screen {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100vh;
-    background-color: transparent; /* 保持背景透明以与全局背景一致 */
+    background-color: transparent; /* Keep the background transparent to be consistent with the global background. */
 }
 
 .loading-logo {

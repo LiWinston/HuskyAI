@@ -8,7 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- *  Utility class for generating username suggestions
+ * Utility class for generating username suggestions
  */
 public class UsernameSuggestionUtil {
 

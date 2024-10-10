@@ -17,33 +17,33 @@
 
 .admin-checkbox {
     display: flex;
-    justify-content: center; /* 水平居中 */
-    align-items: center; /* 垂直居中 */
+    justify-content: center;
+    align-items: center;
     margin-bottom: 15px;
-    cursor: pointer; /* 鼠标悬浮效果 */
+    cursor: pointer;
 }
 
 .admin-checkbox label {
     display: flex;
     padding: 10px;
-    align-items: center; /* 垂直居中对齐 */
-    justify-content: center; /* 标签内容居中 */
-    gap: 10px; /* 复选框与文本之间的间距 */
-    font-size: 18px; /* 调整字体大小 */
-    font-weight: bold; /* 使字体加粗 */
-    color: #333; /* 深色字体 */
-    cursor: pointer; /* 标签可点击 */
-    text-align: center; /* 文本居中 */
-    position: relative; /* 使手动调整位置生效 */
-    top: -5px; /* 手动向上移动文字 */
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    text-align: center;
+    position: relative;
+    top: -5px;
 }
 
 .admin-checkbox input[type="checkbox"] {
     appearance: none;
     width: 20px;
     height: 20px;
-    border: 2px solid #007bff; /* 调整边框颜色 */
-    border-radius: 4px; /* 轻微圆角 */
+    border: 2px solid #007bff;
+    border-radius: 4px;
     display: inline-block;
     position: relative;
     outline: none;
@@ -52,12 +52,12 @@
 }
 
 .admin-checkbox input[type="checkbox"]:checked {
-    background-color: #007bff; /* 选中状态的背景颜色 */
+    background-color: #007bff;
     border-color: #007bff;
 }
 
 .admin-checkbox input[type="checkbox"]:checked::after {
-    content: '✓'; /* 添加选中标记 */
+    content: '✓';
     color: white;
     font-size: 14px;
     position: absolute;
@@ -67,16 +67,16 @@
 }
 
 .admin-checkbox input[type="checkbox"]:focus {
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* 聚焦时的阴影效果 */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
-/* 显示管理员邮箱输入框 */
+/* Show admin email input box. */
 .admin-email-container input {
-    border: 1px solid #4CAF50; /* 邮箱输入框绿色边框 */
+    border: 1px solid #4CAF50;
 }
 
 .admin-email-container input:focus {
-    border-color: #333; /* 邮箱输入框获得焦点时边框颜色 */
+    border-color: #333;
 }
 
 .suspension-window p {
@@ -107,7 +107,7 @@
 }
 
 .username-container {
-    position: relative; /* 确保气泡提示相对于这个容器定位 */
+    position: relative;
     width: 100%;
     margin-bottom: 15px;
 }
@@ -135,7 +135,6 @@
     font-size: 16px;
 }
 
-/* Password container styles */
 /* Password container styles */
 .password-container {
     position: relative;
@@ -171,7 +170,7 @@
     height: 30px;
 }
 
-/* 鼠标悬停时小猴图标变色 */
+/* When hovering the mouse, the little monkey icon changes color. */
 .password-container .toggle-password:hover {
     color: #000;
 }
@@ -215,10 +214,10 @@
 
 .loading-spinner {
     position: absolute;
-    right: 10px; /* 根据需要调整位置 */
+    right: 10px;
     top: 40%;
     transform: translateY(-50%);
-    font-size: 20px; /* 图标大小 */
+    font-size: 20px;
 }
 
 .suggestion-popup {
@@ -239,7 +238,7 @@
     padding: 5px;
     cursor: pointer;
     font-size: 14px;
-    position: relative; /* 添加这一行 */
+    position: relative;
 }
 
 .suggestion-item:hover {
@@ -260,10 +259,10 @@
 .suggestion-item.clicked {
     animation: flyToInput 0.25s ease-in-out forwards;
     position: absolute;
-    z-index: 20; /* 确保动画过程中在其他元素之上 */
+    z-index: 20;
 }
 
-/* 新增的关闭按钮样式 */
+/* New close button style. */
 .close-button {
     position: absolute;
     top: 5px;
@@ -298,7 +297,7 @@
 }
 
 .auth-container, .uuid-input-container {
-    background-color: #f9f9f9; /* 确保输入框容器有轻微背景对比 */
+    background-color: #f9f9f9; /* Ensure that the input box container has a slight background contrast. */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     padding: 30px;
     border-radius: 15px;
@@ -335,7 +334,7 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    margin-bottom: 10px; /* 一致的按钮间距 */
+    margin-bottom: 10px; /* Consistent button spacing. */
 }
 
 .uuid-input-container button:hover {

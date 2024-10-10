@@ -8,7 +8,8 @@ public interface ChatMessagesMongoDAO {
 
     void updateHistoryById(String conversationId, List<Message> newMessages);
 
-    int getConversationLengthById(String conversationId); // Obtain the conversation length.
+    int getConversationLengthById(String conversationId); // Obtain the conversation
+                                                          // length.
 
     List<Message> getConversationHistory(String conversationId);
 

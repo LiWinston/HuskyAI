@@ -3,7 +3,7 @@ import Swal from 'sweetalert2';
 function showSweeetChoice(message, options = {}) {
     const {
         title = 'Notification',
-        icon = 'warning',  // 警告图标默认使用 'warning'
+        icon = 'warning',  // The ‘warning； icon is used by default.
         confirmButtonText = 'OK',
         confirmButtonColor = '#3085d6',
         cancelButtonText = 'Cancel',
@@ -39,13 +39,13 @@ function showSweetAlertWithRetVal(message, options = {}) {
     });
 }
 
-// 默认弹窗，允许传入自定义参数
+// Default popup, allows passing in custom parameters.
 function showSweetAlert(message, options = {}) {
     const {
-        title = 'Notification',   // 默认标题
-        icon = 'success',         // 默认图标
-        confirmButtonText = 'OK', // 默认确认按钮文字
-        confirmButtonColor = '#3085d6',  // 默认确认按钮颜色 (蓝色)
+        title = 'Notification',   // default title
+        icon = 'success',         // default icon
+        confirmButtonText = 'OK', // default confirm button text
+        confirmButtonColor = '#3085d6',  // default confirm button color (blue)
     } = options;
 
     Swal.fire({

@@ -63,7 +63,10 @@ public class BaiduConfig {
     }
 
     private String getRandomModel() {
-        int randomIndex = (int) (Math.random() * modelList.size());// Ensure the random number is within the range of the model list.
+        int randomIndex = (int) (Math.random() * modelList.size());// Ensure the random
+                                                                   // number is within the
+                                                                   // range of the model
+                                                                   // list.
         return modelList.get(randomIndex);
     }
 

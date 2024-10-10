@@ -66,7 +66,8 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
             ChatConversationRecord chatConversationRecord = mongoTemplate.findById(conversationId,
                     ChatConversationRecord.class);
             if (chatConversationRecord != null) {
-                chatConversationRecord.addStringMessages(messageArrays); // Use a string array.
+                chatConversationRecord.addStringMessages(messageArrays); // Use a string
+                                                                         // array.
                 mongoTemplate.save(chatConversationRecord);
             }
             else {
@@ -92,12 +93,14 @@ public class ChatMessagesMongoDAOImpl implements ChatMessagesMongoDAO {
             if (chatConversationRecord != null) {
                 List<String[]> messagesList = chatConversationRecord.getMessages();
 
-                // Step 3: Verify whether the structure and content of the message list are valid.
+                // Step 3: Verify whether the structure and content of the message list
+                // are valid.
                 if (messagesList != null && !messagesList.isEmpty() && messagesList.get(0) != null) {
                     log.info("MongoDB_Get_History:Found {} history - {}. Returning {} messages.", messagesList.size(),
                             conversationId, messagesList.size());
 
-                    // Step 4: Convert the message list to a list of Message objects and return.
+                    // Step 4: Convert the message list to a list of Message objects and
+                    // return.
                     return messagesList.stream().map(this::convertToMessage).collect(Collectors.toList());
                 }
                 else {

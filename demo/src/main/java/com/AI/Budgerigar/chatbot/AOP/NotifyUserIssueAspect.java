@@ -27,7 +27,8 @@ public class NotifyUserIssueAspect {
     private String SudoAlertEmail;
 
     /**
-     * Define a cut point and execute aspect logic. When "handleLoginIp", return "LoginIpStatus.NEW".
+     * Define a cut point and execute aspect logic. When "handleLoginIp", return
+     * "LoginIpStatus.NEW".
      * @param usr user information
      * @param loginIpInfo new IP information
      */

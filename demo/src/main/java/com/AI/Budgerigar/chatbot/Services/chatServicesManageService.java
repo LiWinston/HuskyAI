@@ -26,7 +26,8 @@ import java.util.concurrent.ExecutorService;
 
 public class chatServicesManageService {
 
-    // Use a double-layer Map: the outer Map uses the service's URL or alias as the key, and the inner Map uses the model ID as the key.
+    // Use a double-layer Map: the outer Map uses the service's URL or alias as the key,
+    // and the inner Map uses the model ID as the key.
     @Autowired
     @Getter
     private ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices;
@@ -67,7 +68,8 @@ public class chatServicesManageService {
     }
 
     /**
-     * Obtain the model from the remote service and register it at @serviceName. If an alias is set, use the alias as the key; otherwise, use the service's URL.
+     * Obtain the model from the remote service and register it at @serviceName. If an
+     * alias is set, use the alias as the key; otherwise, use the service's URL.
      * @param serviceConfig
      */
     private void fetchAndRegisterModelsFromService(RemoteServiceConfig.ServiceConfig serviceConfig) {

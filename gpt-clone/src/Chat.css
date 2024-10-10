@@ -22,10 +22,10 @@
 }
 
 .time-group-divider {
-    font-weight: bold; /* 粗体 */
-    margin: 20px 0 10px 10px; /* 适当的上、下和左边距 */
+    font-weight: bold; /* bold */
+    margin: 20px 0 10px 10px; /* Proper top, bottom, and left margins. */
     font-size: 14px;
-    color: #1c1c1c; /* GPT风格的深色文字 */
+    color: #1c1c1c; /* GPT-style dark text. */
 }
 
 .conversation-item {
@@ -57,28 +57,27 @@
     --item-bg-color: #0056b3;
 }
 
-/* 标题基本样式 */
+/* Basic title style. */
 .conversation-item-title {
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* 限制为3行 */
+    -webkit-line-clamp: 3; /* Limited to 3 lines. */
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis; /* 显示省略号 */
-    white-space: normal; /* 保持正常换行 */
+    text-overflow: ellipsis; /* Ellipsis for overflow. */
+    white-space: normal; /* Normal white space. */
     line-height: 1.5em;
-    max-height: 4.5em; /* 三行的高度 */
+    max-height: 4.5em; /* Limited to 4.5em. */
     width: calc(100% - 30px);
-    transition: all 0.3s ease-in-out; /* 添加过渡效果 */
+    transition: all 0.3s ease-in-out;   /* Add a smooth transition. */
 }
 
-/* 超出三行的标题容器 */
+/* Long title style. */
 .conversation-item-title.long-title {
     position: relative;
     height: 4.5em;
     overflow: hidden;
 }
 
-/* 为未选中状态下的悬停添加遮罩 */
 .conversation-item:hover .conversation-item-title.long-title::after {
     content: '';
     position: absolute;
@@ -97,7 +96,6 @@
     transition: background 0.3s ease;
 }
 
-/* 底部遮罩 - 使用 CSS 变量 */
 .conversation-item.selected:hover .conversation-item-title.long-title::after {
     content: '';
     position: absolute;
@@ -116,57 +114,19 @@
     transition: background 0.3s ease;
 }
 
-/*!* 选中状态时的遮罩 *!*/
-/*.conversation-item.selected .conversation-item-title.long-title::after {*/
-/*    background: linear-gradient(*/
-/*            to bottom,*/
-/*            transparent,*/
-/*            rgba(0, 113, 227, 0.3) 20%,*/
-/*            rgba(0, 113, 227, 0.8) 60%,*/
-/*            #0071e3 100%*/
-/*    );*/
-/*}*/
-
-/* 滚动容器 */
+/* Add a smooth scroll effect. */
 .conversation-item-title.long-title .scroll-content {
     position: relative;
     top: 0;
     white-space: normal;
-    /* 确保内容可以正常滚动 */
     will-change: transform;
 }
 
-/* 悬停时触发滚动，取消省略号效果 */
 .conversation-item:hover .conversation-item-title.long-title {
-    -webkit-line-clamp: unset; /* 取消行数限制 */
-    max-height: none; /* 取消高度限制 */
-    overflow: hidden; /* 隐藏溢出 */
+    -webkit-line-clamp: unset; /* Cancel the line clamp. */
+    max-height: none; /* Cancel the max height. */
+    overflow: hidden; /* Hide the overflow. */
 }
-
-/*.conversation-item:hover .conversation-item-title.long-title .scroll-content {*/
-/*    animation: smoothScroll var(--scroll-duration, 15s) ease-in-out infinite;*/
-/*}*/
-
-/*@keyframes smoothScroll {*/
-/*    0% {*/
-/*        transform: translateY(0);*/
-/*    }*/
-/*    5% { !* 添加初始停顿 *!*/
-/*        transform: translateY(0);*/
-/*    }*/
-/*    45% {*/
-/*        transform: translateY(calc(-100% + 4.5em));*/
-/*    }*/
-/*    55% { !* 添加底部停顿 *!*/
-/*        transform: translateY(calc(-100% + 4.5em));*/
-/*    }*/
-/*    95% {*/
-/*        transform: translateY(0);*/
-/*    }*/
-/*    100% {*/
-/*        transform: translateY(0);*/
-/*    }*/
-/*}*/
 
 
 .options-menu {
@@ -179,58 +139,55 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     padding: 10px;
     z-index: 100;
-    opacity: 0; /* 初始状态为隐藏 */
-    visibility: hidden; /* 避免占据布局空间 */
-    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 使用 cubic-bezier 代替 ease-in-out */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .options-menu.show {
-    opacity: 1; /* 当菜单显示时，设置为完全不透明 */
-    visibility: visible; /* 确保显示 */
+    opacity: 1;
+    visibility: visible;
 }
 
-/*.conversation-item:hover .options-menu {*/
-/*    !*display: none; !* 禁用悬停时显示菜单的效果 *!*!*/
-/*}*/
 
 .options-icon {
-    display: none; /* 默认情况下隐藏 */
+    display: none;
     cursor: pointer;
-    width: 14px; /* 固定宽度 */
-    height: 14px; /* 固定高度 */
+    width: 14px;
+    height: 14px;
     align-items: center;
-    justify-content: center; /* 居中对齐 */
-    margin-left: 10px; /* 留出一些间距 */
-    color: rgba(29, 29, 31, 0.53); /* 初始颜色 */
-    flex-shrink: 0; /* 确保按钮不缩小 */
-    transition: color 0.18s ease; /*加动态变色*/
+    justify-content: center;
+    margin-left: 10px;
+    color: rgba(29, 29, 31, 0.53);
+    flex-shrink: 0;
+    transition: color 0.18s ease;
 }
 
 .conversation-item:hover .options-icon {
-    display: flex; /* 当鼠标悬停在 .conversation-item 上时显示图标 */
+    display: flex;
 }
 
 .options-icon:hover {
-    color: #1d1d1f; /* 黑色图标 */
+    color: #1d1d1f;
 }
 
-/* 强制菜单的文字为黑色 */
+
 .options-menu ul {
     list-style: none;
     padding: 0;
     margin: 0;
-    color: #1d1d1f; /* 黑色文字，确保在选中时可见 */
+    color: #1d1d1f;
 }
 
 .options-menu ul li {
     padding: 8px 12px;
     cursor: pointer;
-    color: #1d1d1f; /* 黑色文字 */
+    color: #1d1d1f;
 }
 
 .options-menu ul li:hover {
     background-color: #f5f5f7;
-    color: #1d1d1f; /* 悬停时文字仍为黑色 */
+    color: #1d1d1f;
 }
 
 /*******************************************************************************************/
@@ -245,7 +202,7 @@
 }
 
 .message-container.streaming {
-    border: 1px solid #007aff; /* 突出未完成的消息 */
+    border: 1px solid #007aff;
     animation: pulse 2s infinite;
 }
 
@@ -278,7 +235,7 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
-    max-height: 400vh; /* 设置为一页半的高度 */
+    max-height: 400vh;
     overflow-y: auto;
 }
 
@@ -299,18 +256,18 @@
 }
 
 .message.user, .message.assistant {
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); /* 确保所有消息都有边框阴影 */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 .recent-message .message {
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4); /* 更深的阴影效果 */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
 }
 
 
 .timestamp {
     font-size: 11px;
     margin-top: 1px;
-    margin-bottom: 5px; /* 增加底部外边距，避免时间戳侵入下一条消息 */
+    margin-bottom: 5px;
     opacity: 0.9;
 }
 
@@ -340,7 +297,6 @@
     height: 1px;
     /*background-color: #ccc;*/
     margin: 0 10px;
-    /*    虚短的分割线*/
     background-image: linear-gradient(to right, #ccc, #f5f5f7, #ccc);
     background-size: 100% 1px;
     background-repeat: no-repeat;
@@ -366,7 +322,6 @@
 }
 
 
-/* 添加滚动条样式 */
 .message::-webkit-scrollbar {
     width: 6px;
 }
@@ -407,11 +362,11 @@ textarea {
     resize: none;
     outline: none;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 1s ease, height 1s ease; /* 添加高度过渡效果 */
-    max-width: calc(100% - 80px); /* 留出按钮的宽度 */
-    max-height: 40vh; /* 设置文本框的最大高度 */
-    min-height: 22px; /* 设置文本框的最小高度 */
-    overflow-y: hidden; /* 确保文本框自动扩展时没有滚动条 */
+    transition: box-shadow 1s ease, height 1s ease;
+    max-width: calc(100% - 80px);
+    max-height: 40vh;
+    min-height: 22px;
+    overflow-y: hidden;
 }
 
 textarea:focus {
@@ -419,12 +374,12 @@ textarea:focus {
 }
 
 .chat-container button {
-    display: flex; /* 使用 Flexbox 布局 */
+    display: flex;
     align-self: flex-end;
-    justify-content: center; /* 水平居中对齐内容 */
-    align-items: center; /* 垂直居中对齐内容 */
+    justify-content: center;
+    align-items: center;
     margin-left: 10px;
-    padding: 10px 20px; /* 增加内边距，使按钮看起来更大 */
+    padding: 10px 20px;
     background-color: #007aff;
     color: white;
     border: none;
@@ -434,7 +389,7 @@ textarea:focus {
     cursor: pointer;
     transition: background-color 0.2s ease;
     height: 42px; /* Match the min-height of textarea */
-    box-sizing: border-box; /* 使内边距和边框计入总高度 */
+    box-sizing: border-box;
 }
 
 .chat-container .sendButton {
@@ -450,8 +405,8 @@ textarea:focus {
     justify-content: center;
     transition: background-color 0.2s ease;
     font-size: x-small;
-    max-width: 80px; /* 固定宽度，防止缩放时变形 */
-    height: 30px; /* 固定高度，保持圆形比例 */
+    max-width: 80px;
+    height: 30px;
 }
 
 .chat-container button:hover {
@@ -464,7 +419,7 @@ textarea:focus {
     cursor: not-allowed;
 }
 
-/* 代码高亮样式 */
+
 pre {
     background-color: rgba(40, 44, 52, 0.56);
     border-radius: 4px;
@@ -486,7 +441,7 @@ code {
 .notification-banner {
     align-self: center;
     position: fixed;
-    bottom: 60px; /* 距离底部更远，避免遮挡输入框 */
+    bottom: 60px;
     left: 50%;
     transform: translateX(-50%);
     background-color: #f0ad4e;
@@ -499,7 +454,7 @@ code {
     font-weight: bold;
     text-align: center;
     min-width: 200px;
-    max-width: 80%; /* 使用相对宽度以适应窄屏幕 */
+    max-width: 80%;
 }
 
 
@@ -520,8 +475,8 @@ code {
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s ease;
-    width: 40px; /* 固定宽度，防止缩放时变形 */
-    height: 40px; /* 固定高度，保持圆形比例 */
+    width: 40px;
+    height: 40px;
 }
 
 .new-conversation-btn:hover {
@@ -625,9 +580,9 @@ code {
 .chat-interface .model-options {
     position: absolute;
     top: 100%;
-    left: 50%; /* 将左边缘设置为父元素的中心 */
-    transform: translateX(-50%); /* 向左移动自身宽度的一半 */
-    background-color: rgba(255, 255, 255, 0.95); /* 设置为几乎不透明的白色背景 */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.95);
     border: none;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 10px;
@@ -657,7 +612,7 @@ code {
     text-align: left;
     cursor: pointer;
     border-radius: 10px;
-    color: black; /* 设置为黑色文本 */
+    color: black;
     transition: background-color 0.3s ease;
     white-space: nowrap;
     display: block;
@@ -667,7 +622,7 @@ code {
 
 .chat-interface .model-options button:hover {
     transition: background-color 0.125s ease;
-    background-color: rgba(0, 0, 0, 0.1); /* 悬停时背景为浅黑 */
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 /*loading animation when ai is thinking*/
@@ -712,7 +667,6 @@ code {
     }
 }
 
-/* 移动端适配 */
 @media (max-width: 1079px) {
     .chat-interface {
         flex-direction: column;
@@ -729,7 +683,7 @@ code {
         overflow-y: auto;
         border-right: none;
         border-bottom: 1px solid #d2d2d7;
-        padding: 5px; /* 减小内边距，适应较小屏幕 */
+        padding: 5px;
     }
 
     .conversation-item {
@@ -743,12 +697,12 @@ code {
 
 
     .chat-container {
-        height: calc(100vh - 30vh); /* 动态调整聊天容器的高度 */
+        height: calc(100vh - 30vh);
     }
 
     .message {
         max-width: 100%;
-        max-height: 200vh; /* 超过2页的消息 */
+        max-height: 200vh;
     }
 
 
@@ -766,44 +720,43 @@ code {
     }
 
     .notification-banner {
-        padding: 10px 20px; /* 减小边距 */
-        font-size: 16px; /* 减小字体大小 */
-        bottom: 15px; /* 调整底部间距 */
-        min-width: 150px; /* 减小最小宽度 */
+        padding: 10px 20px;
+        font-size: 16px;
+        bottom: 15px;
+        min-width: 150px;
     }
 
 
 }
 
-/* 重写移动端适配 - 最大宽度 768px */
 @media (max-width: 768px) {
     .chat-interface {
-        flex-direction: column; /* 垂直布局 */
+        flex-direction: column;
     }
 
     .conversation-list {
-        width: 100%; /* 让会话列表占满宽度 */
+        width: 100%;
         height: auto;
-        max-height: 15vh; /* 限制会话列表高度 */
+        max-height: 15vh;
         border-right: none;
-        border-bottom: 1px solid #d2d2d7; /* 改为底部分割线 */
-        padding: 5px; /* 减少边距 */
+        border-bottom: 1px solid #d2d2d7;
+        padding: 5px;
         overflow-y: auto;
     }
 
     .conversation-item {
-        font-size: 14px; /* 减小字体大小 */
+        font-size: 14px;
         padding: 8px;
     }
 
     .chat-container {
-        height: calc(100vh - 20vh); /* 调整聊天容器的高度 */
+        height: calc(100vh - 20vh);
     }
 
     .message {
         max-width: 100%;
-        font-size: 14px; /* 调整消息字体大小 */
-        padding: 8px 12px; /* 减小消息内边距 */
+        font-size: 14px;
+        padding: 8px 12px;
     }
 
     .input-container {
@@ -811,31 +764,30 @@ code {
     }
 
     textarea {
-        font-size: 14px; /* 缩小输入框字体 */
+        font-size: 14px;
         padding: 10px 12px;
-        max-height: calc(80vh); /* 限制文本框的最大高度 */
+        max-height: calc(80vh);
     }
 
     .new-conversation-btn {
-        width: 30px; /* 缩小按钮 */
+        width: 30px;
         height: 30px;
     }
 }
 
-/* 超小屏幕 - 最大宽度 480px */
 @media (max-width: 480px) {
     .conversation-list {
-        max-height: 12vh; /* 限制会话列表高度 */
+        max-height: 12vh;
         padding: 4px;
     }
 
     .conversation-item {
-        font-size: 12px; /* 进一步缩小字体 */
+        font-size: 12px;
         padding: 6px;
     }
 
     .message {
-        font-size: 12px; /* 缩小消息字体 */
+        font-size: 12px;
         padding: 6px 10px;
     }
 
@@ -844,13 +796,13 @@ code {
     }
 
     textarea {
-        font-size: 12px; /* 更小字体 */
+        font-size: 12px;
         padding: 8px;
-        min-height: 32px; /* 限制输入框最小高度 */
+        min-height: 32px;
     }
 
     .new-conversation-btn {
-        width: 25px; /* 更小的按钮 */
+        width: 25px;
         height: 25px;
     }
 }

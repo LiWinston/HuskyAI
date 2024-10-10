@@ -11,11 +11,11 @@ function ModelManagement() {
         {url: '', name: '', apiKey: '', allowedModels: []});
     const [operationResult, setOperationResult] = useState(null);
 
-// 获取当前的模型列表
+// Retrieve the current list of models.
     const fetchModels = async () => {
         try {
             const response = await axios.get(window.API_BASE_URL + '/admin/models');
-            setModels(response.data.data.modelServices);  // 适配新的VO结构
+            setModels(response.data.data.modelServices);  // Adapt to the new VO structure.
         } catch (error) {
             console.error('Error fetching models:', error);
         }
@@ -25,13 +25,13 @@ function ModelManagement() {
         fetchModels().then(r => console.log(r));
     }, []);
 
-    // 动态注册模型
+    // Dynamic registration model.
     const registerModel = async () => {
         try {
             const response = await axios.post(window.API_BASE_URL + '/admin/models', newModel);
             if (response.data.success) {
                 setOperationResult('Model registered successfully.');
-                await fetchModels();  // 注册后刷新列表
+                await fetchModels();  // Refresh the list after registering.
             } else {
                 setOperationResult('Failed to register model.');
             }
@@ -40,7 +40,7 @@ function ModelManagement() {
         }
     };
 
-    // 更新模型信息
+    // Update model information.
     const updateModel = async (name, model, operation) => {
         try {
             await axios.post(window.API_BASE_URL + '/admin/models', {name, model, operation});
@@ -50,7 +50,7 @@ function ModelManagement() {
         }
     };
 
-    // 手动刷新模型
+    // Manually refresh the model.
     const refreshModels = async () => {
         try {
             await axios.post(window.API_BASE_URL + '/admin/models/refresh').then(res => {
@@ -74,7 +74,7 @@ function ModelManagement() {
         }
     }
 
-    // 启用/禁用所有模型
+    // Enable/disable all models.
     const toggleMultiModels = async (name, models, operation) => {
         try {
             const modelIds = models.map((m) => m.model);

@@ -25,11 +25,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * <li>Model details and enable/disable:
  * <ul>
  * <li>Detail: Use the result of the above GET request.</li>
- * <li>Enable/Disable: POST /admin/models，body: {name, model, operation}. "operation" can be "enable" or
- * "disable"</li>
+ * <li>Enable/Disable: POST /admin/models，body: {name, model, operation}. "operation" can
+ * be "enable" or "disable"</li>
  * </ul>
  * </li>
- * <li>Dynamically register a new model: POST /admin/models，body: registerModelDTO，return Result&lt;Boolean&gt;</li>
+ * <li>Dynamically register a new model: POST /admin/models，body: registerModelDTO，return
+ * Result&lt;Boolean&gt;</li>
  * <li>Manually refresh the model: POST /admin/models/refresh</li>
  * </ul>
  */
@@ -47,13 +48,18 @@ public class modelManageController {
     private RemoteServiceConfig remoteServiceConfig;
 
     /**
-     * Get the model list, "RemoteServiceConfig" records all the service configurations, including the service's URL, name, apiKey, allowedModels.
-     * ChatServicesManageService manages and maintains all currently available services, especially ConcurrentHashMap<String,
-     * ConcurrentHashMap<String, ChatService>>
-     * chatServices record name - (model-service instance) mapping. The name may be determined as "name" or "url" depending on the configuration.
-     * To obtain a stable URL, you can use the service instance getOpenAIUrl method (if the service instance is OpenAIChatServiceImpl).
-     * Please note that Baidu and Doubao are not handled here, as they do not support the OpenAI interface. If you need to make changes, please modify the configuration.
-     * The returned ModelsStatusVO records the URL, name, apiKey of all services, and the mdList, which records the model name, whether access is allowed, and whether it is available on the server.
+     * Get the model list, "RemoteServiceConfig" records all the service configurations,
+     * including the service's URL, name, apiKey, allowedModels. ChatServicesManageService
+     * manages and maintains all currently available services, especially
+     * ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices
+     * record name - (model-service instance) mapping. The name may be determined as
+     * "name" or "url" depending on the configuration. To obtain a stable URL, you can use
+     * the service instance getOpenAIUrl method (if the service instance is
+     * OpenAIChatServiceImpl). Please note that Baidu and Doubao are not handled here, as
+     * they do not support the OpenAI interface. If you need to make changes, please
+     * modify the configuration. The returned ModelsStatusVO records the URL, name, apiKey
+     * of all services, and the mdList, which records the model name, whether access is
+     * allowed, and whether it is available on the server.
      * @return Model list
      */
     @GetMapping
@@ -75,7 +81,8 @@ public class modelManageController {
                 String apiKey = serviceConfig.getApiKey();
                 List<String> allowedModels = serviceConfig.getAllowedModels();
 
-                // Check the availableServicesHashMap to see if it is present, and if it is, it is available.
+                // Check the availableServicesHashMap to see if it is present, and if it
+                // is, it is available.
                 ConcurrentHashMap<String, ChatService> chatServiceHashMap = availableServicesHashMap
                     .get(!name.isBlank() ? name : url);
                 ModelsStatusVO.ModelService.ModelServiceBuilder modelServiceBuilder = ModelsStatusVO.ModelService

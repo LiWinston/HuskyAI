@@ -10,22 +10,22 @@ function Login() {
     const [isLogin, setIsLogin] = useState(true);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false); // 控制密码显示/隐藏
+    const [showPassword, setShowPassword] = useState(false); // Control password display/hide.
     const [errorMessage, setErrorMessage] = useState('');
-    const [suggestions, setSuggestions] = useState([]); // 存储替代用户名
-    const [showSuggestionPopup, setShowSuggestionPopup] = useState(false); // 控制气泡提示的显示
+    const [suggestions, setSuggestions] = useState([]); // Store alternative username.
+    const [showSuggestionPopup, setShowSuggestionPopup] = useState(false); // Control the display of tooltips.
     // eslint-disable-next-line no-unused-vars
-    const [checkDone, setCheckDone] = useState(false); // 确保只检查一次用户名
-    const [isCheckingUsername, setIsCheckingUsername] = useState(false); // 用户名检查状态
+    const [checkDone, setCheckDone] = useState(false); // Ensure the username is checked only once.
+    const [isCheckingUsername, setIsCheckingUsername] = useState(false); // Check if the username is being checked.
     const navigate = useNavigate();
 
-    const [isAdmin, setIsAdmin] = useState(false);  // 新增状态: 是否为管理员
-    const [adminEmail, setAdminEmail] = useState('');  // 新增状态: 管理员邮箱
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [adminEmail, setAdminEmail] = useState('');
 
 
-    const location = useLocation();// 获取当前的路由信息, 用于获取注册成功后的用户名
+    const location = useLocation();
     useEffect(() => {
-        // 如果从 Confirm 页面传递了用户名，则设置到输入框
+        // If the username is passed from the Confirm page, set it in the input box.
         if (location.state && location.state.username) {
             setUsername(location.state.username);
         }
@@ -40,34 +40,34 @@ function Login() {
             if (username === '' || username === null || isBlank(username)) {
                 return;
             }
-            setIsCheckingUsername(true); // 开始检查，显示加载图标
+            setIsCheckingUsername(true);
             try {
                 const response = await axios.get(`${window.API_BASE_URL}/user/register/checkUsername`, {params: {username}});
                 const result = response.data;
                 if (result.code === 0) {
-                    setSuggestions(result.data); // 设置替代用户名
-                    setShowSuggestionPopup(true); // 显示气泡提示
+                    setSuggestions(result.data);
+                    setShowSuggestionPopup(true);
                 }
                 setCheckDone(true); // if you want to check username only once after blur, uncomment this line and use "if (!isLogin && !checkDone) {"
             } catch (error) {
                 console.error('Username check failed', error);
             } finally {
-                setIsCheckingUsername(false); // 检查完成，隐藏加载图标
+                setIsCheckingUsername(false); // Check completed, hide loading icon.
             }
         }
     };
-    const [animationTarget, setAnimationTarget] = useState(null); // 存储当前点击的替代用户名
-    const usernameInputRef = useRef(null); // 引用用户名输入框
+    const [animationTarget, setAnimationTarget] = useState(null); // Store the alternative username of the current click.
+    const usernameInputRef = useRef(null); // Cite the username input box.
     const handleSuggestionClick = (suggestion, index) => {
         const usernameRect = usernameInputRef.current.getBoundingClientRect();
         const suggestionElement = document.getElementsByClassName('suggestion-item')[index];
         const suggestionRect = suggestionElement.getBoundingClientRect();
 
-        // 计算飞行动画的相对位移
+        // Calculate the relative displacement of the flight animation.
         const flyToLeft = usernameRect.left - suggestionRect.left;
         const flyToTop = usernameRect.top - suggestionRect.top;
 
-        // 动态设置飞行动画的终点
+        // Dynamically set the endpoint of the flight animation.
         suggestionElement.style.setProperty('--fly-to-left', `${flyToLeft}px`);
         suggestionElement.style.setProperty('--fly-to-top', `${flyToTop}px`);
 
@@ -98,24 +98,24 @@ function Login() {
 
         try {
             UserIpInfo(username, password);
-            // 发送登录请求
+            // Send login request.
             const response = await axios.post(`${window.API_BASE_URL}/user/login`,
                 {username, password},
                 {headers: {'Content-Type': 'application/json'}});
             const result = response.data;
 
             if (result.code === 1) {
-                // 登录成功，处理登录后的逻辑
+                // Login successful, processing post-login logic.
                 const token = result.token;
                 const uuid = result.uuid;
                 const role = result.role;
                 const confirmedAdmin = result.confirmedAdmin;
 
-                // 保存 token 和 uuid 到 localStorage
+                // Save token and uuid to localStorage.
                 localStorage.setItem('token', token);
                 localStorage.setItem('userUUID', uuid);
 
-                // 检查用户角色和管理员验证状态
+                // Check user roles and admin verification status.
                 if (role === 'admin' && confirmedAdmin) {
                     Swal.fire({
                         title: 'Admin Login',
@@ -129,8 +129,8 @@ function Login() {
                         showCloseButton: true,
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            localStorage.removeItem("selectedConversation");  // 清除选中的用户"
-                            localStorage.removeItem("conversations");  // 清除会话列表
+                            localStorage.removeItem("selectedConversation");
+                            localStorage.removeItem("conversations");
                             navigate('/chat');
                         } else if (result.isDenied) {
                             localStorage.removeItem("token");
@@ -141,25 +141,25 @@ function Login() {
                         }
                     });
                 } else if (role === 'admin' && !confirmedAdmin) {
-                    // 未确认的管理员，显示独特的提示
+                    // Unconfirmed administrators, display unique prompts.
                     showSweetAlertWithRetVal('Admin not yet verified. Please contact support.', {
                         title: 'Admin Verification',
                         icon: 'warning',
                         confirmButtonText: 'Go to Chat',
                     }).then(() => {
                         setErrorMessage(result.msg || 'Admin not yet verified. Please contact support.');
-                        localStorage.removeItem("selectedConversation");  // 清除选中的用户"
-                        localStorage.removeItem("conversations");  // 清除会话列表
+                        localStorage.removeItem("selectedConversation");
+                        localStorage.removeItem("conversations");
                         navigate('/chat');
                     });
                 } else {
-                    // 普通用户，跳转到聊天页面
-                    localStorage.removeItem("selectedConversation");  // 清除选中的用户"
-                    localStorage.removeItem("conversations");  // 清除会话列表
+                    // Regular user, redirect to the chat page.
+                    localStorage.removeItem("selectedConversation");
+                    localStorage.removeItem("conversations");
                     navigate('/chat');
                 }
             } else {
-                // 登录失败，显示错误消息
+                // Login failed, show error message.
                 showSweetAlertWithRetVal(result.msg || 'Login failed. Please try again.', {
                     title: 'Login Failed',
                     icon: 'error',
@@ -169,19 +169,18 @@ function Login() {
                 });
             }
         } catch (error) {
-            // 捕获异常，设置错误消息
             setErrorMessage(error.response?.data?.msg || 'An error occurred during login. Please try again.');
         }
     };
 
     const handleRegister = async () => {
         try {
-            const requestData = {username, password, isAdmin, adminEmail};  // 新增管理员邮箱信息
+            const requestData = {username, password, isAdmin, adminEmail};
             if (isAdmin) {
-                requestData.isAdmin = true;  // 如果是管理员，则增加管理员标识
-                requestData.adminEmail = adminEmail;  // 如果是管理员，则增加邮箱信息
+                requestData.isAdmin = true;
+                requestData.adminEmail = adminEmail;
             } else {
-                requestData.isAdmin = false;  // 如果不是管理员，则增加管理员标识
+                requestData.isAdmin = false;
             }
 
             const response = await axios.post(`${window.API_BASE_URL}/user/register`, requestData);
@@ -220,16 +219,16 @@ function Login() {
             <form onSubmit={handleSubmit}>
                 <div className="username-container">
                     <input
-                        ref={usernameInputRef} // 绑定输入框的引用
+                        ref={usernameInputRef}
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        onBlur={handleUsernameBlur} // 用户名输入完成时检测
+                        onBlur={handleUsernameBlur}
                         placeholder="Username"
                         required
                     />
                     {isCheckingUsername && (
-                        <div className="loading-spinner">⏳</div> // 显示加载中的图标
+                        <div className="loading-spinner">⏳</div>
                     )}
                     {showSuggestionPopup && (
                         <div className="suggestion-popup">

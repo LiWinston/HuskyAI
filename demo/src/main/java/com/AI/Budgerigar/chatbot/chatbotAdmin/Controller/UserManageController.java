@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Tag(name = "Admin interface user management", description = "Modify user attributes and add or remove user model access permissions.")
+@Tag(name = "Admin interface user management",
+        description = "Modify user attributes and add or remove user model access permissions.")
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/admin/user")
@@ -47,7 +48,8 @@ public class UserManageController {
     }
 
     @GetMapping("/modelAccess")
-    @Operation(summary = "get model access permissions for all users", description = "Get model access permissions for all users")
+    @Operation(summary = "get model access permissions for all users",
+            description = "Get model access permissions for all users")
     public Result<List<UserModelAccessConfig>> getAllUsersModelAccess() {
         try {
             List<UserModelAccessConfig> users = userModelAccessConfigRepository.findAll();
@@ -60,10 +62,12 @@ public class UserManageController {
     }
 
     @PutMapping("/modelAccess/{userId}")
-    @Operation(summary = "Update model access for a user", description = "Update model access permissions for a specific user")
-    public Result<Void> updateUserModelAccess(@PathVariable String userId, @RequestBody List<ModelAccessDTO> allowedModelDTOs) {
+    @Operation(summary = "Update model access for a user",
+            description = "Update model access permissions for a specific user")
+    public Result<Void> updateUserModelAccess(@PathVariable String userId,
+            @RequestBody List<ModelAccessDTO> allowedModelDTOs) {
         try {
-            //Convert DTO to persistent entity
+            // Convert DTO to persistent entity
             List<UserModelAccessConfig.ModelAccess> newModelAccess = allowedModelDTOs.stream().map(dto -> {
                 UserModelAccessConfig.ModelAccess modelAccess = new UserModelAccessConfig.ModelAccess();
                 BeanUtils.copyProperties(dto, modelAccess);
@@ -75,11 +79,13 @@ public class UserManageController {
                 return modelAccess;
             }).collect(Collectors.toList());
 
-            // Call the service layer to update the user model access permission configuration
+            // Call the service layer to update the user model access permission
+            // configuration
             userModelAccessService.updateUserAccessConfig(userId, newModelAccess);
 
             return Result.success();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Error updating user model access", e);
             return Result.error("Error updating user model access: " + e.getMessage());
         }

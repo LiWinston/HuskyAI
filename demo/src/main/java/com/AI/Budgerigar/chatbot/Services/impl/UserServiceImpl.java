@@ -85,7 +85,9 @@ public class UserServiceImpl implements userService {
         log.info(userRegisterDTO.toString());
         String username = userRegisterDTO.getUsername();
         String password = userRegisterDTO.getPassword();
-        String adminEmail = userRegisterDTO.getAdminEmail(); // Get the admin email, null if not registered as an admin.
+        String adminEmail = userRegisterDTO.getAdminEmail(); // Get the admin email, null
+                                                             // if not registered as an
+                                                             // admin.
 
         try {
             // Check if the username already exists.

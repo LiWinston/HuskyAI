@@ -1,14 +1,14 @@
 import React, {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
-import axios from 'axios'; // 如果你使用React Router
+import axios from 'axios'; // If using React Router
 const LOCAL_URLS = ['http://localhost:8090/health'];
 const REMOTE_URL = '/health';
 export default function Confirm() {
     const [message, setMessage] = useState('Confirming...');
     // eslint-disable-next-line no-unused-vars
     const [username, setUsername] = useState('');
-    const {token} = useParams(); // 获取路由中的 token 参数
-    const navigate = useNavigate(); // 用于页面跳转
+    const {token} = useParams(); // Obtain token parameter from routers
+    const navigate = useNavigate(); // Used for page navigation.
     // eslint-disable-next-line no-unused-vars
     const [error, setError] = useState(null);
 
@@ -20,7 +20,7 @@ export default function Confirm() {
                     await axios.get(url);
                     window.API_BASE_URL = url.replace('/health', '');
                     isLocalServiceAvailable = true;
-                    return;  // 成功连接到本地服务，提前退出函数
+                    return;  // If the connection is successful, return early.
                 } catch (error) {
                     console.log(`Failed to connect to local service: ${url}`);
                 }
@@ -32,27 +32,27 @@ export default function Confirm() {
                     window.API_BASE_URL = REMOTE_URL.replace('/health', '/api');
                 } catch (error) {
                     setError('Failed to connect to any service.');
-                    // 没有连接成功，提前返回
+                    // Failed to connect, returning early.
                 }
             }
         };
 
-        // 调用环境检测函数
+        // Call the environment detection function.
         detectEnvironment().then(() => {
             if (!window.API_BASE_URL) {
                 setMessage('No available service.');
                 return;
             }
 
-            // 发起 GET 请求到确认控制器
+            // Initiate a GET request to the confirmation controller.
             axios.get(`${window.API_BASE_URL}/user/register/confirm/${token}`).then((response) => {
                 const data = response.data;
 
                 if (data.code === 1) {
                     setMessage(
                         `Admin registration confirmed! Welcome, ${data.data}.`);
-                    setUsername(data.data); // 成功后获取用户名
-                    // 等待 3 秒后跳转到登录页面，并粘贴用户名
+                    setUsername(data.data); // Obtain the username after success.
+                    // Redirect to the login page after waiting for 3 seconds and paste the username.
                     setTimeout(() => {
                         navigate('/login', {state: {username: data.data}});
                     }, 3000);
@@ -72,7 +72,7 @@ export default function Confirm() {
     );
 }
 
-// 简单的 CSS 样式
+// Simple CSS styles.
 const styles = {
     container: {
         display: 'flex',

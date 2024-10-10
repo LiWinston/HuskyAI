@@ -70,7 +70,8 @@ public class ChatController {
     }
 
     /**
-     * Transmit ConversationId via GET to express the meaning of retrieving history records.
+     * Transmit ConversationId via GET to express the meaning of retrieving history
+     * records.
      * @param uuid user id
      * @param conversationId conversation id
      * @return conversation history
@@ -105,7 +106,8 @@ public class ChatController {
             }
             String[] modelParts = model.split(MODELALIAS_MODELID_SEPARATOR);
             if (modelParts.length != 2) {
-                return Result.error("Invalid model format. Expected serviceName " + MODELALIAS_MODELID_SEPARATOR + " modelId");
+                return Result
+                    .error("Invalid model format. Expected serviceName " + MODELALIAS_MODELID_SEPARATOR + " modelId");
             }
 
             String serviceName = modelParts[0];
@@ -188,7 +190,8 @@ public class ChatController {
                 log.info("支持流式调用");
                 return ((StreamChatService) chatService).chatFlux(body.get("prompt"), body.get("conversationId"))
                     .map(result -> {
-                        // Convert the Result object to a JSON string and add a newline character.
+                        // Convert the Result object to a JSON string and add a newline
+                        // character.
                         try {
                             return objectMapper.writeValueAsString(result) + "\n";
                         }
@@ -218,7 +221,8 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
-    // Keep the first three models unchanged and sort the other models by the model names within the service source.
+    // Keep the first three models unchanged and sort the other models by the model names
+    // within the service source.
     @PostMapping("/models")
     public Result<?> getModels(@RequestBody Map<String, String> body) {
         String userUUID = body.get("uuid");
@@ -239,7 +243,8 @@ public class ChatController {
             List<String> result = new ArrayList<>(allowedChatServices.size());
 
             /*
-             * Priority is given to sorting the models from the three service sources Aliyun, Baidu, and Doubao by model name, and results are added.
+             * Priority is given to sorting the models from the three service sources
+             * Aliyun, Baidu, and Doubao by model name, and results are added.
              */
             prioritizedModels.stream().filter(chatServices::containsKey).forEach(serviceName -> {
                 chatServices.get(serviceName)
@@ -254,7 +259,8 @@ public class ChatController {
 
             // List<UserModelAccessConfig.ModelAccess> allowedMA = userModelAccessService
             // .getUserAllowedModelAccess(userUUID);
-            // Sort the models of the remaining service sources by model name and include the results.
+            // Sort the models of the remaining service sources by model name and include
+            // the results.
             chatServices.keySet()
                 .stream()
                 .filter(serviceName -> !prioritizedModels.contains(serviceName))
