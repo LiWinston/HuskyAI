@@ -6,8 +6,8 @@ import './um.css';
 
 function UserManagement() {
     const [users, setUsers] = useState([]);
-    const [expandedUser, setExpandedUser] = useState(null); // 存储当前展开对话的用户ID
-    const [userModelAccess, setUserModelAccess] = useState({}); // 存储用户模型访问权限
+    const [expandedUser, setExpandedUser] = useState(null); // Stores the user ID of the currently opened conversation
+    const [userModelAccess, setUserModelAccess] = useState({}); // store user model access permissions
     const [expandedUsers, setExpandedUsers] = useState({});
     // 获取用户状态
     const fetchUsers = async () => {
@@ -49,9 +49,9 @@ function UserManagement() {
     //Switch the user who expanded the conversation history
     const toggleConversationHistory = (userId) => {
         if (expandedUser === userId) {
-            setExpandedUser(null); // 如果当前已展开，点击时折叠
+            setExpandedUser(null); // if currently expanded collapse when clicked
         } else {
-            setExpandedUser(userId); // 展开选中用户的对话历史
+            setExpandedUser(userId); // Expand the conversation history of the selected user
         }
     };
 
@@ -75,10 +75,10 @@ function UserManagement() {
         setUserModelAccess(prevAccess => {
             const updatedAccess = [...(prevAccess[userId] || [])];
             const accessRestriction = updatedAccess[index].accessRestriction || {};
-            accessRestriction[restrictionKey] = value;  // 更新指定字段
+            accessRestriction[restrictionKey] = value;  // update specified field
             updatedAccess[index] = {
                 ...updatedAccess[index],
-                accessRestriction  // 将更新后的 accessRestriction 放回去
+                accessRestriction  // PutTheUpdatedAccessRestrictionBack
             };
             return {
                 ...prevAccess,
@@ -90,7 +90,7 @@ function UserManagement() {
     const formatDateForInput = (dateString) => {
         if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toISOString().slice(0, 16); // 只保留到分钟
+        return date.toISOString().slice(0, 16); // keep only until minutes
     };
 
 
@@ -139,7 +139,7 @@ function UserManagement() {
             const updatedAccess = [...(prevAccess[userId] || [])];
             const currentModel = updatedAccess[index] || {};
             const additionalAttributes = currentModel.additionalAttributes || {};
-            additionalAttributes[key] = value; // 更新指定key的value
+            additionalAttributes[key] = value;//Update the value of the specified key
             updatedAccess[index] = {
                 ...currentModel,
                 additionalAttributes: additionalAttributes
@@ -158,11 +158,30 @@ function UserManagement() {
 
         if (key && value) {
             handleAdditionalAttributesChange(userId, index, key, value);
-            handleNewAttributeChange(userId, index, 'key', '');  // 清空输入框
+            handleNewAttributeChange(userId, index, 'key', '');
             handleNewAttributeChange(userId, index, 'value', '');
         } else {
             alert('Both key and value are required.');
         }
+    };
+
+    const handleDeleteAttribute = (userId, index, key) => {
+        setUserModelAccess(prevAccess => {
+            const updatedAccess = [...(prevAccess[userId] || [])];
+            const currentModel = updatedAccess[index] || {};
+            const additionalAttributes = currentModel.additionalAttributes || {};
+            delete additionalAttributes[key];
+
+            updatedAccess[index] = {
+                ...currentModel,
+                additionalAttributes: additionalAttributes
+            };
+
+            return {
+                ...prevAccess,
+                [userId]: updatedAccess
+            };
+        });
     };
 
 
@@ -268,6 +287,9 @@ function UserManagement() {
                                                                     value={modelAccess.additionalAttributes[attrKey]}
                                                                     onChange={(e) => handleAdditionalAttributesChange(user.uuid, index, attrKey, e.target.value)}
                                                                 />
+                                                                <button
+                                                                    onClick={() => handleDeleteAttribute(user.uuid, index, attrKey)}>Delete
+                                                                </button>
                                                             </div>
                                                         ))}
                                                         {/* 新增 key-value 输入框 */}

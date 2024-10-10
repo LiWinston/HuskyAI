@@ -97,6 +97,63 @@
     min-height: 60px;
 }
 
+/* Key-value pair styles */
+.user-management .key-value-pair {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.user-management .key-value-pair span {
+    width: 50px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.user-management .key-value-pair input {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.user-management .key-value-pair button {
+    padding: 5px 10px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.user-management .key-value-pair button:hover {
+    background-color: #d32f2f;
+}
+
+/* Add new key-value input styles */
+.user-management .new-key-value {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.user-management .new-key-value input {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.user-management .new-key-value button {
+    padding: 5px 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.user-management .new-key-value button:hover {
+    background-color: #45a049;
+}
+
+
 /* Responsive design */
 @media screen and (max-width: 600px) {
     .user-management table,
