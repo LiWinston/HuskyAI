@@ -21,16 +21,16 @@ public class ChatRequestDTO {
 
     private boolean stream = false;
 
-    private double temperature = 0.7; // 默认值，根据需要调整
+    private double temperature = 0.7; // Default value, adjust as needed.
 
-    // 原有的构造函数，保留以处理单一的prompt
+    // The original constructor is retained to handle a single prompt.
     public ChatRequestDTO(String model, String prompt, Instant timestamp) {
         this.model = model;
         this.messages = new ArrayList<>();
         this.messages.add(new OAMessageDTO("user", prompt));
     }
 
-    // 私有的构造函数
+    // Private constructor.
     private ChatRequestDTO(String model, List<Message> messages) {
         this.model = model;
         this.messages = messages.stream()
@@ -38,12 +38,12 @@ public class ChatRequestDTO {
             .collect(Collectors.toList());
     }
 
-    // 工厂方法，用于从 List<Message> 创建 ChatRequestDTO
+    // Factory method for creating ChatRequestDTO from List<Message>.
     public static ChatRequestDTO fromMessages(String model, List<Message> messages) {
         return new ChatRequestDTO(model, messages);
     }
 
-    // 工厂方法，用于从 List<String[]> 创建 ChatRequestDTO
+    // A factory method for creating ChatRequestDTO from List<String[]>.
     public static ChatRequestDTO fromStringTuples(String model, List<String[]> stringPairList) {
         List<Message> messages = new ArrayList<>();
         for (String[] stringPair : stringPairList) {

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "管理员界面用户管理", description = "修改用户属性、增删用户的模型访问权限")
+@Tag(name = "Admin interface user management", description = "Modify user attributes and add or remove user model access permissions.")
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/admin/user")
@@ -31,7 +31,7 @@ public class UserManageController {
     private UserMapper userMapper;
 
     @GetMapping
-    @Operation(summary = "获取所有用户", description = "获取所有用户的信息")
+    @Operation(summary = "Obtain all users", description = "Obtain all user information.")
     public Result<List<UserPw>> getAllUsers() {
         try {
             List<UserPw> users = userMapper.selectAll();

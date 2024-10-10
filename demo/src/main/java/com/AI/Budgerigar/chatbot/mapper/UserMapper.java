@@ -14,26 +14,26 @@ public interface UserMapper extends BaseMapper<UserPw> {
     List<UserPw> selectAll();
 
     /**
-     * 根据用户的 UUID 获取用户信息 Retrieve user information by UUID
-     * @param uuid 用户的唯一标识符 UUID
-     * @return UserPw 用户密码信息
+     * Retrieve user information by UUID
+     * @param uuid user's only identifier UUID
+     * @return UserPw user password information
      */
     UserPw getUserByUuid(@Param("uuid") String uuid);
 
     /**
-     * 根据用户 UUID 获取其所有的对话记录 Retrieve all conversations by user UUID
-     * @param uuid 用户的唯一标识符 UUID
-     * @return List<Conversation> 用户的对话记录列表
+     * Retrieve all conversations by user UUID
+     * @param uuid user's only identifier UUID
+     * @return List<Conversation> user's conversation list
      */
     List<Conversation> getConversationsByUserUuid(@Param("uuid") String uuid);
 
     /**
-     * 注册新用户 Register a new user
-     * @param uuid 用户的唯一标识符 UUID
-     * @param username 用户名
-     * @param password 密码
-     * @param role 用户角色
-     * @return int 插入成功的行数
+     * Register a new user
+     * @param uuid user's only identifier UUID
+     * @param username
+     * @param password
+     * @param role
+     * @return int Number of rows successfully inserted.
      */
     @Insert("INSERT INTO UserPw (uuid, username, password, role) "
             + "VALUES (#{uuid}, #{username}, #{password}, #{role})")
@@ -41,11 +41,11 @@ public interface UserMapper extends BaseMapper<UserPw> {
             @Param("role") String role);
 
     /**
-     * 注册新的管理员 Register a new admin
-     * @param uuid 用户的唯一标识符 UUID
-     * @param email 管理员的邮箱
-     * @param verified 管理员是否验证的标志位
-     * @return int 插入成功的行数
+     * Register a new admin
+     * @param uuid user's only identifier UUID
+     * @param email
+     * @param verified Flag indicating whether the administrator is verified.
+     * @return int Number of rows successfully inserted.
      */
     @Insert("INSERT INTO AdminInfo (uuid, admin_level, email, verified) "
             + "VALUES (#{uuid}, 0, #{email}, #{verified})")
@@ -53,16 +53,16 @@ public interface UserMapper extends BaseMapper<UserPw> {
             @Param("password") String password, @Param("email") String email, @Param("verified") boolean verified);
 
     /**
-     * 根据用户 UUID 提升其为管理员 Promote a user to admin by UUID
-     * @param uuid 用户的唯一标识符 UUID
+     * Promote a user to admin by UUID
+     * @param uuid user's only identifier UUID
      */
     @Update("UPDATE UserPw SET role = 'admin' WHERE uuid = #{uuid}")
     void promoteToAdminByUuid(String uuid);
 
     /**
-     * 根据用户名获取用户信息 Retrieve user information by username
-     * @param username 用户名
-     * @return UserPw 用户密码信息
+     * Retrieve user information by username
+     * @param username
+     * @return UserPw user password information
      */
     @Select("SELECT uuid, username, password, role FROM UserPw WHERE username = #{username}")
     @Results({ @Result(property = "uuid", column = "uuid"), @Result(property = "username", column = "username"),
@@ -70,30 +70,30 @@ public interface UserMapper extends BaseMapper<UserPw> {
     UserPw getUserByUsername(@Param("username") String username);
 
     /**
-     * 根据 UUID 和对话 ID 删除特定的对话记录 Delete a specific conversation by UUID and conversation ID
-     * @param uuid 用户的唯一标识符 UUID
-     * @param conversationId 对话的唯一标识符
-     * @return int 删除的行数
+     * Delete a specific conversation by UUID and conversation ID
+     * @param uuid user's only identifier UUID
+     * @param conversationId conversation only identifier
+     * @return int Number of rows deleted.
      */
     int deleteConversationByUuidCid(String uuid, String conversationId);
 
     /**
-     * 将管理员降级为普通用户 Downgrade an admin to a regular user by UUID
-     * @param uuid 用户的唯一标识符 UUID
+     * Downgrade an admin to a regular user by UUID
+     * @param uuid user's only identifier UUID
      */
     void downgradeAdminByUuid(String uuid);
 
     /**
-     * 确认管理员身份 (验证邮箱) Confirm admin by setting the verified flag to true
-     * @param uuid 管理员的唯一标识符 UUID
+     * Confirm admin by setting the verified flag to true
+     * @param uuid user's only identifier UUID
      */
     @Update("UPDATE AdminInfo SET verified = TRUE WHERE uuid = #{uuid}")
     void confirmAdmin(String uuid);
 
     /**
-     * 根据 UUID 获取管理员信息 Retrieve admin information by UUID
-     * @param token 管理员的唯一标识符 (token)
-     * @return AdminInfo 管理员信息
+     * Retrieve admin information by UUID
+     * @param token The administrator's unique identifier (token).
+     * @return AdminInfo admin information
      */
     @Select("SELECT * FROM AdminInfo WHERE uuid = #{uuid}")
     AdminInfo getAdminInfoByUuid(String token);

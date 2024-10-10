@@ -54,7 +54,7 @@ public class BaiduChatServiceImpl implements ChatService, StreamChatService {
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
 
-    // // 使用 ThreadLocal 来存储 conversationId
+    // // Use ThreadLocal to store conversationId.
     // private static final ThreadLocal<String> conversationIdThreadLocal =
     // ThreadLocal.withInitial(() -> "default_baidu_conversation");
     @Autowired
@@ -82,24 +82,23 @@ public class BaiduChatServiceImpl implements ChatService, StreamChatService {
     @Override
     public Result<String> chat(String input, String conversationId) {
         try {
-            // 从 Redis 中获取对话历史
+            // Retrieve conversation history from Redis.
             List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, input, conversationId);
 
-            // 创建 ChatCompletion 请求对象
+            // Create a ChatCompletion request object.
             ChatBuilder chatCompletion = baiduConfig.getRandomChatBuilder();
 
-            // 添加对话历史到请求对象中
+            // Add conversation history to the request object.
             for (String[] entry : conversationHistory) {
-                chatCompletion.addMessage(entry[0], entry[2]); // entry[0] 是角色，entry[2]
-                                                               // 是内容
+                chatCompletion.addMessage(entry[0], entry[2]); // entry[0] is role，entry[2] is message.
             }
 
-            // 执行请求
+            // Execute the request and get the response.
             ChatResponse response = chatCompletion.execute();
             String result = response.getResult();
             logInfo(" # " + baiduConfig.getCurrentModel() + "\n" + result.substring(0, Math.min(20, result.length())));
 
-            // 将助手的响应添加到 Redis 对话历史
+            // Add the assistant's response to the Redis conversation history.
             chatMessagesRedisDAO.addMessage(conversationId, "assistant", getNowTimeStamp(),
                     // StringEscapeUtils.escapeHtml4(result));
                     result);

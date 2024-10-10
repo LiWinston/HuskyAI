@@ -24,7 +24,7 @@ public class UserModelAccessService {
     private chatServicesManageService chatServicesManageService;
 
     /**
-     * 获取用户允许访问的模型服务
+     * Obtain the model services that the user is allowed to access.
      */
     public List<ChatService> getUserAllowedChatServices(String userId) {
         Optional<UserModelAccessConfig> accessConfigOpt = userModelAccessConfigRepository.findById(userId);
@@ -34,12 +34,12 @@ public class UserModelAccessService {
                 UserModelAccessConfig accessConfig = accessConfigOpt.get();
                 List<UserModelAccessConfig.ModelAccess> allowedModels = accessConfig.getAllowedModels();
 
-                // 从全局的 chatServices 中筛选出用户允许的模型服务
+                // Filter the user-allowed model services from the global chatServices.
                 return allowedModels.stream()
                     .map(modelAccess -> chatServicesManageService.getChatServices()
                         .get(modelAccess.getUrl())
                         .get(modelAccess.getModel()))
-                    .filter(Objects::nonNull) // 过滤掉不存在的服务
+                    .filter(Objects::nonNull) // Filter out nonexistent services.
                     .collect(Collectors.toList());
             }
             catch (Exception e) {
@@ -67,14 +67,14 @@ public class UserModelAccessService {
     public void updateUserAccessConfig(String userId, List<UserModelAccessConfig.ModelAccess> newModelAccess) {
         Optional<UserModelAccessConfig> accessConfigOpt = userModelAccessConfigRepository.findById(userId);
 
-        // 如果找到用户的配置，则更新
+        // If the user's configuration is found, update it.
         if (accessConfigOpt.isPresent()) {
             log.info("Updating user access config for user {}", userId);
             UserModelAccessConfig accessConfig = accessConfigOpt.get();
             accessConfig.setAllowedModels(newModelAccess);
             userModelAccessConfigRepository.save(accessConfig);
         }
-        // 如果找不到用户的配置，创建新的配置
+        // If the user's configuration cannot be found, create a new configuration.
         else {
             log.info("Creating new user access config for user {}", userId);
             UserModelAccessConfig newAccessConfig = new UserModelAccessConfig();

@@ -14,29 +14,29 @@ public class AdminWaitingListRedisDAO {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
-    private static final long INVITE_EXPIRE_TIME = 60 * 60; // 1小时
+    private static final long INVITE_EXPIRE_TIME = 60 * 60; // 1 hour
 
     /**
-     * 将管理员的uuid和对应的token存入Redis，设置过期时间
-     * @param token 生成的唯一标识符
-     * @param uuid 管理员的uuid
+     * Store the administrator's UUID and corresponding token in Redis and set an expiration time.
+     * @param token generated unique identifier.
+     * @param uuid admin's uuid.
      */
     public void addAdminToWaitingList(String token, String uuid) {
         redisTemplate.opsForValue().set(token, uuid, INVITE_EXPIRE_TIME, TimeUnit.SECONDS);
     }
 
     /**
-     * 根据token从Redis中获取管理员的uuid
-     * @param token 邀请链接中的唯一标识符
-     * @return 管理员的uuid
+     * Get the administrator's UUID from Redis according to the token.
+     * @param token unique identifier in the invitation link.
+     * @return admin's uuid.
      */
     public String getUuidByToken(String token) {
         return redisTemplate.opsForValue().get(token);
     }
 
     /**
-     * 删除Redis中存储的token，确保一次性使用
-     * @param token 邀请链接中的唯一标识符
+     * Delete the token stored in Redis to ensure one-time use.
+     * @param token unique identifier in the invitation link.
      */
     public void removeToken(String token) {
         redisTemplate.delete(token);

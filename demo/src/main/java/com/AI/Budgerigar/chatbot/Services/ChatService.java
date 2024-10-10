@@ -21,7 +21,7 @@ public interface ChatService {
 
     Result<String> chat(String prompt, String conversationId) throws Exception;
 
-    // 默认方法来记录信息
+    // default method to log info
     // default void logInfo(String message) {
     // String className = getCallingClassName();
     // logger.info(className + " : " + message.substring(0, Math.min(40,
@@ -55,7 +55,7 @@ public interface ChatService {
         logger.info(className + " : " + formattedMessage.toString());
     }
 
-    // 默认方法来记录错误
+    // Default method to log errors.
     default void logError(String message, Throwable throwable) {
         String className = getCallingClassName();
         logger.severe(className + " : " + message);
@@ -64,7 +64,7 @@ public interface ChatService {
 
     default String getCallingClassName() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        // 查找调用当前方法的类
+        // Find the class that calls the current method.
         for (int i = 1; i < stackTrace.length; i++) {
             if (stackTrace[i].getMethodName().equals("chat")) {
                 return stackTrace[i].getClassName();

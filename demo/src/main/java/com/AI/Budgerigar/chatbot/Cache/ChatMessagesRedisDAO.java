@@ -23,22 +23,22 @@ public class ChatMessagesRedisDAO {
     // private static final Logger logger =
     // Logger.getLogger(ChatMessagesRedisDAO.class.getName());
 
-    // 单纯获取消息条数
+    // Get the number of messages.
     public long getMessageCount(String conversationId) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         try {
             Long count = redisTemplate.opsForList().size(key);
-            return Objects.requireNonNullElse(count, 0L); // 如果 count 是 null，则返回 0
+            return Objects.requireNonNullElse(count, 0L); // If count is equal to null，return 0.
         }
         catch (DataAccessException e) {
             log.error("Failed to get message count for conversation {}", conversationId, e);
-            return 0; // 出现异常时返回0
+            return 0; // Return 0 if an exception occurs.
         }
     }
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
 
-    // 添加新消息（更新后的方法）
+    // Add a new message.
     public void addMessage(String conversationId, String speaker, String timestamp, String message) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         // String timestamp = Instant.now().toString().formatted(formatter);
@@ -53,7 +53,7 @@ public class ChatMessagesRedisDAO {
         }
     }
 
-    // 删除某条消息
+    // Delete a message.
     public void deleteMessage(String conversationId, int index) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         try {
@@ -66,39 +66,39 @@ public class ChatMessagesRedisDAO {
         }
     }
 
-    // 获取对话历史，返回 List<String[]> 类型
+    // Get chat history，return a string list.
     public List<String[]> getConversationHistory(String conversationId) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         try {
             List<String> entries = redisTemplate.opsForList().range(key, 0, -1);
             if (entries == null) {
                 log.info("Redis:No history found for {}", conversationId);
-                return List.of(); // 返回空列表而不是null
+                return List.of(); // Return an empty list instead of null.
             }
             else {
                 return entries.stream()
-                    .map(entry -> entry.split("\\|", 3)) // 使用 ":" 分隔符拆分，获取时间戳
-                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // 处理带时间戳的消息
+                    .map(entry -> entry.split("\\|", 3)) // Split using the ":" delimiter to get the timestamp.
+                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // Handle messages with timestamps.
                     .collect(Collectors.toList());
             }
         }
         catch (DataAccessException e) {
             log.error("Failed to get conversation history for {}", conversationId, e);
-            return List.of(); // 返回空列表以保持方法一致性
+            return List.of(); // Return an empty list to maintain method consistency.
         }
     }
 
-    // 清除整个对话历史
+    // Remove entire chat history.
     public Boolean clearConversation(String conversationId) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         try {
             redisTemplate.delete(key);
             log.info("Redis Cleared conversation history for conversationId: {}", conversationId);
-            return true; // 操作成功，返回true
+            return true; // Successful operation，return "true".
         }
         catch (DataAccessException e) {
             log.error("Failed to clear conversation history for conversationId: {}", conversationId, e);
-            return false; // 操作失败，返回false
+            return false; // Failure，return "false".
         }
     }
 
@@ -114,7 +114,7 @@ public class ChatMessagesRedisDAO {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
 
         try {
-            // 获取对话历史列表
+            // Get chat history from Redis.
             List<String> entries = redisTemplate.opsForList().range(key, 0, -1);
             if (entries == null || entries.isEmpty()) {
                 log.info("Maintaining:No redis history found for {}", conversationId);
@@ -122,11 +122,11 @@ public class ChatMessagesRedisDAO {
             }
 
             List<String> adjustedEntries = new ArrayList<>();
-            Set<String> uniqueEntries = new HashSet<>(); // 用于去重
+            Set<String> uniqueEntries = new HashSet<>(); // Used for deduplication.
             String lastRole = "";
             boolean needsAdjustment = false;
 
-            // 去重并维护交替顺序
+            // Remove duplicates and maintain alternating order.
             for (String entry : entries) {
                 String[] parts = entry.split("\\|", 3);
                 if (parts.length < 3) {
@@ -138,7 +138,7 @@ public class ChatMessagesRedisDAO {
                 String timestamp = parts[1];
                 String content = parts[2];
 
-                // 如果是重复的消息或内容为空，跳过
+                // If it's a duplicate message or the content is empty, skip it.
                 if (uniqueEntries.contains(entry) || content.trim().isEmpty()) {
                     // log.info("Removed duplicate or empty message: {}", entry);
                     continue;
@@ -146,8 +146,8 @@ public class ChatMessagesRedisDAO {
 
                 uniqueEntries.add(entry);
 
-                // 检查消息交替顺序
-                if (adjustedEntries.size() % 2 == 0) { // 偶数索引应为用户消息
+                // Check the interleaving order of messages.
+                if (adjustedEntries.size() % 2 == 0) { // Even indices should be user messages.
                     if (role.equals("user")) {
                         adjustedEntries.add(entry);
                         lastRole = role;
@@ -157,7 +157,7 @@ public class ChatMessagesRedisDAO {
                         log.warn("Expected user message, but found assistant. Skipping entry.");
                     }
                 }
-                else { // 奇数索引应为助手消息
+                else { // Odd indices should be assistant messages.
                     if (role.equals("assistant")) {
                         adjustedEntries.add(entry);
                         lastRole = role;
@@ -169,14 +169,14 @@ public class ChatMessagesRedisDAO {
                 }
             }
 
-            // 保证总数为偶数且助手结束
+            // Ensure the total is even and the assistant ends.
             if (adjustedEntries.size() % 2 == 1 || !lastRole.equals("assistant")) {
                 String lastTimestamp = getNowTimeStamp();
                 adjustedEntries.add("assistant|" + lastTimestamp + "| ");
                 log.info("Added placeholder to ensure conversation ends with assistant.");
             }
 
-            // 更新 Redis 中的对话历史
+            // Update conversation history in Redis.
             redisTemplate.delete(key);
             redisTemplate.opsForList().rightPushAll(key, adjustedEntries);
             log.info("Maintained history adjusted for {}", conversationId);
@@ -187,20 +187,19 @@ public class ChatMessagesRedisDAO {
         }
     }
 
-    // 获取最近 N 条对话历史
+    // Get the latest N conversation history.
     public List<String[]> getLastNMessages(String conversationId, int n) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         try {
-            List<String> entries = redisTemplate.opsForList().range(key, -n, -1); // 获取最后
-                                                                                  // N 条消息
+            List<String> entries = redisTemplate.opsForList().range(key, -n, -1); // Get the latest N messages.
             if (entries == null) {
                 log.info("No history found for {}", conversationId);
                 return Arrays.asList();
             }
             else {
                 return entries.stream()
-                    .map(entry -> entry.split("\\|", 3)) // 使用 ":" 分隔符拆分
-                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // 返回带时间戳的消息
+                    .map(entry -> entry.split("\\|", 3)) // Split using the ":" delimiter to get the timestamp.
+                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // Handle messages with timestamps.
                     .collect(Collectors.toList());
             }
         }
@@ -210,7 +209,7 @@ public class ChatMessagesRedisDAO {
         }
     }
 
-    // 获取指定范围内的对话历史,适用于渐进式加载或分页 - Unchecked
+    // Obtain conversation history within a specified range, suitable for progressive loading or pagination. - Unchecked
     public List<String[]> getMessagesRange(String conversationId, int start, int end) {
         String key = CONVERSATION_HISTORY_KEY_PREFIX + conversationId;
         try {
@@ -221,8 +220,8 @@ public class ChatMessagesRedisDAO {
             }
             else {
                 return entries.stream()
-                    .map(entry -> entry.split("\\|", 3)) // 使用 ":" 分隔符拆分
-                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // 返回带时间戳的消息
+                    .map(entry -> entry.split("\\|", 3)) // Split using the ":" delimiter to get the timestamp.
+                    .map(parts -> new String[] { parts[0], parts[1], parts[2] }) // Handle messages with timestamps.
                     .collect(Collectors.toList());
             }
         }

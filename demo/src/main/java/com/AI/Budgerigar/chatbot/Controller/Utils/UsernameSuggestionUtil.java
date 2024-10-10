@@ -8,7 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * 用户名建议生成工具类 Utility class for generating username suggestions
+ *  Utility class for generating username suggestions
  */
 public class UsernameSuggestionUtil {
 
@@ -17,15 +17,15 @@ public class UsernameSuggestionUtil {
     private static final LevenshteinDistance levenshteinDistance = new LevenshteinDistance();
 
     /**
-     * 根据用户名生成建议的候选用户名 Generate username suggestions based on Levenshtein distance
-     * @param userMapper 数据库查询映射器
-     * @param username 输入的用户名
-     * @return List<String> 建议的用户名列表
+     * Generate username suggestions based on Levenshtein distance
+     * @param userMapper Database query mapper.
+     * @param username Input username.
+     * @return List<String> Suggested username list.
      */
     public static List<String> generateUsernameSuggestions(UserMapper userMapper, String username) {
         List<String> candidates = new ArrayList<>();
 
-        // Step 1: 生成各种候选项
+        // Step 1: Generate various candidates.
         candidates.add(username.toLowerCase());
         candidates.add(username.toUpperCase());
         candidates.add(capitalizeFirstLetter(username));
@@ -39,7 +39,7 @@ public class UsernameSuggestionUtil {
         candidates.add(username + "_01");
         candidates.add(username + "123");
 
-        // Step 2: 确保建议项在数据库中是唯一的
+        // Step 2: Ensure that the suggested item is unique in the database.
         List<String> validCandidates = new ArrayList<>();
         for (String candidate : candidates) {
             if (userMapper.getUserByUsername(candidate) == null) {
@@ -47,10 +47,10 @@ public class UsernameSuggestionUtil {
             }
         }
 
-        // Step 3: 根据 Levenshtein 距离进行排序
+        // Step 3: Sort by Levenshtein distance.
         validCandidates.sort(Comparator.comparingInt(c -> levenshteinDistance.apply(username, c)));
 
-        // Step 4: 返回前 N 个建议项
+        // Step 4: Return the top N suggestions.
         return validCandidates.subList(0, Math.min(MAX_SUGGESTIONS, validCandidates.size()));
     }
 
