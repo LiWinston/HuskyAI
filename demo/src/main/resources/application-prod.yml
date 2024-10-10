@@ -1,54 +1,18 @@
 remote-services:
   serviceConfigs:
-    - url: https://ai.bitsleep.cn
-      name: PCLMStudio
-
-
-    - url: https://ai2.bitsleep.cn
-      name: MBP14LMStudio
-
-
-    - url: https://ai3.bitsleep.cn
-      name: MBP15LMStudio
-
-
-    - url: https://spark-api-open.xf-yun.com
-      name: Spark
-      api-key: XGHZSZkhaMuSPcOWKwAU:joDYvyjLLCIxTzWZmRsf
+    - url: https://api.openai.com
+      name: OpenAI
+      api-key: sk-Nguzl57Q54aBhqV8xvTYhbQsBSOQb2Zx2umHeHOGsVT3BlbkFJEk-noLr87JWlmJ9gg1fSoYMS-F2NaCBZtzxFWdcPEA
       allowed-models:
-        - Lite
-
-    - url: https://dashscope.aliyuncs.com/compatible-mode
-      name: Aliyun
-      api-key: sk-91e9f4d529c64576b7a36106c0707257
-      allowed-models:
-        - qwen1.5-0.5b-chat
-        - qwen-1.8b-chat
-        - chatglm3-6b
-        - qwen2-1.5b-instruct
-        - qwen2-0.5b-instruct
-        - qwen1.5-1.8b-chat
-
-    - url: https://free.gpt.ge
-      name: HuskyGPT
-      api-key: sk-oFfQXYfAfNSKFaDLF6618c3760D44994Bb542dFc8d1b40F4
-      allowed-models:
+#        - gpt-3.5-turbo
+#        - gpt-3.5-turbo-0125
+#        - gpt-3.5-turbo-16k
         - gpt-4o-mini
-        - gpt-4o-mini-2024-07-18
-        - gpt-3.5-turbo-0125
-        - gpt-3.5-turbo-1106
-        - gpt-3.5-turbo
-        - gpt-3.5-turbo-16k
-        - net-gpt-3.5-turbo
-
-    - url: https://free.gpt.ge
-      name: HuskyGPTBackup
-      api-key: sk-lIyO4an68RcjGhWL01117631C9464631Be0f6eEaF9Be3642
-      allowed-models:
-        - gpt-4o-mini
-        - gpt-4o-mini-2024-07-18
-        - gpt-3.5-turbo-0125
-        - gpt-3.5-turbo-1106
-        - gpt-3.5-turbo
-        - gpt-3.5-turbo-16k
-        - net-gpt-3.5-turbo
+#        - gpt-4o-mini-2024-07-18
+#        - gpt-4o
+#        - gpt-4o-2024-08-06
+        - chatgpt-4o-latest
+#        - gpt-4-turbo-2024-04-09
+#        - gpt-4-turbo-preview
+#        - gpt-4-1106-preview
+        - gpt-4
