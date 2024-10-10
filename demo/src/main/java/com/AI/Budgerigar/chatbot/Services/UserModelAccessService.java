@@ -69,12 +69,14 @@ public class UserModelAccessService {
 
         // 如果找到用户的配置，则更新
         if (accessConfigOpt.isPresent()) {
+            log.info("Updating user access config for user {}", userId);
             UserModelAccessConfig accessConfig = accessConfigOpt.get();
             accessConfig.setAllowedModels(newModelAccess);
             userModelAccessConfigRepository.save(accessConfig);
         }
         // 如果找不到用户的配置，创建新的配置
         else {
+            log.info("Creating new user access config for user {}", userId);
             UserModelAccessConfig newAccessConfig = new UserModelAccessConfig();
             newAccessConfig.setUserId(userId);
             newAccessConfig.setAllowedModels(newModelAccess);

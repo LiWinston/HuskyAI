@@ -1,0 +1,136 @@
+/* Scoped styles for UserManagement component */
+.user-management {
+    font-family: Arial, sans-serif;
+    background-color: #f0f8ff;
+    padding: 20px;
+}
+
+.user-management h3 {
+    color: #333;
+    text-align: center;
+}
+
+/* User item styles */
+.user-management .user-item {
+    background-color: white;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-management .user-info {
+    font-size: 16px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+/* Button styles */
+.user-management button {
+    margin-top: 10px;
+    padding: 8px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.user-management button:hover {
+    background-color: #45a049;
+}
+
+/* Table styles */
+.user-management .model-access-info {
+    margin-top: 15px;
+}
+
+.user-management .model-access-info h4 {
+    margin-bottom: 10px;
+    color: #444;
+}
+
+.user-management table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.user-management th, .user-management td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.user-management th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #333;
+}
+
+.user-management tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Input styles */
+.user-management input[type="text"],
+.user-management input[type="number"],
+.user-management select,
+.user-management textarea {
+    width: calc(100% - 16px);
+    padding: 6px;
+    margin: 2px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.user-management select {
+    background-color: white;
+}
+
+.user-management textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* Responsive design */
+@media screen and (max-width: 600px) {
+    .user-management table,
+    .user-management thead,
+    .user-management tbody,
+    .user-management th,
+    .user-management td,
+    .user-management tr {
+        display: block;
+    }
+
+    .user-management thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .user-management tr {
+        margin-bottom: 10px;
+    }
+
+    .user-management td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+    }
+
+    .user-management td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: bold;
+    }
+}

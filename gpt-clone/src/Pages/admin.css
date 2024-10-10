@@ -160,3 +160,35 @@ input[type="text"]:focus {
     margin-top: 20px;
     font-size: 14px;
 }
+
+.admin-dashboard {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    overflow: hidden;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.dashboard-section {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.scrollable-container {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+}
