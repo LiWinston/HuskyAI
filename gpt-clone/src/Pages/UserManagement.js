@@ -117,6 +117,53 @@ function UserManagement() {
         }
     };
 
+    const handleNewAttributeChange = (userId, index, key, value) => {
+        setUserModelAccess(prevAccess => {
+            const updatedAccess = [...(prevAccess[userId] || [])];
+            const currentModel = updatedAccess[index] || {};
+            currentModel.newAttribute = {
+                ...currentModel.newAttribute,
+                [key]: value
+            };
+            updatedAccess[index] = currentModel;
+
+            return {
+                ...prevAccess,
+                [userId]: updatedAccess
+            };
+        });
+    };
+
+    const handleAdditionalAttributesChange = (userId, index, key, value) => {
+        setUserModelAccess(prevAccess => {
+            const updatedAccess = [...(prevAccess[userId] || [])];
+            const currentModel = updatedAccess[index] || {};
+            const additionalAttributes = currentModel.additionalAttributes || {};
+            additionalAttributes[key] = value; // 更新指定key的value
+            updatedAccess[index] = {
+                ...currentModel,
+                additionalAttributes: additionalAttributes
+            };
+
+            return {
+                ...prevAccess,
+                [userId]: updatedAccess
+            };
+        });
+    };
+
+    const addNewAttribute = (userId, index) => {
+        const currentModel = userModelAccess[userId][index];
+        const { key, value } = currentModel.newAttribute || {};
+
+        if (key && value) {
+            handleAdditionalAttributesChange(userId, index, key, value);
+            handleNewAttributeChange(userId, index, 'key', '');  // 清空输入框
+            handleNewAttributeChange(userId, index, 'value', '');
+        } else {
+            alert('Both key and value are required.');
+        }
+    };
 
 
     const toggleUserExpansion = (userId) => {
@@ -212,11 +259,38 @@ function UserManagement() {
                                                     />
                                                 </td>
                                                 <td>
-                                                    <textarea
-                                                        value={JSON.stringify(modelAccess.additionalAttributes)}
-                                                        onChange={(e) => handleModelAccessChange(user.uuid, index, 'additionalAttributes', JSON.parse(e.target.value))}
-                                                    />
+                                                    <div>
+                                                        {Object.keys(modelAccess.additionalAttributes || {}).map((attrKey, i) => (
+                                                            <div key={i} className="key-value-pair">
+                                                                <span>{attrKey}:</span>
+                                                                <input
+                                                                    type="text"
+                                                                    value={modelAccess.additionalAttributes[attrKey]}
+                                                                    onChange={(e) => handleAdditionalAttributesChange(user.uuid, index, attrKey, e.target.value)}
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                        {/* 新增 key-value 输入框 */}
+                                                        <div className="new-key-value">
+                                                            <input
+                                                                type="text"
+                                                                placeholder="New Key"
+                                                                value={modelAccess.newAttribute?.key || ''}
+                                                                onChange={(e) => handleNewAttributeChange(user.uuid, index, 'key', e.target.value)}
+                                                            />
+                                                            <input
+                                                                type="text"
+                                                                placeholder="New Value"
+                                                                value={modelAccess.newAttribute?.value || ''}
+                                                                onChange={(e) => handleNewAttributeChange(user.uuid, index, 'value', e.target.value)}
+                                                            />
+                                                            <button
+                                                                onClick={() => addNewAttribute(user.uuid, index)}>Add
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </td>
+
                                             </tr>
                                         ))}
                                         </tbody>
