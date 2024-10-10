@@ -3,6 +3,8 @@ import axios from 'axios';
 import {ChevronDown, ChevronUp} from 'lucide-react';
 
 import './um.css';
+import {showSweetAlertWithRetVal} from "../Component/sweetAlertUtil";
+import Swal from "sweetalert2";
 
 function UserManagement() {
     const [users, setUsers] = useState([]);
@@ -110,10 +112,50 @@ function UserManagement() {
                 additionalAttributes: modelAccess.additionalAttributes || {}
             }));
 
-            await axios.put(`${window.API_BASE_URL}/admin/user/modelAccess/${userId}`, updatedModelAccess);
-            console.log('Model access saved for user:', userId);
+            await axios.put(`${window.API_BASE_URL}/admin/user/modelAccess/${userId}`, updatedModelAccess)
+                .then(res => {
+                    if (res.data.code) {
+                        // Success: allow user to choose whether to refresh
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: res.data.msg,
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, refresh!',
+                            cancelButtonText: 'No, stay here',
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                fetchUserModelAccess(); // Refresh on user's confirmation
+                            }
+                        });
+                    } else {
+                        // Failure: force refresh, no option to skip
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: res.data.msg,
+                            confirmButtonText: 'Refresh Now',
+                            allowOutsideClick: false, // Prevent closing by clicking outside
+                            allowEscapeKey: false // Prevent closing with Esc key
+                        }).then(() => {
+                            fetchUserModelAccess(); // Always refresh after error
+                        });
+                    }
+                });
+
         } catch (error) {
             console.error('Error saving model access:', error);
+            // In case of a request failure or any error, ensure user knows something went wrong
+            Swal.fire({
+                icon: 'error',
+                title: 'Request Failed',
+                text: 'An unexpected error occurred. Please try again later.',
+                confirmButtonText: 'Refresh Now',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then(() => {
+                fetchUserModelAccess(); // Ensure refresh after error
+            });
         }
     };
 
