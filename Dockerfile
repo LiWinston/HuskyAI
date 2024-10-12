@@ -46,43 +46,58 @@ COPY gpt-clone/ .
 # Build the frontend application
 RUN npm run build
 
-# 第三阶段：运行时镜像，使用 OpenJDK 和 Nginx
-# Stage 3: Runtime image using OpenJDK and Nginx
-FROM eclipse-temurin:21-jre AS runtime
+# 第三阶段：运行时镜像，使用 Nginx 和 OpenJDK
+FROM nginx:latest AS nginx
 
-# 设置应用的工作目录为 /app
-# Set the application working directory to /app
-WORKDIR /app
+# 将前端生成的静态文件复制到 Nginx 的 web 根目录
+COPY --from=frontend-build /app/frontend/build /usr/share/nginx/html
 
-# 复制从后端构建阶段生成的 JAR 文件
-# Copy the generated JAR file from the backend build stage
-COPY --from=backend-build /app/backend/target/*.jar app.jar
-
-# 创建目录以存放前端构建文件
-# Create a directory to store frontend build files
-RUN mkdir -p /app/frontend/build
-
-# 复制从前端构建阶段生成的静态文件
-# Copy the generated frontend build files from the frontend build stage
-COPY --from=frontend-build /app/frontend/build /app/frontend/build
-
-# 更新包索引并安装 Nginx
-# Update package index and install Nginx
-RUN apt-get update && apt-get install -y nginx
-
-# 复制 Nginx 配置文件到正确的位置
-# Copy the Nginx configuration file to the appropriate location
+# 复制 Nginx 配置文件
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# 暴露 Nginx 和 Spring Boot 应用程序的端口
-# Expose ports for Nginx and the Spring Boot application
+RUN nginx -V && nginx -t
+
+# 使用 OpenJDK 镜像运行 Spring Boot 应用
+FROM eclipse-temurin:21-jre AS runtime
+
+WORKDIR /app
+COPY --from=backend-build /app/backend/target/*.jar app.jar
+
+# 更新包索引并安装 Elasticsearch
+FROM eclipse-temurin:21-jre AS runtime
+
+WORKDIR /app
+COPY --from=backend-build /app/backend/target/*.jar app.jar
+
+# 更新包索引并安装 Elasticsearch
+RUN apt-get update && apt-get install -y wget gnupg openjdk-11-jre-headless supervisor && \
+    wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.17.9-amd64.deb && \
+    dpkg -i elasticsearch-7.17.9-amd64.deb && \
+    rm elasticsearch-7.17.9-amd64.deb && \
+    mkdir -p /etc/elasticsearch && \
+    echo "xpack.security.enabled: false" >> /etc/elasticsearch/elasticsearch.yml && \
+    echo "discovery.type: single-node" >> /etc/elasticsearch/elasticsearch.yml && \
+    chown -R elasticsearch:elasticsearch /usr/share/elasticsearch && \
+    chown -R elasticsearch:elasticsearch /var/lib/elasticsearch && \
+    chown -R elasticsearch:elasticsearch /etc/elasticsearch
+
+# 设置系统限制
+RUN ulimit -n 65535
+
+# 设置 Elasticsearch 环境变量
+ENV ES_JAVA_OPTS="-Xms512m -Xmx512m"
+# 复制 supervisord 配置文件
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# 暴露端口
 EXPOSE 80
 EXPOSE 8090
+EXPOSE 9200
+EXPOSE 9300
 
-# 启动 Nginx 和 Spring Boot 应用程序
-# Start Nginx and the Spring Boot application
-CMD ["sh", "-c", "nginx && java -jar app.jar"]
-# 指定 Spring Boot 运行在 8090 端口
+# 使用 supervisord 启动 Nginx 和 Spring Boot
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
 
 
 
