@@ -100,7 +100,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
         try {
             List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, prompt, conversationId);
 
-            // 使用工厂方法从 String[] 列表创建 ChatRequestDTO
+            // Create ChatRequestDTO from a String[] list using the factory method.
             ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringTuples(model, conversationHistory);
 
             ChatResponseDTO chatResponseDTO = restTemplate.postForObject(openAIUrl, chatRequestDTO,
@@ -131,21 +131,24 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
 
     @PostConstruct
     public void init() {
-        // 设置连接池，保活连接
+        // Set up a connection pool and keep the connection alive.
         ConnectionProvider provider = ConnectionProvider.builder("custom")
-            .maxConnections(500) // 设置最大连接数
-            .pendingAcquireTimeout(Duration.ofSeconds(60)) // 等待连接池的超时时间
-            .maxIdleTime(Duration.ofSeconds(30)) // 空闲连接保活时间
-            .maxLifeTime(Duration.ofMinutes(5)) // 连接最长保留时间
+            .maxConnections(500) // Set the largest number of connections
+            .pendingAcquireTimeout(Duration.ofSeconds(60)) // Waiting time for connection
+            .maxIdleTime(Duration.ofSeconds(30)) // set the maximum idle time
+            .maxLifeTime(Duration.ofMinutes(5)) // set the maximum life time
             .build();
 
         this.webClient = WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(HttpClient.create(provider).compress(true).keepAlive(true)))
             .baseUrl(openAIUrl)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // 设置内容类型
-            .defaultHeader(HttpHeaders.CACHE_CONTROL, "no-cache") // 设置缓存控制
-            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + openaiApiKey) // 设置 API
-                                                                                // Key
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE) // set
+                                                                                       // the
+                                                                                       // content
+                                                                                       // type
+            .defaultHeader(HttpHeaders.CACHE_CONTROL, "no-cache") // set the cache control
+            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + openaiApiKey) // set API
+                                                                                // key
             .build();
     }
 
@@ -228,7 +231,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
             executorService.submit(() -> chatSyncService.updateHistoryFromRedis(conversationId));
         }
 
-        // 更新SQL中的最后对话时间
+        // Update the last conversation time in SQL.
         executorService.submit(() -> {
             Conversation conversation = conversationMapper.selectById(conversationId);
             if (conversation != null) {
@@ -242,8 +245,9 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
     }
 
     // private int getMongoConversationLength(String conversationId) {
-    // // 从 MongoDB 获取会话长度的逻辑
-    // // 假设 ChatMessagesMongoDAO 提供了获取会话长度的方法
+    // // Logic to obtain session length from MongoDB.
+    // // Assume that ChatMessagesMongoDAO provides a method to get the conversation
+    // length.
     // return chatMessagesMongoDAO.getConversationLengthById(conversationId);
     // }
 

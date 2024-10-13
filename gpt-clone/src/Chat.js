@@ -6,7 +6,7 @@ import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
 import {vscDarkPlus} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {FaPlus} from 'react-icons/fa';
-import ConversationItem from './ConversationItem'; // 引入加号图标
+import ConversationItem from './ConversationItem'; // Introduce the plus icon.
 import './Component/Toggle.css';
 import {showSweetAlertWithRetVal} from './Component/sweetAlertUtil';
 
@@ -16,16 +16,15 @@ function Chat() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     // eslint-disable-next-line no-unused-vars
-    const [rows, setRows] = useState(1); // 新增行数状态
+    const [rows, setRows] = useState(1); // New row status.
     const [loading, setLoading] = useState(false);
     const [conversations, setConversations] = useState([]); // Ensure initial state is an array
     const [selectedConversation, setSelectedConversation] = useState(null);
-    const [selectedModel, setSelectedModel] = useState(''); // 当前选中的模型
+    const [selectedModel, setSelectedModel] = useState(''); // The currently selected model.
     const [models, setModels] = useState([]); // List of models
     const [showModelOptions, setShowModelOptions] = useState(false); //
     const [useStream, setUseStream] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    // 当 selectedConversation 改变时，自动更新到 localStorage
+    // Automatically update to localStorage when selectedConversation changes.
     useEffect(() => {
         if (selectedConversation !== null) {
             localStorage.setItem('selectedConversation', selectedConversation);
@@ -39,9 +38,9 @@ function Chat() {
     const textareaRef = useRef(null);
     // eslint-disable-next-line no-unused-vars
     const [animatingTitle, setAnimatingTitle] = useState(null);
-    const [showShareModal, setShowShareModal] = useState(false); // 控制分享弹窗
-    const [selectedMessages, setSelectedMessages] = useState([]); // 选择分享的消息
-    const [shareMessages, setShareMessages] = useState([]); // 存储分享的消息
+    const [showShareModal, setShowShareModal] = useState(false); // Control sharing popup.
+    const [selectedMessages, setSelectedMessages] = useState([]); // Store selected messages.
+    const [shareMessages, setShareMessages] = useState([]); // Store messages to share.
     const [sharedCid, setSharedCid] = useState(null);
     const [streamingMessage, setStreamingMessage] = useState(null);
 
@@ -53,17 +52,17 @@ function Chat() {
 
     const adjustTextareaHeight = () => {
         if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto'; // 重置高度
-            const scrollHeight = textareaRef.current.scrollHeight; // 获取实际内容高度
+            textareaRef.current.style.height = 'auto';
+            const scrollHeight = textareaRef.current.scrollHeight; // Get scroll height
             const maxHeight = parseInt(getComputedStyle(textareaRef.current).maxHeight, 10);
 
-            // 如果高度达到最大限度，允许滚动
+            // If the height reaches the maximum limit, allow scrolling.
             if (scrollHeight > maxHeight) {
                 textareaRef.current.style.height = `${maxHeight}px`;
-                textareaRef.current.style.overflowY = 'auto'; // 允许滚动
+                textareaRef.current.style.overflowY = 'auto'; // Allow scrolling
             } else {
                 textareaRef.current.style.height = `${scrollHeight}px`;
-                textareaRef.current.style.overflowY = 'hidden'; // 禁止滚动
+                textareaRef.current.style.overflowY = 'hidden'; // Forbid scrolling
             }
 
             setTextareaHeight(`${textareaRef.current.style.height}px`);
@@ -109,12 +108,12 @@ function Chat() {
         const fetchAndLoadConversation = async () => {
             try {
                 const userUUID = localStorage.getItem('userUUID');
-                setNotification('Fetching conversations...'); // 设置通知
-                console.log('Fetching conversations for user:', userUUID); // 打印用户UUID
+                setNotification('Fetching conversations...'); // Set notification
+                console.log('Fetching conversations for user:', userUUID); // Print user UUID
 
                 console.log(`${window.API_BASE_URL}/chat`, {uuid: userUUID});
-                await fetchConversations(); // 等待对话列表获取完成
-                setNotification(null); // 清除通知
+                await fetchConversations(); // Wait for conversations to be fetched
+                setNotification(null); // Clear notification
             } catch (e) {
                 console.error('Error loading conversation:', e);
             }
@@ -127,8 +126,8 @@ function Chat() {
         fetchAndLoadConversation().then(() => console.log('Conversations fetched')).catch(e => console.error('Error after fetchAndLoadConversation:', e));
     }, []);
 
-    const modelSelectorRef = useRef(null);  // 用于引用整个模型选择器的 ref
-    // 点击页面其他地方隐藏模型选项的逻辑
+    const modelSelectorRef = useRef(null);
+    // Click elsewhere on the page to hide model options.
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (modelSelectorRef.current &&
@@ -137,16 +136,16 @@ function Chat() {
             }
         };
 
-        // 绑定全局点击事件
+        // Bind global click event.
         document.addEventListener('mousedown', handleClickOutside);
 
         return () => {
-            // 清除全局点击事件监听器
+            // Remove global click event listener.
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
 
-    // 修改初始化加载对话的 useEffect
+    // Modify the useEffect for initializing the loading dialog.
     useEffect(() => {
         const loadInitialConversation = async () => {
             if (conversations.length > 0) {
@@ -218,7 +217,7 @@ function Chat() {
         }
     };
 
-    // 新增函数用于创建新对话
+    // Add a new function to create a new conversation.
     const createNewConversation = async () => {
         try {
             const uuid = localStorage.getItem('userUUID');
@@ -243,8 +242,8 @@ function Chat() {
         try {
             // const uuid = localStorage.getItem('userUUID');
             // const response = await axios.get(`${window.API_BASE_URL}/chat/${uuid}/${conversationId}`);
-            // setShareMessages(response.data.data);  // 设置分享消息
-            setShowShareModal(true);  // 显示分享 modal
+            // setShareMessages(response.data.data);  // Set sharing message.
+            setShowShareModal(true);  // Show sharing modal.
         } catch (error) {
             console.error('Error syncing conversation history', error);
         }
@@ -253,9 +252,9 @@ function Chat() {
     const handleSelectMessage = (messageId) => {
         setSelectedMessages(prev => {
             if (prev.includes(messageId)) {
-                return prev.filter(id => id !== messageId); // 取消选择
+                return prev.filter(id => id !== messageId);
             } else {
-                return [...prev, messageId];  // 添加选择
+                return [...prev, messageId];
             }
         });
     };
@@ -268,8 +267,8 @@ function Chat() {
             });
             const shareLink = window.location.origin + '/chat/share/' +
                 response.data.data;
-            setShowShareModal(false);  // 关闭分享弹窗
-            // alert(`Share link generated: ${shareLink}`);  // 显示分享链接
+            setShowShareModal(false);
+            // alert(`Share link generated: ${shareLink}`);
             showSweetAlertWithRetVal(`Share link generated: ${shareLink}`, {
                 title: 'Share Link',
                 icon: 'success',
@@ -288,12 +287,12 @@ function Chat() {
         }
     };
 
-    // 将输入指针重新定位到输入框
+    // Reposition the input pointer to the input box.
     useEffect(() => {
         if (!loading && textareaRef.current) {
-            textareaRef.current.focus(); // 只有在非loading状态时聚焦
+            textareaRef.current.focus();
         }
-    }, [loading]); // 监测 loading 状态
+    }, [loading]);
 
     const sendMessage = async () => {
         if (input.trim() === '') return;
@@ -322,11 +321,11 @@ function Chat() {
                 const selectedConv = conversations[conversationIndex];
                 const timeGroup = getTimeGroup(selectedConv.timestampLast);
                 if (timeGroup !== "Today") {
-                    // 如果对话不在“今天”内，重排到最前
+                    // If the conversation is not "today," rearrange it to the front.
                     const updatedConversations = [...conversations];
-                    updatedConversations.splice(conversationIndex, 1); // 从原位置移除
-                    updatedConversations.unshift({ ...selectedConv, timestampLast: timestamp }); // 插入到最前面
-                    setConversations(updatedConversations); // 更新对话列表
+                    updatedConversations.splice(conversationIndex, 1);
+                    updatedConversations.unshift({ ...selectedConv, timestampLast: timestamp });
+                    setConversations(updatedConversations);
                 }
             }
 
@@ -354,7 +353,7 @@ function Chat() {
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder('utf-8');
                 let accumulatedData = '';
-                let accumulatedText = ''; // 手动累积文本
+                let accumulatedText = '';
 
                 while (true) {
                     const {done, value} = await reader.read();
@@ -362,23 +361,20 @@ function Chat() {
 
                     accumulatedData += decoder.decode(value, {stream: true});
 
-                    // 按换行符分隔 JSON 对象
+                    // Separate JSON objects by newline character.
                     while (accumulatedData.includes('\n')) {
                         const newlineIndex = accumulatedData.indexOf('\n');
                         const jsonChunk = accumulatedData.slice(0, newlineIndex);
                         accumulatedData = accumulatedData.slice(newlineIndex + 1);
 
                         try {
-                            const parsedChunk = JSON.parse(jsonChunk);  // 解析JSON
+                            const parsedChunk = JSON.parse(jsonChunk);
                             // console.log('Parsed chunk:', parsedChunk);
                             if (parsedChunk.data) {
                                 accumulatedText += parsedChunk.data;
                                 setStreamingMessage(prevMessage => ({
                                     ...prevMessage, text: accumulatedText, timestamp: timestamp,
                                 }));
-                                // 每次更新消息到 messages 列表
-                                // console.log('Streaming message:', streamingMessage);
-                                // setMessages(prevMessages => [...prevMessages, { sender: 'assistant', text: parsedChunk.data, timestamp: new Date() }]);
                             }
                             if (parsedChunk.msg) {
                                 parseMsgAndPotentialNotify(parsedChunk.msg);
@@ -390,7 +386,7 @@ function Chat() {
                     }
                 }
 
-                // 处理可能剩余的数据
+                // Handle any remaining data.
                 if (accumulatedData) {
                     try {
                         const parsedChunk = JSON.parse(accumulatedData);
@@ -475,12 +471,12 @@ function Chat() {
             const totalLength = animatingTitle.targetTitle.length;
             const remainingChars = totalLength - animatingTitle.index;
 
-            // 基础延迟时间
+            // Basic latency time.
             const baseDelay = 3;
             const maxDelay = 55;
 
-            // 根据剩余字符数调整延迟
-            // 字符越少，延迟越长，但不超过200ms
+            // Adjust the delay according to the number of remaining characters.
+            // The fewer characters, the longer the delay, but not more than 200ms.
             const adjustedDelay = Math.min(baseDelay + (1 / remainingChars) * 1000,
                 maxDelay);
 
@@ -507,26 +503,26 @@ function Chat() {
         }
     }, [animatingTitle]);
 
-    const [userScrolled, setUserScrolled] = useState(false); // 用于判断用户是否手动滚动
+    const [userScrolled, setUserScrolled] = useState(false);
 
-    // 自动滚动逻辑
+    // Automatic scrolling logic.
     useEffect(() => {
-        if (chatWindowRef.current && !userScrolled) { // 只有在用户没有手动上滚时，才强制滚动
+        if (chatWindowRef.current && !userScrolled) {
             chatWindowRef.current.scrollTo({
                 top: chatWindowRef.current.scrollHeight,
-                behavior: streamingMessage ? 'instant' : 'smooth', // 根据是否流式判断滚动行为
+                behavior: streamingMessage ? 'instant' : 'smooth',
             });
         }
     }, [messages, streamingMessage, userScrolled]);
 
-    // 监听用户滚动
+    // Listen to user scroll.
     useEffect(() => {
         const handleScroll = () => {
             if (!chatWindowRef.current) return;
 
             const {scrollTop, scrollHeight, clientHeight} = chatWindowRef.current;
 
-            // 如果用户滚动到了上方（不在底部），则认为用户手动滚动了
+            // If the user scrolls up (not at the bottom), it is considered that the user scrolled manually.
             if (scrollTop + clientHeight < scrollHeight - 10) {
                 setUserScrolled(true);
             } else {
@@ -550,20 +546,20 @@ function Chat() {
         const now = new Date();
         const conversationDate = new Date(timestamp);
 
-        // 获取本地时间偏移量，并应用到 conversationDate
+        // Get the local time offset and apply it to conversationDate.
         const localConversationDate = new Date(conversationDate.getTime() - conversationDate.getTimezoneOffset() * 60000);
 
-        // 设置 now 的时间为当天的 00:00:00
+        // Set the time of now to 00:00:00 of the day.
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
         const oneDay = 24 * 60 * 60 * 1000;
         const oneWeek = 7 * oneDay;
-        const oneMonth = 30 * oneDay;  // 近似一个月
+        const oneMonth = 30 * oneDay;
 
-        // 检测用户语言
+        // Detect user language.
         const userLang = navigator.language || navigator.userLanguage;
 
-        // 根据语言环境设置时间分组标签
+        // Group time labels according to locale settings.
         const labels = {
             en: {
                 today: "Today",
@@ -581,10 +577,10 @@ function Chat() {
             }
         };
 
-        // 判断是中文还是英文，设置对应的标签
+        // Determine whether it is Chinese or English and set the corresponding label.
         const languageLabels = userLang.startsWith('zh') ? labels.zh : labels.en;
 
-        // 时间分组逻辑
+        // Time grouping logic.
         if (localConversationDate >= todayStart) {
             return languageLabels.today;
         } else if (localConversationDate >= new Date(todayStart - oneDay)) {
@@ -628,7 +624,7 @@ function Chat() {
     return (
         <div className="chat-interface">
             <div className="conversation-list">
-                {/* 头部 */}
+                {/* Head */}
                 <div className="conversation-header">
                     <h3>Conversations</h3>
                     <button className="new-conversation-btn" onClick={createNewConversation}>
@@ -636,45 +632,44 @@ function Chat() {
                     </button>
                 </div>
 
-                {/* 按时间分组的对话 */}
+                {/* Conversations grouped by time. */}
                 {Array.isArray(conversations) &&
                     groupConversationsByTimeGroup(conversations).map((item, index) => {
-                        // 渲染时间分隔符
                         if (item.type === 'time-group-divider') {
                             return (
                                 <div key={index} className="time-group-divider">
-                                    {item.group} {/* 显示分组标签，如"今天"、"昨天" */}
+                                    {item.group} {/* Display group labels like "Today," "Yesterday." */}
                                 </div>
                             );
                         }
 
-                        // 渲染对话条目
+                        // Render dialogue entry.
                         return (
                             <ConversationItem
-                                key={item.id} // 每个对话的唯一 ID
+                                key={item.id} // Unique ID for each conversation.
                                 conversation={{
                                     ...item,
                                     title: animatingTitle && animatingTitle.id === item.id
                                         ? animatingTitle.currentTitle
                                         : item.title,
-                                }} // 传递对话数据
-                                conversations={conversations} // 传递对话列表数据
-                                messages={messages} // 传递消息数据
-                                loadConversation={loadConversation} // 传递加载对话的函数
-                                fetchConversations={fetchConversations} // 传递刷新对话列表的函数
-                                selectedConversation={selectedConversation} // 传递当前选中的对话 ID
-                                setSelectedConversation={setSelectedConversation} // 传递设置对话状态的函数
-                                setMessages={setMessages} // 传递设置消息状态的函数
-                                setNotification={setNotification} // 传递设置通知状态的函数
-                                openShareModal={openShareModal} // 传递打开分享弹窗的函数
-                                setShareMessages={setShareMessages} // 传递设置分享消息状态的函数
-                                setSharedCid={setSharedCid} // 传递设置分享对话 ID 的函数
+                                }} // set the data of the conversation.
+                                conversations={conversations}
+                                messages={messages}
+                                loadConversation={loadConversation}
+                                fetchConversations={fetchConversations}
+                                selectedConversation={selectedConversation}
+                                setSelectedConversation={setSelectedConversation}
+                                setMessages={setMessages}
+                                setNotification={setNotification}
+                                openShareModal={openShareModal}
+                                setShareMessages={setShareMessages}
+                                setSharedCid={setSharedCid}
                             />
                         );
                     })}
             </div>
 
-            {/* 分享弹窗 */}
+            {/* Share Popup Window */}
             {showShareModal && (<div className="share-modal">
                 <h3>Select messages to share</h3>
                 <div className="message-list">
@@ -749,8 +744,8 @@ function Chat() {
                             }
                         }} placeholder="Type your message..."
                         disabled={loading}
-                        // rows={rows} // 根据输入内容动态调整行数
-                        style={{height: textareaHeight}} // 动态调整高度
+                        // rows={rows}
+                        style={{height: textareaHeight}}
                     />
                     <div className="inputButtonContainer">
 
@@ -767,15 +762,21 @@ function Chat() {
                         </label>
 
 
-                        <button className=".chat-container sendButton"
-                                onClick={sendMessage} disabled={loading}>
-                            {loading ? 'Thinking' : 'Send'}
+                        <button className=".chat-container sendButton" onClick={sendMessage} disabled={loading}>
+                            {loading ? (
+                                <div className="thinking-animation">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            ) : 'Send'}
                         </button>
+
                     </div>
                 </div>
 
             </div>
-            {/* 浮动弹幕通知 */}
+            {/*  */}
             <AnimatePresence>
                 {notification && (<motion.div
                     className="notification-banner"
@@ -791,7 +792,6 @@ function Chat() {
 }
 
 function MessageComponent({msg, messages, index, isStreaming = false}) {
-    // 添加防御性检查
     if (!msg || typeof msg !== 'object') {
         console.error('Invalid message object:', msg);
         return null;

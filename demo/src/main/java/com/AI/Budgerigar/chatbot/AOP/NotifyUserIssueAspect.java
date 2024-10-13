@@ -27,9 +27,10 @@ public class NotifyUserIssueAspect {
     private String SudoAlertEmail;
 
     /**
-     * 定义切点，当 handleLoginIp 返回 LoginIpStatus.NEW 时执行切面逻辑
-     * @param usr 用户信息
-     * @param loginIpInfo 新的 IP 信息
+     * Define a cut point and execute aspect logic. When "handleLoginIp", return
+     * "LoginIpStatus.NEW".
+     * @param usr user information
+     * @param loginIpInfo new IP information
      */
     @AfterReturning(
             pointcut = "execution(* com.AI.Budgerigar.chatbot.Services.LoginIpService.handleLoginIp(..)) && args(usr, loginIpInfo)",

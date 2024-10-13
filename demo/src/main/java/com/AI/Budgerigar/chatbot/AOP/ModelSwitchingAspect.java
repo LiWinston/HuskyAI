@@ -32,19 +32,19 @@ public class ModelSwitchingAspect {
         for (int i = 0; i < maxRetries; i++) {
             try {
                 log.info("Using model: " + baiduConfig.getCurrentChatBuilder());
-                return joinPoint.proceed(); // 尝试执行原始方法
+                return joinPoint.proceed(); // Attempt to execute the original method.
             }
             catch (Exception e) {
                 log.error("Error using model {}: {}", baiduConfig.getCurrentModel(), e.getMessage());
                 lastException = e;
-                baiduConfig.switchToNextModel(); // 切换到下一个模型
+                baiduConfig.switchToNextModel(); // Change to the next model.
                 ChatService impl = (ChatService) joinPoint.getTarget();
                 String conversationId = args[1].toString();
                 chatMessagesRedisDAO.maintainMessageHistory(conversationId);
             }
         }
 
-        // 如果所有尝试都失败，抛出最后一个异常
+        // If all attempts fail, throw the last exception.
         if (lastException != null)
             return Result.error(lastException.getMessage());
         else {

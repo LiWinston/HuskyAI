@@ -28,7 +28,7 @@ public class ShareController {
         return ResponseEntity.ok().build();
     }
 
-    // 生成分享链接
+    // Generate sharing link.
     @PostMapping
     public Result<String> generateShareLink(@RequestBody Map<String, Object> requestData) {
         try {
@@ -36,10 +36,10 @@ public class ShareController {
             String conversationId = (String) requestData.get("conversationId");
             List<Integer> messageIndexes = (List<Integer>) requestData.get("messageIndexes");
 
-            // 调用服务生成分享链接
+            // Call the service to generate a share link.
             String shareCode = shareService.generateShareLink(uuid, conversationId, messageIndexes);
 
-            // 返回生成的分享链接
+            // Return the generated share link.
             return Result.success(shareCode);
         }
         catch (Exception e) {
@@ -48,7 +48,7 @@ public class ShareController {
         }
     }
 
-    // 获取分享的对话详情
+    // Get details of the shared conversation.
     @GetMapping("/{shareCode}")
     public Result<List<Message>> getSharedConversation(HttpServletRequest request, @PathVariable String shareCode) {
         log.info("Request Method: {}", request.getMethod());
@@ -62,7 +62,7 @@ public class ShareController {
         }
     }
 
-    // 删除分享记录
+    // Delete a shared conversation.
     @DeleteMapping("/{shareCode}")
     public Result<String> deleteShare(@PathVariable String shareCode) {
         try {

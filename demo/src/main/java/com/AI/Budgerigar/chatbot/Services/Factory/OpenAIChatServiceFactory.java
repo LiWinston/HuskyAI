@@ -10,21 +10,23 @@ import org.springframework.web.client.RestTemplate;
 public class OpenAIChatServiceFactory {
 
     @Autowired
-    private AutowireCapableBeanFactory beanFactory; // 自动注入
+    private AutowireCapableBeanFactory beanFactory; // Automatic injection.
 
     /**
-     * 创建 OpenAIChatServiceImpl 实例，并让 Spring 自动注入依赖，只设置 OpenAI 的 URL 和模型 ID
-     * @param openAIUrl 服务的 URL
-     * @param model 模型 ID
-     * @return 返回一个自动注入依赖的 OpenAIChatServiceImpl 实例
+     * Create an instance of OpenAIChatServiceImpl, let Spring automatically inject
+     * dependencies, and only set the URL and model ID of OpenAI.
+     * @param openAIUrl service URL
+     * @param model model ID
+     * @return Return an instance of OpenAIChatServiceImpl with automatically injected
+     * dependencies.
      */
     public OpenAIChatServiceImpl create(String openAIUrl, String model) {
         OpenAIChatServiceImpl service = new OpenAIChatServiceImpl();
 
-        // 先注入其他依赖
+        // Inject other dependencies first.
         beanFactory.autowireBean(service);
 
-        // 然后设置特定的值
+        // Then set specific values.
         service.setModel(model);
         service.setOpenAIUrl(openAIUrl);
         service.setRestTemplate(new RestTemplate());
@@ -34,19 +36,21 @@ public class OpenAIChatServiceFactory {
     }
 
     /**
-     * 创建 OpenAIChatServiceImpl 实例，并让 Spring 自动注入依赖，用于创建并自行修改 OpenAI 的 URL、模型 ID 和 API 密钥
-     * @param openAIUrl 服务的 URL
-     * @param model 模型 ID
-     * @param openaiApiKey OpenAI 的 API 密钥
-     * @return 返回一个自动注入依赖的 OpenAIChatServiceImpl 实例
+     * Create an instance of OpenAIChatServiceImpl and let Spring automatically inject
+     * dependencies to create and modify OpenAI's URL, model ID, and API key.
+     * @param openAIUrl service URL
+     * @param model model ID
+     * @param openaiApiKey OpenAI API key
+     * @return Return an instance of OpenAIChatServiceImpl with automatically injected
+     * dependencies.
      */
     public OpenAIChatServiceImpl create(String openAIUrl, String model, String openaiApiKey) {
         OpenAIChatServiceImpl service = new OpenAIChatServiceImpl();
 
-        // 先注入其他依赖
+        // Inject other dependencies first.
         beanFactory.autowireBean(service);
 
-        // 然后设置特定的值
+        // Then set specific values.
         service.setModel(model);
         service.setOpenAIUrl(openAIUrl);
         service.setOpenaiApiKey(openaiApiKey);

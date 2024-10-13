@@ -138,7 +138,7 @@ public class GenerateTittle {
     private void rollAndSetModel(AtomicReference<String> _openAIUrl, AtomicReference<String> _model,
             AtomicReference<String> _apikey) {
         var chatServices = chatServicesManageService.getChatServices();
-        // 遍历服务和模型
+        // Traverse services and models.
         chatServices.forEach((serviceName, serviceMap) -> {
             serviceMap.forEach((modelId, chatService) -> {
                 if (chatService instanceof OpenAIChatServiceImpl oachatService && !Objects.equals(modelId, "openai")) {
@@ -157,11 +157,12 @@ public class GenerateTittle {
         List<OpenAIChatServiceImpl> availableServices = new ArrayList<>();
 
         log.debug("escapeUrl: {}, escapeModel: {}", escapeUrl, escapeModel);
-        // 先收集所有可用的OpenAIChatServiceImpl实例
+        // First collect all available OpenAIChatServiceImpl instances.
         chatServices.forEach((serviceName, serviceMap) -> {
             serviceMap.forEach((modelId, chatService) -> {
                 if (chatService instanceof OpenAIChatServiceImpl && !Objects.equals(modelId, "openai")) {
-                    // 非openai的OpenAIChatServiceImpl实例加入availableServices列表
+                    // Instances of OpenAIChatServiceImpl that are not openai are added to
+                    // the availableServices list.
                     availableServices.add((OpenAIChatServiceImpl) chatService);
                 }
             });
@@ -169,13 +170,15 @@ public class GenerateTittle {
 
         log.debug("availableServices: {}", availableServices);
 
-        // 如果只有一个非openai的OpenAIChatServiceImpl实例，直接使用该实例
+        // If there is only one non-OpenAI OpenAIChatServiceImpl instance, use that
+        // instance directly.
         if (availableServices.size() == 1) {
             // if (openAIUrl != null && model != null) {
-            // // 预先注入了openAIUrl和model，则退行到该设定，使用唯一的非openai模型
+            // // If openAIUrl and model are pre-injected, revert to that setting and use
+            // the only non-openai model.
             // return;
             // }
-            log.debug("只有一个非openai的OpenAIChatServiceImpl实例，直接使用该实例");
+            log.debug("There is only one non-openai OpenAIChatServiceImpl instance, use that instance directly.");
             OpenAIChatServiceImpl singleService = availableServices.getFirst();
             _openAIUrl.set(singleService.getOpenAIUrl());
             _model.set(singleService.getModel());
@@ -183,23 +186,26 @@ public class GenerateTittle {
             return;
         }
 
-        // 遍历服务和模型，进行避让
+        // Traverse services and models to avoid.
         for (OpenAIChatServiceImpl service : availableServices) {
             if (service.getOpenAIUrl().equals(escapeUrl) && service.getModel().equals(escapeModel)) {
-                continue; // 避让当前模型
+                continue; // Avoid the current model.
             }
-            log.debug("避让成功 {}", service.getModel());
-            // 选择其他模型并设置
+            log.debug("Avoid successfully {}", service.getModel());
+            // Select another model and set it.
             _openAIUrl.set(service.getOpenAIUrl());
             _model.set(service.getModel());
             _apikey.set(service.getOpenaiApiKey());
             return;
         }
 
-        // 如果避让后没有可选模型，仍然使用原模型
+        // If there is no alternative model after avoiding, still use the original model.
         if (_openAIUrl.get() == null || _model.get() == null) {
-            log.debug("避让后没有可选模型，仍然使用原模型");
-            OpenAIChatServiceImpl fallbackService = availableServices.get(0); // 回退到第一个可用模型
+            log.debug("After yielding, there is no alternative model, still using the original model.");
+            OpenAIChatServiceImpl fallbackService = availableServices.get(0); // Revert to
+                                                                              // the first
+                                                                              // available
+                                                                              // model.
             _openAIUrl.set(fallbackService.getOpenAIUrl());
             _model.set(fallbackService.getModel());
             _apikey.set(fallbackService.getOpenaiApiKey());

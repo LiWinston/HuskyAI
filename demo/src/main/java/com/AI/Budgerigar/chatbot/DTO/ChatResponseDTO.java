@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true) // 忽略未映射的字段
+@JsonIgnoreProperties(ignoreUnknown = true) // Ignore unmapped fields.
 @ToString
 public class ChatResponseDTO {
 
@@ -37,15 +37,15 @@ public class ChatResponseDTO {
 
         private int index;
 
-        private OAMessageDTO message; // 用于同步响应
+        private OAMessageDTO message; // Used for synchronous response.
 
-        private OAMessageDTO delta; // 用于流式响应的命名映射
+        private OAMessageDTO delta; // Naming map for streaming response.
 
-        private String finish_reason; // 完整响应中的字段
+        private String finish_reason; // Fields in the complete response.
 
     }
 
-    private String logprobs; // 完整响应中的字段
+    private String logprobs; // Fields in the complete response.
 
     @Getter
     @Setter

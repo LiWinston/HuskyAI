@@ -12,7 +12,7 @@ public class LoginDTO {
     private String password;
 
     //
-    // @JsonProperty("UserIpInfo") // 这里指定 JSON 中的 "UserIpInfo" 对应 Java 中的 "userIpInfo"
+    // @JsonProperty("UserIpInfo")
     // private UserIpInfoDTO userIpInfo;
 
 }

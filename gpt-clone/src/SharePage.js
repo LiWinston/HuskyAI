@@ -7,7 +7,7 @@ import VscDarkPlus from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dark
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import './SharePage.css';
-import {FaCopy, FaDownload} from 'react-icons/fa'; // 添加下载图标
+import {FaCopy, FaDownload} from 'react-icons/fa'; // Add download icon.
 
 // 使用开源头像链接
 const userAvatarUrl = 'https://i.imgur.com/jQhQZKk.png';  // 示例头像：用户

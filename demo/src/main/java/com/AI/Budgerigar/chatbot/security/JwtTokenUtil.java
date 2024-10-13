@@ -21,7 +21,7 @@ public class JwtTokenUtil {
 
     private final Key key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
-    // 生成 JWT
+    // Generate JWT
     public String generateToken(String uuid) {
         return Jwts.builder()
             .setSubject(uuid)
@@ -31,14 +31,14 @@ public class JwtTokenUtil {
             .compact();
     }
 
-    // 从 JWT 中获取 UUID
+    // Obtain UUID from JWT
     public String getUuidFromToken(String token) {
         Claims claims = Jwts.parser().setSigningKey(key).build().parseClaimsJws(token).getBody();
 
         return claims.getSubject();
     }
 
-    // 验证 JWT 是否有效
+    // Check if JWT is valid
     public boolean validateToken(String token) {
         try {
             Jwts.parser().setSigningKey(key).build().parseClaimsJws(token);

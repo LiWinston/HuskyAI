@@ -1,6 +1,9 @@
 package com.AI.Budgerigar.chatbot.Nosql;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
@@ -84,7 +87,9 @@ public class UserModelAccessConfig {
      */
     @Data
     @AllArgsConstructor
-    @NoArgsConstructor // 添加无参构造函数
+    @NoArgsConstructor // Add a parameterless constructor.
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class ModelAccess {
 
         public ModelAccess(String url, String model) {
@@ -128,6 +133,11 @@ public class UserModelAccessConfig {
      * AccessRestriction class represents the restrictions on model access.
      */
     @Data
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
     public static class AccessRestriction {
 
         /**

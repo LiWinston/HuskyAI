@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.AI.Budgerigar.chatbot.Constant.ApplicationConstant.MODELALIAS_MODELID_SEPARATOR;
+
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/chat")
@@ -46,19 +48,18 @@ public class ChatController {
     @Autowired
     private UserModelAccessService userModelAccessService;
 
-    // 获取DB中所有对话清单，以备用户选取.每个对话清单包含对话ID和对话节选
-    // get all conversation list from DB for user to choose.
+    // Get all conversation list from DB for user to choose.
     // Each conversation list contains conversation ID and conversation excerpt
     @GetMapping()
     public Result<?> getConversationList(@RequestParam String uuid) {
         try {
-            // 使用 userService 查询用户是否存在
+            // Use userService to check if the user exists.
             var userExists = userService.checkUserExistsByUuid(uuid);
             if (userExists.getCode() == 0) {
                 return Result.error(userExists.getMsg());
             }
 
-            // 获取用户的对话列表及消息节选
+            // Obtain the user's conversation list and message excerpts.
             List<Conversation> conversations = userService.getConversations(uuid);
             return Result.success(conversations);
 
@@ -69,10 +70,11 @@ public class ChatController {
     }
 
     /**
-     * 用get传输ConversationId，表达获取历史记录之义
-     * @param uuid 用户ID
-     * @param conversationId 对话ID
-     * @return 对话历史记录
+     * Transmit ConversationId via GET to express the meaning of retrieving history
+     * records.
+     * @param uuid user id
+     * @param conversationId conversation id
+     * @return conversation history
      */
     @GetMapping("/{uuid}/{conversationId}")
     public Result<?> chat(@PathVariable String uuid, @PathVariable String conversationId) {
@@ -102,9 +104,10 @@ public class ChatController {
             if (model == null) {
                 model = "baidu";
             }
-            String[] modelParts = model.split("上的");
+            String[] modelParts = model.split(MODELALIAS_MODELID_SEPARATOR);
             if (modelParts.length != 2) {
-                return Result.error("Invalid model format. Expected serviceName上的modelId");
+                return Result
+                    .error("Invalid model format. Expected serviceName " + MODELALIAS_MODELID_SEPARATOR + " modelId");
             }
 
             String serviceName = modelParts[0];
@@ -124,7 +127,7 @@ public class ChatController {
                 log.info("key: " + k + " value: " + v.toString());
             });
 
-            // 非流式调用
+            // Non-streaming chat
             Result<String> response = chatService.chat(body.get("prompt"), body.get("conversationId"));
             return Result.success(response.getData(), response.getMsg());
         }
@@ -139,10 +142,10 @@ public class ChatController {
         try {
             String model = body.get("model");
             if (model == null) {
-                model = "baidu上的baidu";
+                model = "baidu" + MODELALIAS_MODELID_SEPARATOR + "baidu";
             }
 
-            String[] modelParts = model.split("上的");
+            String[] modelParts = model.split(MODELALIAS_MODELID_SEPARATOR);
             if (modelParts.length != 2) {
                 return Flux.just(Result.error("Invalid model format. Expected serviceName:modelId")).map(result -> {
                     try {
@@ -182,12 +185,13 @@ public class ChatController {
                     });
             }
 
-            // 检查是否支持流式调用
+            // Check if streaming is supported.
             if (chatService instanceof StreamChatService) {
                 log.info("支持流式调用");
                 return ((StreamChatService) chatService).chatFlux(body.get("prompt"), body.get("conversationId"))
                     .map(result -> {
-                        // 将Result对象转换为JSON字符串并添加换行符
+                        // Convert the Result object to a JSON string and add a newline
+                        // character.
                         try {
                             return objectMapper.writeValueAsString(result) + "\n";
                         }
@@ -217,28 +221,30 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
-    // 保持前三个模型不变，并对其他模型按服务源内部的模型名排序
+    // Keep the first three models unchanged and sort the other models by the model names
+    // within the service source.
     @PostMapping("/models")
     public Result<?> getModels(@RequestBody Map<String, String> body) {
         String userUUID = body.get("uuid");
-        // // 检查远程服务的健康状况
+        // // Check the health of the remote service.
         // chatServicesManageService.checkRemoteServicesHealth();
 
         ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices = chatServicesManageService
             .getChatServices();
         try {
-            // 优先模型列表
+            // Priority model list.
             List<String> prioritizedModels = Arrays.asList("HuskyGPT", "Aliyun", "baidu", "doubao", "PCLMStudio",
                     "MBP14LMStudio");
 
             List<ChatService> allowedChatServices = userModelAccessService.getUserAllowedChatServices(userUUID);
             log.info("Allowed chat services: " + allowedChatServices);
 
-            // 最多也就这些了，还可能筛掉服务器现在不可用的服务
+            // Filter out services that are currently unavailable on the server.
             List<String> result = new ArrayList<>(allowedChatServices.size());
 
             /*
-             * 优先对 Aliyun, baidu, doubao 三个服务源的模型按模型名排序，并加入结果
+             * Priority is given to sorting the models from the three service sources
+             * Aliyun, Baidu, and Doubao by model name, and results are added.
              */
             prioritizedModels.stream().filter(chatServices::containsKey).forEach(serviceName -> {
                 chatServices.get(serviceName)
@@ -247,13 +253,14 @@ public class ChatController {
                     .filter(modelId -> allowedChatServices.stream()
                         .anyMatch(cs -> cs.equals(chatServices.get(serviceName).get(modelId))))
                     .forEach(modelId -> {
-                        result.add(serviceName + "上的" + modelId);
+                        result.add(serviceName + MODELALIAS_MODELID_SEPARATOR + modelId);
                     });
             });
 
             // List<UserModelAccessConfig.ModelAccess> allowedMA = userModelAccessService
             // .getUserAllowedModelAccess(userUUID);
-            // 对其余服务源的模型按模型名排序，并加入结果
+            // Sort the models of the remaining service sources by model name and include
+            // the results.
             chatServices.keySet()
                 .stream()
                 .filter(serviceName -> !prioritizedModels.contains(serviceName))
@@ -264,7 +271,7 @@ public class ChatController {
                         .filter(modelId -> allowedChatServices.stream()
                             .anyMatch(cs -> cs.equals(chatServices.get(serviceName).get(modelId))))
                         .sorted()
-                        .forEach(modelId -> result.add(serviceName + "上的" + modelId));
+                        .forEach(modelId -> result.add(serviceName + MODELALIAS_MODELID_SEPARATOR + modelId));
                 });
 
             return Result.success(result);
@@ -281,12 +288,12 @@ public class ChatController {
     @DeleteMapping("/{uuid}/{conversationId}")
     public Result<?> deleteConversation(@PathVariable String uuid, @PathVariable String conversationId) {
         try {
-            // 使用 userService 的 deleteConversation 方法并返回结果
+            // Use the deleteConversation method of userService and return the result.
             return chatSyncService.deleteConversation(uuid, conversationId);
 
         }
         catch (Exception e) {
-            // 捕获任何异常并返回错误响应
+            // Capture any exceptions and return an error response.
             return Result.error(e.getMessage());
         }
     }

@@ -36,7 +36,7 @@ public class ChatConversationRecord {
         return messages;
     }
 
-    // 添加一个接受 Message 类型列表的方法
+    // Add a method that accepts a list of Message types.
     public void addMessages(List<Message> newMessages) {
         List<String[]> messageArrays = newMessages.stream()
             .map(message -> new String[] { message.getRole(), message.getTimestamp(), message.getContent() })
@@ -44,7 +44,7 @@ public class ChatConversationRecord {
         this.messages.addAll(messageArrays);
     }
 
-    // 添加一个接受 String[] 类型列表的方法
+    // Add a method that accepts a list of type String[].
     public void addStringMessages(List<String[]> newMessages) {
         this.messages.addAll(newMessages);
     }

@@ -26,39 +26,43 @@ public class ShareServiceImpl implements ShareService {
         this.chatSyncService = chatSyncService;
     }
 
-    // 生成分享链接
+    // Generate share link.
     @Override
     public String generateShareLink(String uuid, String conversationId, List<Integer> messageIndexes) {
-        String shareCode = UUID.randomUUID().toString(); // 生成唯一分享码
-        // chatSyncService.updateHistoryFromRedis(conversationId); // 确保同步
+        String shareCode = UUID.randomUUID().toString(); // Generate a unique sharing
+                                                         // code.
+        // chatSyncService.updateHistoryFromRedis(conversationId); // Ensure that the
+        // conversation history is up to date.
         shareDAO.saveShare(shareCode, uuid, conversationId, messageIndexes);
         return shareCode;
     }
 
-    // 根据分享码获取对话详情
+    // Get conversation details based on the shared code.
     @Override
     public List<Message> getSharedConversation(String shareCode) {
-        // 从 shareDAO 中根据 shareCode 获取对应的分享记录
+        // Retrieve the corresponding sharing record from shareDAO based on shareCode.
         ShareRecord record = shareDAO.findByShareCode(shareCode);
         log.info("record:{}", record);
         if (record != null) {
-            // 获取指定 conversationId 的完整消息列表
+            // Get the complete message list of the specified conversationId.
             List<Message> allMessages = chatSyncService.getHistory(record.getConversationId());
 
-            // 根据记录中的索引筛选出被分享的消息
+            // Filter out the shared messages based on the index in the records.
             List<Integer> messageIndexes = record.getMessageIndexes();
 
             return messageIndexes.stream()
-                .filter(index -> index >= 0 && index < allMessages.size()) // 避免无效索引
-                .map(allMessages::get) // 根据索引获取消息
+                .filter(index -> index >= 0 && index < allMessages.size()) // Avoid
+                                                                           // invalid
+                                                                           // indexes.
+                .map(allMessages::get) // Get message by index.
                 .collect(Collectors.toList());
         }
         log.error("Share record not found for share code: {}", shareCode);
-        // 如果未找到记录，返回空列表
+        // Return an empty list if no record is found.
         return Collections.emptyList();
     }
 
-    // 删除分享记录
+    // Delete sharing record.
     @Override
     public void deleteShare(String shareCode) {
         shareDAO.deleteByShareCode(shareCode);

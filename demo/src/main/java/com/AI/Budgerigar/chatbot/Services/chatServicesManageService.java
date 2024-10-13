@@ -10,7 +10,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -27,18 +26,19 @@ import java.util.concurrent.ExecutorService;
 
 public class chatServicesManageService {
 
-    // 使用双层 Map：外层 Map 以服务的 URL 或别名作为 key，内层 Map 以模型 ID 作为 key
+    // Use a double-layer Map: the outer Map uses the service's URL or alias as the key,
+    // and the inner Map uses the model ID as the key.
     @Autowired
     @Getter
     private ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices;
 
-    @Autowired
-    @Qualifier("baidu")
-    private ChatService baiduChatService;
-
-    @Autowired
-    @Qualifier("doubao")
-    private ChatService doubaoChatService;
+    // @Autowired
+    // @Qualifier("baidu")
+    // private ChatService baiduChatService;
+    //
+    // @Autowired
+    // @Qualifier("doubao")
+    // private ChatService doubaoChatService;
 
     @Autowired
     private RemoteServiceConfig remoteServiceConfig;
@@ -47,28 +47,29 @@ public class chatServicesManageService {
     private OpenAIChatServiceFactory openAIChatServiceFactory;
 
     @Autowired
-    private ExecutorService executorService;// 线程池 thread pool
+    private ExecutorService executorService;// thread pool
 
     @PostConstruct
     public void init() {
-        chatServices.put("baidu", new ConcurrentHashMap<>() {
-            {
-                put("baidu", baiduChatService);
-            }
-        });
-        chatServices.put("doubao", new ConcurrentHashMap<>() {
-            {
-                put("doubao", doubaoChatService);
-            }
-        });
-        // 从配置中读取根路径并动态注册服务
+        // chatServices.put("baidu", new ConcurrentHashMap<>() {
+        // {
+        // put("baidu", baiduChatService);
+        // }
+        // });
+        // chatServices.put("doubao", new ConcurrentHashMap<>() {
+        // {
+        // put("doubao", doubaoChatService);
+        // }
+        // });
+        // Read the root path from the configuration and dynamically register the service.
         for (RemoteServiceConfig.ServiceConfig service : remoteServiceConfig.getServiceConfigs()) {
             fetchAndRegisterModelsFromService(service);
         }
     }
 
     /**
-     * 从远程服务获取模型并注册 &#064;serviceName 若有别名设定则key使用别名，否则使用服务的 URL
+     * Obtain the model from the remote service and register it at @serviceName. If an
+     * alias is set, use the alias as the key; otherwise, use the service's URL.
      * @param serviceConfig
      */
     private void fetchAndRegisterModelsFromService(RemoteServiceConfig.ServiceConfig serviceConfig) {
@@ -93,19 +94,19 @@ public class chatServicesManageService {
                 ConcurrentHashMap<String, ChatService> modelServices = chatServices.getOrDefault(serviceName,
                         new ConcurrentHashMap<>());
 
-                // 获取允许注册的模型列表
+                // Get a list of models permitted for registration.
                 List<String> allowedModels = serviceConfig.getAllowedModels();
 
                 for (Map<String, Object> modelData : models) {
                     String modelId = (String) modelData.get("id");
 
-                    // 如果 allowedModels 不为空，且 modelId 不在列表中，跳过
+                    // If allowedModels is not empty and modelId is not in the list, skip.
                     if (allowedModels != null && !allowedModels.isEmpty() && !allowedModels.contains(modelId)) {
                         log.info("Model {} is not in the allowed list for service {}, skipping registration.", modelId,
                                 serviceName);
                         continue;
                     }
-                    // 如果模型不存在，则注册新的 ChatService
+                    // If the model does not exist, register a new ChatService.
                     if (!modelServices.containsKey(modelId)) {
                         registerNewChatService(modelId, baseUrl, serviceName, openaiApiKey);
                     }
@@ -219,7 +220,7 @@ public class chatServicesManageService {
 
             List<String> allowedModels = serviceConfig.getAllowedModels();
 
-            // 获取模型ID
+            // Obtain model ID
             List<String> modelIds = new ArrayList<>();
             JsonNode dataNode = jsonResponse.get("data");
             if (dataNode != null && dataNode.isArray()) {
@@ -236,13 +237,13 @@ public class chatServicesManageService {
             return modelIds;
         }
         catch (HttpServerErrorException e) {
-            // 只记录HTTP状态码和错误信息
+            // Only record HTTP status codes and error messages.
             log.error("Failed to fetch models from service: {}, HTTP status: {}, Error message: {}", serviceUrl,
                     e.getStatusCode(), e.getResponseBodyAsString());
             return Collections.emptyList();
         }
         catch (Exception e) {
-            // 捕获其他异常
+            // Catch other exceptions.
             log.error("Failed to fetch models from service: {}", serviceUrl, e);
             return Collections.emptyList();
         }

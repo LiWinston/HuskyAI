@@ -43,7 +43,7 @@ public class TokenLimiter {
     public List<String[]> getAdaptiveHistory(String conversationId, int maxTokens) {
         LinkedList<String[]> adaptiveHistory = new LinkedList<>();
         int tokenCount = 0;
-        int batchSize = 8; // 初始批量读取数量
+        int batchSize = 8; // Initial batch read quantity.
 
         int finalMaxTokens = min(maxTokenLimit, maxTokens);
         // log.info("maxTokens: {}, finalMaxTokens: {},maxTokenLimit: {}", maxTokens,
@@ -85,11 +85,11 @@ public class TokenLimiter {
             startIndex = actualStartIndex - 1;
         }
 
-        // 调整历史记录以确保正确的顺序和角色交替
+        // Adjust the history to ensure the correct order and role alternation.
         return adjustHistoryForAlternatingRoles(adaptiveHistory);
     }
 
-    // 固定：根据消息条数限制获取对话历史
+    // Fixed: Obtain conversation history based on the message count limit.
     public List<String[]> getFixedHistory(String conversationId) {
         long totalMessages = chatMessagesRedisDAO.getMessageCount(conversationId);
         int messageCount = min(maxMessageLimit, (int) totalMessages);
@@ -100,7 +100,7 @@ public class TokenLimiter {
 
         List<String[]> fixedHistory = chatMessagesRedisDAO.getLastNMessages(conversationId, messageCount);
 
-        // 更严格的调整：确保交替顺序
+        // Stricter adjustment: ensure alternate order.
         adjustHistoryForAlternatingRoles(fixedHistory);
 
         return fixedHistory;
@@ -117,13 +117,14 @@ public class TokenLimiter {
         List<String[]> fixedHistory = chatMessagesRedisDAO.getLastNMessages(conversationId,
                 min(maxMessageLimit, messageCount));
 
-        // 更严格的调整：确保交替顺序
+        // Stricter adjustment: ensure alternate order.
         adjustHistoryForAlternatingRoles(fixedHistory);
 
         return fixedHistory;
     }
 
-    // 确保历史以"user"开始和结束，且用户和助手消息交替
+    // Ensure history starts with and ends with "user". User and assistant messages
+    // alternate.
     public List<String[]> adjustHistoryForAlternatingRoles(List<String[]> history) {
         if (history.isEmpty()) {
             return history;
@@ -132,7 +133,8 @@ public class TokenLimiter {
         LinkedList<String[]> adjustedHistory = new LinkedList<>();
         String expectedRole = "user";
 
-        // 从最新的消息开始处理，确保以 user 消息结尾
+        // Start processing from the latest news, ensuring it ends with the user's
+        // message.
         for (int i = history.size() - 1; i >= 0; i--) {
             String[] message = history.get(i);
             if (message[0].equals(expectedRole)) {
@@ -141,12 +143,12 @@ public class TokenLimiter {
             }
         }
 
-        // 如果调整后的历史不是以 user 开始，则移除第一条消息
+        // If the adjusted history does not start with "user", remove the first message.
         if (!adjustedHistory.isEmpty() && !"user".equals(adjustedHistory.getFirst()[0])) {
             adjustedHistory.removeFirst();
         }
 
-        // 确保消息数量为奇数
+        // Ensure the number of messages is odd.
         if (adjustedHistory.size() % 2 == 0 && !adjustedHistory.isEmpty()) {
             adjustedHistory.removeFirst();
         }
@@ -158,17 +160,17 @@ public class TokenLimiter {
 
     @PostConstruct
     public void init() {
-        // 初始化 TOKEN_PATTERN
+        // Initialize "TOKEN_PATTERN".
         TOKEN_PATTERN = Pattern.compile("\\w+|\\p{Punct}|\\s+");
     }
 
-    // 估算消息的token数量的辅助方法
+    // An auxiliary method to accurately estimate the number of tokens in a message.
     public int estimateTokenCount(String content) {
         if (content == null || content.isEmpty()) {
             return 0;
         }
 
-        // 使用已经编译好的 TOKEN_PATTERN
+        // Use the pre-compiled "TOKEN_PATTERN".
         Matcher matcher = TOKEN_PATTERN.matcher(content);
 
         int tokenCount = 0;
