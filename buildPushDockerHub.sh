@@ -23,12 +23,19 @@ if [ $? -ne 0 ]; then
 fi
 
 # 检查并删除本地旧镜像
-if docker images | grep -q "$DOCKER_USERNAME/$IMAGE_NAME"; then
-  echo "Found existing local image: $DOCKER_USERNAME/$IMAGE_NAME:$TAG. Removing it..."
+if docker images | grep -q "$DOCKER_USERNAME/$IMAGE_NAME:$TAG"; then
+  echo "Found existing local image: $DOCKER_USERNAME/$IMAGE_NAME:$TAG. Trying to remove it..."
   docker image rm "$DOCKER_USERNAME/$IMAGE_NAME:$TAG"
+
   if [ $? -ne 0 ]; then
-    echo "Error: Failed to remove local image. Please try manually deleting the image." >&2
-    exit 1
+    echo "Warning: Failed to remove local image. Falling back to a new tag..."
+
+    # 生成一个新标签（例如带时间戳的版本号）
+    NEW_TAG=$(date +%Y%m%d%H%M%S)
+    echo "Using new tag: $NEW_TAG"
+    TAG=$NEW_TAG
+  else
+    echo "Old image removed successfully."
   fi
 else
   echo "No local image to remove. Continuing..."
