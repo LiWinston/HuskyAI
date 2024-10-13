@@ -73,7 +73,7 @@ fi
 
 # 启动新的LG容器并将其添加到testnet网络中
 echo "Starting LG container..."
-docker run -d --name LG --network testnet --network-alias svc -p 80:80 -p 8090:8090 -e SPRING_DATA_REDIS_HOST=redis ${DOCKER_USERNAME}/${IMAGE_NAME}:${TAG}
+docker run -d --name LG --network testnet --network-alias svc -p 80:80 -p 8090:8090 -e SPRING_DATA_REDIS_HOST=redis -e SPRING_PROFILES_ACTIVE=prod${DOCKER_USERNAME}/${IMAGE_NAME}:${TAG}
 
 if [ $? -eq 0 ]; then
   echo "LG container started successfully."
