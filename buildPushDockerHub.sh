@@ -1,12 +1,12 @@
 #Run this script to build the docker image and push to hub, then trigger the render deploy
-#Use windows shell, WSL, or git bash to run this script, may need chmod 777 deploy_Render.sh on Mac
+#Use windows shell, WSL, or git bash to run this script, may need chmod 777 buildPushDockerHub.sh on Mac
 #Run this script in the root directory of the project
 
 # 设定 Docker Hub 用户名和镜像名称
 DOCKER_USERNAME="yongchunl"  # 替换为你的 Docker Hub 用户名
 IMAGE_NAME="lms-gpt"
 TAG="latest"  # 可以根据需要修改标签，例如使用版本号
-RENDER_URL="https://api.render.com/deploy/srv-cronat2j1k6c739ksph0?key=s-dNsYQvuP4"
+#RENDER_URL="https://api.render.com/deploy/srv-cronat2j1k6c739ksph0?key=s-dNsYQvuP4"
 
 # 检查 Docker 是否安装
 if ! [ -x "$(command -v docker)" ]; then
@@ -50,13 +50,13 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# 触发 Render 部署
-echo "Triggering Render deployment via URL: $RENDER_URL..."
-curl -X GET "$RENDER_URL"
-if [ $? -ne 0 ]; then
-  echo "Error: Render deployment trigger failed! Please check the API key or deployment URL." >&2
-  exit 1
-fi
+## 触发 Render 部署
+#echo "Triggering Render deployment via URL: $RENDER_URL..."
+#curl -X GET "$RENDER_URL"
+#if [ $? -ne 0 ]; then
+#  echo "Error: Render deployment trigger failed! Please check the API key or deployment URL." >&2
+#  exit 1
+#fi
 
 # 完成
-echo "Docker image pushed successfully and Render deployment triggered successfully!"
+echo "Docker image pushed successfully to Docker Hub: $DOCKER_USERNAME/$IMAGE_NAME:$TAG"
