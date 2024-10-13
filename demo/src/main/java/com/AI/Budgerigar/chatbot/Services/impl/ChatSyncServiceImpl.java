@@ -241,6 +241,9 @@ public class ChatSyncServiceImpl implements ChatSyncService {
         // Merge the messages of MongoDB and Redis, avoiding overwriting newer Redis
         // messages.
         List<Message> mergedMessages = mergeMessages(redisMessages, mongoMessages);
+        for (Message message : mergedMessages) {
+            log.info("Merged message: {}", message);
+        }
 
         // Write the merged message back to Redis.
         chatMessagesRedisDAO.clearConversation(conversationId); // Clear existing Redis

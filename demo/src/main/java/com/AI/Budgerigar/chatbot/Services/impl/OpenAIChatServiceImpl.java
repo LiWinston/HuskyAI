@@ -95,7 +95,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
 
     @Override
     public Result<String> chat(String prompt, String conversationId) {
-        log.info("Flux chat with \u001B[34m{}\u001B[0m using model \u001B[32m{}\u001B[0m FROM {}", openAIUrl, model,
+        log.info("chat with \u001B[34m{}\u001B[0m using model \u001B[32m{}\u001B[0m FROM {}", openAIUrl, model,
                 OpenAIChatServiceImpl.class.getName());
         try {
             List<String[]> conversationHistory = preChatBehaviour.getHistoryPreChat(this, prompt, conversationId);
