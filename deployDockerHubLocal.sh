@@ -32,9 +32,30 @@ else
   LOCAL_IMAGE_EXISTS=false
 fi
 
-# 如果没有本地镜像或需要拉取更新镜像，拉取新镜像
-if [ "$LOCAL_IMAGE_EXISTS" = false ]; then
-  echo "Pulling the LMS-GPT image from Docker Hub..."
+# 检查本地是否已有LMS-GPT镜像，并比较与远程镜像的摘要
+echo "Checking for local LMS-GPT image and comparing with remote..."
+LOCAL_IMAGE_EXISTS=false
+NEED_UPDATE=false
+
+if docker images | grep -q "${DOCKER_USERNAME}/${IMAGE_NAME}"; then
+  LOCAL_IMAGE_EXISTS=true
+  LOCAL_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${DOCKER_USERNAME}/${IMAGE_NAME}:${TAG} | cut -d'@' -f2)
+  REMOTE_DIGEST=$(docker manifest inspect ${DOCKER_USERNAME}/${IMAGE_NAME}:${TAG} | jq -r '.manifests[0].digest')
+
+  if [ "$LOCAL_DIGEST" != "$REMOTE_DIGEST" ]; then
+    echo "Remote image has been updated. Local image will be replaced."
+    NEED_UPDATE=true
+  else
+    echo "Local image is up to date."
+  fi
+else
+  echo "No local LMS-GPT image found."
+  NEED_UPDATE=true
+fi
+
+# 如果需要更新或没有本地镜像，拉取新镜像
+if [ "$NEED_UPDATE" = true ]; then
+  echo "Pulling the latest LMS-GPT image from Docker Hub..."
   docker pull ${DOCKER_USERNAME}/${IMAGE_NAME}:${TAG}
   if [ $? -ne 0 ]; then
     echo "Failed to pull the image from Docker Hub. Exiting..."
