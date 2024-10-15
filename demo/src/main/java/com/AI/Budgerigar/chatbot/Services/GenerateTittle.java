@@ -2,11 +2,13 @@ package com.AI.Budgerigar.chatbot.Services;
 
 import com.AI.Budgerigar.chatbot.AIUtil.TokenLimiter;
 import com.AI.Budgerigar.chatbot.Cache.ChatMessagesRedisDAO;
+import com.AI.Budgerigar.chatbot.Config.BaiduConfig;
 import com.AI.Budgerigar.chatbot.DTO.ChatRequestDTO;
 import com.AI.Budgerigar.chatbot.DTO.ChatResponseDTO;
 import com.AI.Budgerigar.chatbot.Services.impl.OpenAIChatServiceImpl;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
+import com.baidubce.qianfan.core.builder.ChatBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,8 +45,8 @@ public class GenerateTittle {
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
 
-    // @Autowired
-    // private BaiduConfig baiduConfig;
+     @Autowired
+     private BaiduConfig baiduConfig;
 
     @Autowired
     private ConversationMapper conversationMapper;
@@ -117,11 +119,18 @@ public class GenerateTittle {
             String summary = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
             if (summary == null || summary.isEmpty()) {
-                return Result.error(conversationId, "Failed to generate a title.");
+                summary = generateTitleWithBaidu(recentMessages);
+                if (summary == null || summary.isEmpty()) {
+                    return Result.error(conversationId, "Failed to generate a title.");
+                }
+                log.info("Generated title: " + "\u001B[32;1m" + summary + "\u001B[0m" + " \u001B[35mBased on "
+                        + recentMessages.size() + " messages.\u001B[0m" + " \u001B[34m" + "baidu" + "\u001B[0m"
+                        + " \u001B[36m" + baiduConfig.getCurrentModel() + "\u001B[0m");
+            }else{
+                log.info("Generated title: " + "\u001B[32;1m" + summary + "\u001B[0m" + " \u001B[35mBased on "
+                        + recentMessages.size() + " messages.\u001B[0m" + " \u001B[34m" + _openAIUrl.get() + "\u001B[0m"
+                        + " \u001B[36m" + _model.get() + "\u001B[0m");
             }
-            log.info("Generated title: " + "\u001B[32;1m" + summary + "\u001B[0m" + " \u001B[35mBased on "
-                    + recentMessages.size() + " messages.\u001B[0m" + " \u001B[34m" + _openAIUrl.get() + "\u001B[0m"
-                    + " \u001B[36m" + _model.get() + "\u001B[0m");
             // Step 3: Update the 'firstmessage' field in the database
             conversationMapper.setMessageForShort(conversationId, summary);
 
@@ -209,6 +218,26 @@ public class GenerateTittle {
             _openAIUrl.set(fallbackService.getOpenAIUrl());
             _model.set(fallbackService.getModel());
             _apikey.set(fallbackService.getOpenaiApiKey());
+        }
+    }
+
+    private String generateTitleWithBaidu(List<String[]> recentMessages) {
+        try {
+            ChatBuilder chatCompletion = baiduConfig.getRandomChatBuilder();
+            recentMessages.add(new String[] { "assistant", null, "Still to be answered" });
+            recentMessages.add(new String[] { "user", null,
+                    "Generate a concise and relevant title for this conversation, matching the original content's language. No matter how the content changes, provide a title. Focus slightly more on recent messages. If the topic has significantly shifted, determine the title based on the updated subject. Please reply with only the title, without any pleasantries, introductions, or prefixes. Directly provide a subject-predicate, verb-object, or modifier-head structure. If it's an English title, ensure it follows a subject-predicate, or adjective-noun phrase. Avoid phrases like 'Recent message:' in the title. If there are multiple possible titles, choose the simplest one." });
+
+            recentMessages = tokenLimiter.adjustHistoryForAlternatingRoles(recentMessages);
+
+            for (String[] entry : recentMessages) {
+                chatCompletion.addMessage(entry[0], entry[2]);
+            }
+
+            return chatCompletion.execute().getResult();
+        } catch (Exception e) {
+            log.error("Error using Baidu service: ", e);
+            return null;
         }
     }
 
