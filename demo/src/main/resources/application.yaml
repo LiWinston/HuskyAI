@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://aws-0-ap-southeast-2.pooler.supabase.com:5432/huskyaidb1
+    username: postgres.xpnaqdffbpbkdrdmqsmz
+    password: JnWA9#Nzse-mQ3@
+    # 连接池基本配置
+    druid:
+      initial-size: 5               # 初始化时建立的连接数
+      min-idle: 5                   # 最小空闲连接数，保证连接池最少有几个空闲连接
+      max-active: 20                # 最大连接数，防止过多连接耗尽资源
+      max-wait: 60000               # 连接获取超时时间（毫秒），超过这个时间未获取到连接则抛出异常
+      time-between-eviction-runs-millis: 60000  # 检查空闲连接的周期（毫秒）
+      min-evictable-idle-time-millis: 300000    # 空闲连接被驱逐的最小空闲时间（毫秒）
+      test-while-idle: true          # 在空闲连接回收时检测连接是否有效
+      test-on-borrow: false          # 获取连接时不测试（提高性能，使用idle测试代替）
+      test-on-return: false          # 归还连接时不测试（提高性能）
+      validation-query: SELECT 1     # PostgreSQL 连接校验语句
+      pool-prepared-statements: true # 缓存预编译的SQL语句
+      max-pool-prepared-statement-per-connection-size: 20  # 每个连接缓存的最大预编译SQL数
+
+      # 日志配置
+      log-abandoned: true            # 记录被遗弃的连接
+      remove-abandoned: true         # 超过时间的连接被强制回收
+      remove-abandoned-timeout: 180  # 被弃用连接的超时时间（秒）
+
+      # SQL 慢查询监控配置
+      filters: stat,wall,slf4j        # 启用监控（stat）和日志输出（slf4j）
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000 # 慢SQL标准为5秒
+      use-global-data-source-stat: true  # 记录全局的监控信息，便于调试

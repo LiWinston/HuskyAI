@@ -236,6 +236,12 @@
             <version>2.3.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+            <version>1.2.22</version>
+        </dependency>
+
         <!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.springframework/spring-webflux &ndash;&gt;-->
 <!--        <dependency>-->
 <!--            <groupId>org.springframework</groupId>-->
