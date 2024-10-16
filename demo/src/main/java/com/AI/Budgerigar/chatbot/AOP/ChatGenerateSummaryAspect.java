@@ -171,7 +171,7 @@ public class ChatGenerateSummaryAspect {
 
         // Listen to each message in the stream and merge the titles at the last one
         // (i.e., when finishReason isn't equal to null).
-        return resultFlux.concatMap(result -> {
+        return resultFlux.flatMapSequential(result -> {
             if (future != null && future.isDone() && !titleAppended.get()) {
                 // If "future" is done, merge the title as soon as possible.
                 return Mono.fromFuture(future).map(titleResult -> {
