@@ -45,8 +45,8 @@ public class GenerateTittle {
     @Autowired
     private ChatMessagesRedisDAO chatMessagesRedisDAO;
 
-     @Autowired
-     private BaiduConfig baiduConfig;
+    @Autowired
+    private BaiduConfig baiduConfig;
 
     @Autowired
     private ConversationMapper conversationMapper;
@@ -126,7 +126,8 @@ public class GenerateTittle {
                 log.info("Generated title: " + "\u001B[32;1m" + summary + "\u001B[0m" + " \u001B[35mBased on "
                         + recentMessages.size() + " messages.\u001B[0m" + " \u001B[34m" + "baidu" + "\u001B[0m"
                         + " \u001B[36m" + baiduConfig.getCurrentModel() + "\u001B[0m");
-            }else{
+            }
+            else {
                 log.info("Generated title: " + "\u001B[32;1m" + summary + "\u001B[0m" + " \u001B[35mBased on "
                         + recentMessages.size() + " messages.\u001B[0m" + " \u001B[34m" + _openAIUrl.get() + "\u001B[0m"
                         + " \u001B[36m" + _model.get() + "\u001B[0m");
@@ -235,7 +236,8 @@ public class GenerateTittle {
             }
 
             return chatCompletion.execute().getResult();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Error using Baidu service: ", e);
             return null;
         }

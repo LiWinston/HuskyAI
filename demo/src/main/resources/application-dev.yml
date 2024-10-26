@@ -1,7 +1,7 @@
 remote-services:
   serviceConfigs:
-#    - url: https://ai.bitsleep.cn
-#      name: PCLMStudio
+    - url: http://localhost:1234
+      name: PCLMStudio
 #
 #
 #    - url: https://ai2.bitsleep.cn
@@ -71,6 +71,6 @@ remote-services:
 #        - gpt-3.5-turbo-16k
 #        - net-gpt-3.5-turbo
 
-    - url: https://api.chatanywhere.org
-      name: ChatAnywhere
-      api-key: sk-ivKmlp7OYGP4ziC7R9vOQXKsiq3umWUSylsKLdoog7IoINUl
+#    - url: https://api.chatanywhere.org
+#      name: ChatAnywhere
+#      api-key: sk-ivKmlp7OYGP4ziC7R9vOQXKsiq3umWUSylsKLdoog7IoINUl

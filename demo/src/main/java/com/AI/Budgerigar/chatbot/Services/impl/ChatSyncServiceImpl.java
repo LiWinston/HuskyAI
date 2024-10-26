@@ -34,19 +34,20 @@ public class ChatSyncServiceImpl implements ChatSyncService {
     // Get history and pass it to the front end for display.
     @Override
     public List<Message> getHistory(String conversationId) {
-//        List<String[]> conversationHistory = chatMessagesRedisDAO.getConversationHistory(conversationId);
-//        if (!conversationHistory.isEmpty()) {
-//            return conversationHistory.stream().map(this::convertToMessage).toList();
-//        }
+        // List<String[]> conversationHistory =
+        // chatMessagesRedisDAO.getConversationHistory(conversationId);
+        // if (!conversationHistory.isEmpty()) {
+        // return conversationHistory.stream().map(this::convertToMessage).toList();
+        // }
         // // First, submit current conversation cache to DB
-         updateHistoryFromRedis(conversationId);
+        updateHistoryFromRedis(conversationId);
         return chatMessagesMongoDAO.getConversationHistory(conversationId);
-////        updateRedisFromMongo(conversationId);
-//        // Get history to show in front end
-//        return chatMessagesRedisDAO.getConversationHistory(conversationId)
-//            .stream()
-//            .map(this::convertToMessage)
-//            .toList();
+        //// updateRedisFromMongo(conversationId);
+        // // Get history to show in front end
+        // return chatMessagesRedisDAO.getConversationHistory(conversationId)
+        // .stream()
+        // .map(this::convertToMessage)
+        // .toList();
     }
 
     // Update the history log, fetch the latest messages from Redis, and update them to

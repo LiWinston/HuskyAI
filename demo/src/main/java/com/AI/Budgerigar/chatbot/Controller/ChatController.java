@@ -233,7 +233,7 @@ public class ChatController {
             .getChatServices();
         try {
             // Priority model list.
-            List<String> prioritizedModels = Arrays.asList("HuskyGPT", "Aliyun", "baidu", "doubao", "PCLMStudio",
+            List<String> prioritizedModels = Arrays.asList("PCLMStudio", "HuskyGPT", "Aliyun", "baidu", "doubao",
                     "MBP14LMStudio");
 
             List<ChatService> allowedChatServices = userModelAccessService.getUserAllowedChatServices(userUUID);
