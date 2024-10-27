@@ -263,6 +263,47 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
 }
 
+.markdown-table-container {
+    width: 100%;
+}
+
+.markdown-table-container table {
+    border-collapse: collapse;
+    margin: 2em 0;
+    background-color: #f9f9f9; /* 背景颜色稍微亮一些 */
+}
+
+.markdown-table-container th,
+.markdown-table-container td {
+    border: 1px solid #e4e4e4; /* 更浅的灰色边框 */
+    padding: 12px; /* 增加内边距 */
+    text-align: left;
+}
+
+.markdown-table-container th {
+    background-color: #f2f2f2; /* 浅色背景 */
+    font-weight: bold;
+    color: #333; /* 深灰色字体 */
+}
+
+.markdown-table-container td,
+.markdown-table-container th {
+    transition: all 0.2s ease-in-out; /* 平滑过渡效果 */
+}
+
+.markdown-table-container tr:hover td {
+    background-color: #f4f4f4; /* 鼠标悬停时的背景色 */
+}
+
+@media (max-width: 768px) {
+    .markdown-table-container table,
+    .markdown-table-container th,
+    .markdown-table-container td {
+        font-size: 0.9em;
+    }
+}
+
+
 
 .timestamp {
     font-size: 11px;

@@ -9,6 +9,7 @@ import {FaPlus} from 'react-icons/fa';
 import ConversationItem from './ConversationItem'; // Introduce the plus icon.
 import './Component/Toggle.css';
 import {showSweetAlertWithRetVal} from './Component/sweetAlertUtil';
+import remarkGfm from 'remark-gfm';
 
 const CONVERSATION_SUMMARY_GENERATED = '#CVSG##CVSG##CVSG#';
 
@@ -820,34 +821,47 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
             transition={{duration: 0.3}}
         >
             <div className={`message ${msg.sender}`}>
-                <ReactMarkdown
-                    children={msg.text || ''}
-                    components={{
-                        code({node, inline, className, children, ...props}) {
-                            const match = /language-(\w+)/.exec(className || '');
-                            return !inline ? (<SyntaxHighlighter
-                                style={vscDarkPlus}
-                                language={match ? match[1] : 'plaintext'}
-                                PreTag="div"
-                                children={String(children).replace(/\n$/, '')}
-                                {...props}
-                            />) : (<code className={className} {...props}>
-                                {children}
-                            </code>);
-                        },
-                    }}
-                />
+                <div className="markdown-table-container">
+                    <ReactMarkdown
+                        children={msg.text || ''}
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                            code({
+                                     node,
+                                     inline,
+                                     className,
+                                     children,
+                                     ...props
+                                 }) {
+                                const match = /language-(\w+)/.exec(
+                                    className || '');
+                                return !inline ? (<SyntaxHighlighter
+                                    style={vscDarkPlus}
+                                    language={match ? match[1] : 'plaintext'}
+                                    PreTag="div"
+                                    children={String(children).
+                                        replace(/\n$/, '')}
+                                    {...props}
+                                />) : (<code className={className} {...props}>
+                                    {children}
+                                </code>);
+                            },
+                        }}
+                    />
+                </div>
             </div>
             <div className={`timestamp ${msg.sender}-timestamp`}>
-                {messageDate.toLocaleString(navigator.language, {
-                    year: 'numeric',
-                    month: navigator.language.startsWith('zh') ? 'long' : 'short',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                    second: 'numeric',
-                    dayPeriod: 'short',
-                })}
+                    {messageDate.toLocaleString(navigator.language, {
+                        year: 'numeric',
+                        month: navigator.language.startsWith('zh') ?
+                            'long' :
+                            'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        second: 'numeric',
+                        dayPeriod: 'short',
+                    })}
             </div>
         </motion.div>
     </React.Fragment>);
