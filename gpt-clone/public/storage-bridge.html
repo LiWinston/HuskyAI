@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Storage Bridge</title>
+    <script>
+        try {
+            // 在子域名页面也设置document.domain
+            document.domain = 'bitsleep.cn';
+        } catch (e) {
+            console.warn('Unable to set document.domain', e);
+        }
+    </script>
+</head>
+<body>
+<!-- 这个页面故意留空，只用于访问localStorage -->
+</body>
+</html>
