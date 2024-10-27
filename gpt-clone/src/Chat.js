@@ -794,10 +794,11 @@ function Chat() {
         </div>);
 }
 
+// 预处理文本，将“\(...)”和“\[...]”转换为“$$...$$”的格式
 function preprocessText(text) {
-    // 将“\(...)”和“\[...]”转换为“$$...$$”的格式
-    return text.replace(/\\\((.*?)\\\)/g, '$$$$ $1 $$$$')
-    .replace(/\\\[(.*?)\\\]/g, '$$$$ $1 $$$$');
+    return text
+        .replace(/\\\((.*?)\\\)/g, '$$$$ $1 $$$$')
+        .replace(/\\\[(.*?)\\\]/g, '$$$$ $1 $$$$');
 }
 
 function MessageComponent({msg, messages, index, isStreaming = false}) {
@@ -805,6 +806,8 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
         console.error('Invalid message object:', msg);
         return null;
     }
+
+    const processedText = preprocessText(msg.text || '');
 
     const messageDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
     const currentDate = new Date();
@@ -836,32 +839,34 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
             <div className={`message ${msg.sender}`}>
                 <div className="markdown-table-container">
                     <MathJax>
-                    <ReactMarkdown
-                        children={preprocessText(msg.text) || ''}
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                            code({
-                                     node,
-                                     inline,
-                                     className,
-                                     children,
-                                     ...props
-                                 }) {
-                                const match = /language-(\w+)/.exec(
-                                    className || '');
-                                return !inline ? (<SyntaxHighlighter
-                                    style={vscDarkPlus}
-                                    language={match ? match[1] : 'plaintext'}
-                                    PreTag="div"
-                                    children={String(children).
-                                        replace(/\n$/, '')}
-                                    {...props}
-                                />) : (<code className={className} {...props}>
-                                    {children}
-                                </code>);
-                            },
-                        }}
-                    />
+                        <ReactMarkdown
+                            children={processedText || ''}
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                                code({
+                                         node,
+                                         inline,
+                                         className,
+                                         children,
+                                         ...props
+                                     }) {
+                                    const match = /language-(\w+)/.exec(
+                                        className || '');
+                                    return !inline ? (<SyntaxHighlighter
+                                        style={vscDarkPlus}
+                                        language={match ? match[1] : 'plaintext'}
+                                        PreTag="div"
+                                        children={String(children).
+                                            replace(/\n$/, '')}
+                                        {...props}
+                                    />) : (
+                                        <code className={className} {...props}>
+                                            {children}
+                                        </code>
+                                    );
+                                },
+                            }}
+                        />
                     </MathJax>
                 </div>
             </div>
