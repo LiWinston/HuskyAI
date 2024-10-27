@@ -12,6 +12,7 @@ import {showSweetAlertWithRetVal} from './Component/sweetAlertUtil';
 import remarkGfm from 'remark-gfm';
 
 import {MathJax, MathJaxContext} from 'better-react-mathjax';
+import UserControlCenter from "./Component/UserControlCenter";
 
 const CONVERSATION_SUMMARY_GENERATED = '#CVSG##CVSG##CVSG#';
 
@@ -46,6 +47,7 @@ function Chat() {
     const [shareMessages, setShareMessages] = useState([]); // Store messages to share.
     const [sharedCid, setSharedCid] = useState(null);
     const [streamingMessage, setStreamingMessage] = useState(null);
+    const [username, setUsername] = useState(localStorage.getItem('username'));
 
     const handleInputChange = (event) => {
         const text = event.target.value;
@@ -791,6 +793,7 @@ function Chat() {
                 </motion.div>)}
             </AnimatePresence>
 
+            <UserControlCenter username={username} /> {/* Add UserControlCenter component */}
         </div>);
 }
 

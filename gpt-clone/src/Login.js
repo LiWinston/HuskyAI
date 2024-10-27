@@ -109,11 +109,14 @@ function Login() {
                 const token = result.token;
                 const uuid = result.uuid;
                 const role = result.role;
+                const username = result.username;
                 const confirmedAdmin = result.confirmedAdmin;
 
                 // Save token and uuid to localStorage.
                 localStorage.setItem('token', token);
                 localStorage.setItem('userUUID', uuid);
+                localStorage.setItem('role', role);
+                localStorage.setItem('username', username);
 
                 // Check user roles and admin verification status.
                 if (role === 'admin' && confirmedAdmin) {
