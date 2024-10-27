@@ -794,11 +794,11 @@ function Chat() {
         </div>);
 }
 
-// 预处理文本，将“\(...)”和“\[...]”转换为“$$...$$”的格式
+// 预处理文本，将"\(...)"和"\[...]"转换为"$$...$$"的格式
 function preprocessText(text) {
     return text
-        .replace(/\\\((.*?)\\\)/g, '$$$$ $1 $$$$')
-        .replace(/\\\[(.*?)\\\]/g, '$$$$ $1 $$$$');
+    .replace(/\\\((.*?)\\\)/g, '$$$$ $1 $$$$')
+    .replace(/\\\[([\s\S]*?)\\\]/g, '$$$$ $1 $$$$');
 }
 
 function MessageComponent({msg, messages, index, isStreaming = false}) {
