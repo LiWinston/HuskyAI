@@ -11,6 +11,8 @@ import './Component/Toggle.css';
 import {showSweetAlertWithRetVal} from './Component/sweetAlertUtil';
 import remarkGfm from 'remark-gfm';
 
+import {MathJax, MathJaxContext} from 'better-react-mathjax';
+
 const CONVERSATION_SUMMARY_GENERATED = '#CVSG##CVSG##CVSG#';
 
 function Chat() {
@@ -792,6 +794,12 @@ function Chat() {
         </div>);
 }
 
+function preprocessText(text) {
+    // 将“\(...)”和“\[...]”转换为“$$...$$”的格式
+    return text.replace(/\\\((.*?)\\\)/g, '$$$$ $1 $$$$')
+    .replace(/\\\[(.*?)\\\]/g, '$$$$ $1 $$$$');
+}
+
 function MessageComponent({msg, messages, index, isStreaming = false}) {
     if (!msg || typeof msg !== 'object') {
         console.error('Invalid message object:', msg);
@@ -805,7 +813,12 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
         (messages[index - 1] && new Date(messages[index - 1].timestamp) <
             (currentDate - 24 * 60 * 60 * 1000)));
 
+    const mathJaxConfig = {
+        loader: { load: ["input/tex", "output/chtml"] }, // specify output
+    };
+
     return (<React.Fragment>
+        <MathJaxContext config={mathJaxConfig}>
         {isFirstRecentMessage && (<div className="day-divider">
             <div className="divider-line"></div>
             <div className="divider-text">Messages within the last day</div>
@@ -822,8 +835,9 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
         >
             <div className={`message ${msg.sender}`}>
                 <div className="markdown-table-container">
+                    <MathJax>
                     <ReactMarkdown
-                        children={msg.text || ''}
+                        children={preprocessText(msg.text) || ''}
                         remarkPlugins={[remarkGfm]}
                         components={{
                             code({
@@ -848,6 +862,7 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
                             },
                         }}
                     />
+                    </MathJax>
                 </div>
             </div>
             <div className={`timestamp ${msg.sender}-timestamp`}>
@@ -864,6 +879,7 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
                     })}
             </div>
         </motion.div>
+        </MathJaxContext>
     </React.Fragment>);
 }
 
