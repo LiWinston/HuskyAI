@@ -725,8 +725,10 @@ function Chat() {
 
                     <AnimatePresence>
                         {messages.map((msg, index) => (
-                            <MessageComponent key={index} msg={msg} messages={messages}
-                                              index={index}/>))}
+                            <ErrorBoundary key={index}>
+                                <MessageComponent msg={msg} messages={messages} index={index}/>
+                            </ErrorBoundary>
+                        ))}
                     </AnimatePresence>
                     {streamingMessage && (
                         <MessageComponent msg={streamingMessage} messages={messages}
@@ -800,6 +802,29 @@ function preprocessText(text) {
     .replace(/\\\((.*?)\\\)/g, '$$$$ $1 $$$$')
     .replace(/\\\[([\s\S]*?)\\\]/g, '$$$$ $1 $$$$');
 }
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+    }
+
+    static getDerivedStateFromError(error) {
+        // 更新 state 使下一次渲染能够显示降级后的 UI
+        return { hasError: true };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error("Caught an error:", error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            // 可以自定义错误提示页面
+            return <h1>Something went wrong.</h1>;
+        }
+        return this.props.children;
+    }
+}
 
 function MessageComponent({msg, messages, index, isStreaming = false}) {
     const mathJaxRef = useRef(null);
@@ -817,15 +842,14 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
         return () => {
             if (mathJaxRef.current) {
                 try {
-                    // 移除所有MathJax生成的元素
                     const jaxElements = mathJaxRef.current.getElementsByClassName('MathJax');
-                    while (jaxElements.length > 0) {
+                    while (jaxElements.length > 0 && jaxElements[0].parentNode === mathJaxRef.current) {
                         jaxElements[0].remove();
                     }
 
                     // 移除MathJax脚本缓存
                     const scriptElements = mathJaxRef.current.getElementsByTagName('script');
-                    while (scriptElements.length > 0) {
+                    while (scriptElements.length > 0 && scriptElements[0].parentNode === mathJaxRef.current) {
                         scriptElements[0].remove();
                     }
                 } catch (error) {
@@ -887,19 +911,19 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
                                         PreTag="div"
                                         children={String(children).
                                             replace(/\n$/, '')}
-                                        {...props}
-                                    />) : (
-                                        <code className={className} {...props}>
-                                            {children}
-                                        </code>
-                                    );
-                                },
-                            }}
-                        />
-                    </MathJax>
+                                            {...props}
+                                        />) : (
+                                            <code className={className} {...props}>
+                                                {children}
+                                            </code>
+                                        );
+                                    },
+                                }}
+                            />
+                        </MathJax>
+                    </div>
                 </div>
-            </div>
-            <div className={`timestamp ${msg.sender}-timestamp`}>
+                <div className={`timestamp ${msg.sender}-timestamp`}>
                     {messageDate.toLocaleString(navigator.language, {
                         year: 'numeric',
                         month: navigator.language.startsWith('zh') ?
@@ -911,8 +935,8 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
                         second: 'numeric',
                         dayPeriod: 'short',
                     })}
-            </div>
-        </motion.div>
+                </div>
+            </motion.div>
         </MathJaxContext>
     </React.Fragment>);
 }
