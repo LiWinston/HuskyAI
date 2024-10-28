@@ -29,17 +29,21 @@ function ModelManagement() {
     const registerModel = async () => {
         try {
             const response = await axios.post(window.API_BASE_URL + '/admin/models', newModel);
-            if (response.data.success) {
+            if (response.data.code !== 0) {
                 setOperationResult('Model registered successfully.');
-                await fetchModels();  // Refresh the list after registering.
+                showSweetAlertWithRetVal('Model registered successfully.', {icon: 'success', title: 'Success'}).then(async () => {
+                    await fetchModels();  // Refresh the list after registering.
+                })
+
             } else {
                 setOperationResult('Failed to register model.');
+                await showSweetAlertWithRetVal('Failed to register model.', {icon: 'error', title: 'Error'});
             }
         } catch (error) {
             console.error('Error registering model:', error);
+            await showSweetAlertWithRetVal('Error registering model: ' + error.message, {icon: 'error', title: 'Error'});
         }
     };
-
     // Update model information.
     const updateModel = async (name, model, operation) => {
         try {
@@ -76,15 +80,24 @@ function ModelManagement() {
 
     // Enable/disable all models.
     const toggleMultiModels = async (name, models, operation) => {
-        try {
-            const modelIds = models.map((m) => m.model);
-            await axios.post(window.API_BASE_URL + '/admin/models',
-                {name, model: modelIds, operation: operation});
-            await fetchModels();
-        } catch (error) {
-            console.error('Error disabling all models:', error);
+    try {
+        const modelIds = models.map((m) => m.model);
+        const response = await axios.post(window.API_BASE_URL + '/admin/models/manage', {
+            name,
+            model: modelIds,
+            operation: operation
+        });
+        if (response.data.code === 1) {
+            await showSweetAlertWithRetVal('Operation successful.', {icon: 'success', title: 'Success'});
+        } else {
+            await showSweetAlertWithRetVal('Operation failed: ' + response.data.msg, {icon: 'error', title: 'Error'});
         }
-    };
+        await fetchModels();
+    } catch (error) {
+        console.error('Error disabling all models:', error);
+        await showSweetAlertWithRetVal('Error: ' + error.message, {icon: 'error', title: 'Error'});
+    }
+};
 
     return (
         <div className="admin-interface">

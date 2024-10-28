@@ -3,6 +3,8 @@ package com.AI.Budgerigar.chatbot.chatbotAdmin.Controller;
 import com.AI.Budgerigar.chatbot.Config.RemoteServiceConfig;
 import com.AI.Budgerigar.chatbot.Services.ChatService;
 import com.AI.Budgerigar.chatbot.Services.chatServicesManageService;
+import com.AI.Budgerigar.chatbot.chatbotAdmin.DTO.ManageModelDTO;
+import com.AI.Budgerigar.chatbot.chatbotAdmin.DTO.RegisterModelDTO;
 import com.AI.Budgerigar.chatbot.chatbotAdmin.VO.ModelsStatusVO;
 import com.AI.Budgerigar.chatbot.result.Result;
 import lombok.AllArgsConstructor;
@@ -138,6 +140,94 @@ public class modelManageController {
 
         private Integer remove;
 
+    }
+
+    @PostMapping("")
+    public Result<Boolean> registerModel(@RequestBody RegisterModelDTO dto) {
+        try {
+            String url = dto.getUrl();
+            String name = dto.getName();
+            String apiKey = dto.getApiKey() != null ? dto.getApiKey() : "";
+            List<String> allowedModels = dto.getAllowedModels();
+
+            // Fetch all service configs
+            List<RemoteServiceConfig.ServiceConfig> serviceConfigs = remoteServiceConfig.getServiceConfigs();
+
+            // Check if the URL is already registered
+            for (RemoteServiceConfig.ServiceConfig config : serviceConfigs) {
+                if (config.getUrl().equals(url)) {
+                    return Result.error("URL already exists.");
+                }
+            }
+
+            // Create new service configuration
+            RemoteServiceConfig.ServiceConfig newServiceConfig = new RemoteServiceConfig.ServiceConfig();
+            newServiceConfig.setName(name);
+            newServiceConfig.setUrl(url);
+            newServiceConfig.setApiKey(apiKey);
+            newServiceConfig.setAllowedModels(allowedModels);
+
+            // Add the new service config to the list and register models
+            serviceConfigs.add(newServiceConfig);
+            chatServicesManageService.fetchAndRegisterModelsFromService(newServiceConfig);
+
+            return Result.success(true); // Success
+        }
+        catch (Exception e) {
+            log.error("Error registering model: {}", e.getMessage());
+            return Result.error(e.getMessage()); // Failure
+        }
+    }
+
+    @PostMapping("/manage")
+    public Result<Boolean> manageModels(@RequestBody ManageModelDTO dto) {
+        try {
+            String name = dto.getName();
+            List<String> models = dto.getModels();
+            String operation = dto.getOperation();
+
+            var chatServices = chatServicesManageService.getChatServices();
+            // Check if the service exists in the chatServices map.
+            ConcurrentHashMap<String, ChatService> serviceMap = chatServices.getOrDefault(name,
+                    new ConcurrentHashMap<>());
+
+            for (String model : models) {
+                if (!serviceMap.containsKey(model) && operation.equals("disable")) {
+                    return Result.error("Model does not exist.");
+                }
+            }
+
+            // Perform operation on each model
+            for (String model : models) {
+                if (operation.equals("enable")) {
+                    // Register the model if it does not exist
+                    if (!serviceMap.containsKey(model)) {
+                        RemoteServiceConfig.ServiceConfig serviceConfig = remoteServiceConfig.getServiceConfigs()
+                            .stream()
+                            .filter(config -> config.getName().equals(name))
+                            .findFirst()
+                            .orElseThrow(
+                                    () -> new IllegalArgumentException("Service config not found for name: " + name));
+                        chatServicesManageService.registerNewChatService(model, serviceConfig.getUrl(), name,
+                                serviceConfig.getApiKey());
+                    }
+                }
+                else if (operation.equals("disable")) {
+                    // Remove the model if it exists
+                    serviceMap.remove(model);
+                }
+            }
+
+            // Update the chatServices map
+            chatServices.put(name, serviceMap);
+
+            return Result.success(true); // Success
+
+        }
+        catch (Exception e) {
+            log.error("Error managing models: {}", e.getMessage());
+            return Result.error(e.getMessage()); // Failure
+        }
     }
 
 }

@@ -73,7 +73,7 @@ public class chatServicesManageService {
      * alias is set, use the alias as the key; otherwise, use the service's URL.
      * @param serviceConfig
      */
-    private void fetchAndRegisterModelsFromService(RemoteServiceConfig.ServiceConfig serviceConfig) {
+    public void fetchAndRegisterModelsFromService(RemoteServiceConfig.ServiceConfig serviceConfig) {
         String baseUrl = serviceConfig.getUrl();
         String modelsEndpoint = baseUrl + "/v1/models";
         String serviceName = serviceConfig.getName() != null ? serviceConfig.getName() : baseUrl;
@@ -250,7 +250,7 @@ public class chatServicesManageService {
         }
     }
 
-    private void registerNewChatService(String modelId, String baseUrl, String serviceName, String openaiApiKey) {
+    public void registerNewChatService(String modelId, String baseUrl, String serviceName, String openaiApiKey) {
         ChatService newService = openAIChatServiceFactory.create(baseUrl + "/v1/chat/completions", modelId,
                 openaiApiKey);
         ConcurrentHashMap<String, ChatService> modelServices = chatServices.getOrDefault(serviceName,
