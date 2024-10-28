@@ -802,6 +802,39 @@ function preprocessText(text) {
 }
 
 function MessageComponent({msg, messages, index, isStreaming = false}) {
+    const mathJaxRef = useRef(null);
+
+    const mathJaxConfig = {
+        loader: { load: ["input/tex", "output/chtml"] }, // specify output
+        tex: { packages: { "[+]": ["color"] } },
+        startup: {
+            typeset: false,  // Prevent automatic typesetting
+        }
+    };
+
+    useEffect(() => {
+        // 清理函数
+        return () => {
+            if (mathJaxRef.current) {
+                try {
+                    // 移除所有MathJax生成的元素
+                    const jaxElements = mathJaxRef.current.getElementsByClassName('MathJax');
+                    while (jaxElements.length > 0) {
+                        jaxElements[0].remove();
+                    }
+
+                    // 移除MathJax脚本缓存
+                    const scriptElements = mathJaxRef.current.getElementsByTagName('script');
+                    while (scriptElements.length > 0) {
+                        scriptElements[0].remove();
+                    }
+                } catch (error) {
+                    console.error('MathJax cleanup error:', error);
+                }
+            }
+        };
+    }, [msg.text]);
+
     if (!msg || typeof msg !== 'object') {
         console.error('Invalid message object:', msg);
         return null;
@@ -815,10 +848,6 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
     const isFirstRecentMessage = isRecent && (index === 0 ||
         (messages[index - 1] && new Date(messages[index - 1].timestamp) <
             (currentDate - 24 * 60 * 60 * 1000)));
-
-    const mathJaxConfig = {
-        loader: { load: ["input/tex", "output/chtml"] }, // specify output
-    };
 
     return (<React.Fragment>
         <MathJaxContext config={mathJaxConfig}>
@@ -837,8 +866,8 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
             transition={{duration: 0.3}}
         >
             <div className={`message ${msg.sender}`}>
-                <div className="markdown-table-container">
-                    <MathJax>
+                <div className="markdown-table-container" ref={mathJaxRef}>
+                    <MathJax dynamic>
                         <ReactMarkdown
                             children={processedText || ''}
                             remarkPlugins={[remarkGfm]}
