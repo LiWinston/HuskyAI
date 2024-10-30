@@ -31,7 +31,7 @@ public class ChatRequestDTO {
     }
 
     // Private constructor.
-    private ChatRequestDTO(String model, List<Message> messages) {
+    public ChatRequestDTO(String model, List<Message> messages) {
         this.model = model;
         this.messages = messages.stream()
             .map(message -> new OAMessageDTO(message.getRole(), message.getContent()))
