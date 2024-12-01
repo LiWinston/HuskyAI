@@ -10,8 +10,8 @@ import './SharePage.css';
 import {FaCopy, FaDownload} from 'react-icons/fa'; // Add download icon.
 
 // 使用开源头像链接
-const userAvatarUrl = 'https://i.imgur.com/jQhQZKk.png';  // 示例头像：用户
-const assistantAvatarUrl = 'https://i.imgur.com/LdP5UQi.png';  // 示例头像：机器人
+const userAvatarUrl = 'https://img.icons8.com/?size=100&id=23265&format=png&color=000000';  // 示例头像：用户
+const assistantAvatarUrl = 'https://img.icons8.com/?size=100&id=37410&format=png&color=000000';  // 示例头像：机器人
 
 const LOCAL_URLS = ['http://localhost:8090/health'];
 const REMOTE_URL = '/health';
