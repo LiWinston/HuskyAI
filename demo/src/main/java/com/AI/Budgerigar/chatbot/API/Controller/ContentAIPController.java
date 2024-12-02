@@ -17,19 +17,20 @@ public class ContentAIPController {
     @Resource
     private SummarizeSvc summarizeSvc;
 
-    //TODO: 限流
+    // TODO: 限流
     @PostMapping("/summarize")
     public Result<String> summarize(@RequestBody Map<String, String> body) {
         String text = body.get("text");
         String type = body.get("type");
-        if(type == null || type.isEmpty()){
+        if (type == null || type.isEmpty()) {
             return Result.error("type is required");
         }
-        switch (type){
-            case "EMAILSUBJECT", "EMAIL", "EMAIL_SUBJECT", "email", "email_subject" :
+        switch (type) {
+            case "EMAILSUBJECT", "EMAIL", "EMAIL_SUBJECT", "email", "email_subject":
                 return summarizeSvc.summarizeEmail(text);
             default:
                 return Result.error("type is not supported");
         }
     }
+
 }

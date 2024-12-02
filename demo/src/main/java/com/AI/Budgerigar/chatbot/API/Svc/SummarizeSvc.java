@@ -41,16 +41,19 @@ public class SummarizeSvc {
 
             if (openAIUrl.get() == null || model.get() == null || apikey.get() == null) {
                 log.info("No available OpenAI model found.");
-            }else {
+            }
+            else {
                 RestTemplate restTemplate = new RestTemplate();
                 restTemplate.getInterceptors().add((request, body, execution) -> {
                     request.getHeaders().add("Authorization", "Bearer " + apikey.get());
                     return execution.execute(request, body);
                 });
 
-                String prompt = "Please summarize the following text into a suitable Eamil Subject. A good subject should be concise and informative. Dont be just repeating the content. \n\n\r" + text;
+                String prompt = "Please summarize the following text into a suitable Eamil Subject. A good subject should be concise and informative. Dont be just repeating the content. \n\n\r"
+                        + text;
                 ChatRequestDTO chatRequestDTO = new ChatRequestDTO(model.get(), prompt, null);
-                ChatResponseDTO chatResponseDTO = restTemplate.postForObject(openAIUrl.get(), chatRequestDTO, ChatResponseDTO.class);
+                ChatResponseDTO chatResponseDTO = restTemplate.postForObject(openAIUrl.get(), chatRequestDTO,
+                        ChatResponseDTO.class);
                 summary = chatResponseDTO.getChoices().get(0).getMessage().getContent();
 
                 if (summary != null && !summary.isEmpty()) {
@@ -65,24 +68,28 @@ public class SummarizeSvc {
 
             return Result.success(summary);
 
-
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Error generating summary: ", e);
             return Result.error("An error occurred while generating the summary.");
         }
     }
 
-    private void rollAndSetModel(AtomicReference<String> openAIUrl, AtomicReference<String> model, AtomicReference<String> apikey) {
-        ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices = chatServicesManageService.getChatServices();
+    private void rollAndSetModel(AtomicReference<String> openAIUrl, AtomicReference<String> model,
+            AtomicReference<String> apikey) {
+        ConcurrentHashMap<String, ConcurrentHashMap<String, ChatService>> chatServices = chatServicesManageService
+            .getChatServices();
 
         // 使用随机取值的方式，从双层HashMap中选取任意一个服务
-        List<Map.Entry<String, ConcurrentHashMap<String, ChatService>>> outerEntries = new ArrayList<>(chatServices.entrySet());
+        List<Map.Entry<String, ConcurrentHashMap<String, ChatService>>> outerEntries = new ArrayList<>(
+                chatServices.entrySet());
         if (outerEntries.isEmpty()) {
             return; // 若无可用服务，直接返回
         }
 
         // 随机选择一个服务
-        Map.Entry<String, ConcurrentHashMap<String, ChatService>> randomOuterEntry = outerEntries.get(ThreadLocalRandom.current().nextInt(outerEntries.size()));
+        Map.Entry<String, ConcurrentHashMap<String, ChatService>> randomOuterEntry = outerEntries
+            .get(ThreadLocalRandom.current().nextInt(outerEntries.size()));
         ConcurrentHashMap<String, ChatService> serviceMap = randomOuterEntry.getValue();
 
         List<Map.Entry<String, ChatService>> innerEntries = new ArrayList<>(serviceMap.entrySet());
@@ -91,7 +98,8 @@ public class SummarizeSvc {
         }
 
         // 从内部Map中随机取一个
-        Map.Entry<String, ChatService> randomInnerEntry = innerEntries.get(ThreadLocalRandom.current().nextInt(innerEntries.size()));
+        Map.Entry<String, ChatService> randomInnerEntry = innerEntries
+            .get(ThreadLocalRandom.current().nextInt(innerEntries.size()));
         ChatService chatService = randomInnerEntry.getValue();
 
         if (chatService instanceof OpenAIChatServiceImpl oachatService) {
@@ -101,15 +109,16 @@ public class SummarizeSvc {
         }
     }
 
-
     private String generateSummaryWithBaidu(String text) {
         try {
             ChatBuilder chatCompletion = baiduConfig.getRandomChatBuilder();
             chatCompletion.addMessage("user", text);
             return chatCompletion.execute().getResult();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Error using Baidu service: ", e);
             return null;
         }
     }
+
 }

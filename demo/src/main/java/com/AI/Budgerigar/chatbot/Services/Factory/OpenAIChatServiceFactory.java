@@ -33,6 +33,11 @@ public class OpenAIChatServiceFactory {
 
         return (OpenAIChatServiceImpl) beanFactory.initializeBean(service,
                 "openAIChatService_" + openAIUrl + "_" + model);
+        /*
+         * 不必也不应使调用beanFactory.registerSingleton(beanName, proxy); 这是一个典型的手动管理生命周期的场景： 对象由
+         * map 引用并管理 生命周期与 map 中的引用一致 移除时直接从 map 删除即可被 GC registerSingleton 反而可能带来问题： 会在
+         * Spring 容器中保持对该对象的引用 即使从 map 中移除，如果没有显式从容器注销，对象仍然不会被 GC 可能造成内存泄露
+         */
     }
 
     /**
