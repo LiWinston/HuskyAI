@@ -1015,9 +1015,9 @@ code {
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     z-index: 1001;
-    width: 800px;
-    max-width: 90vw;
-    max-height: 80vh;
+    width: 1200px;  /* 增加宽度 */
+    max-width: 95vw;
+    max-height: 85vh;
     display: flex;
     flex-direction: column;
 }
@@ -1079,11 +1079,11 @@ code {
     gap: 24px;
     flex: 1;
     min-height: 0;
-    height: 400px; /* 固定高度 */
+    height: 500px; /* 增加高度 */
 }
 
 .theme-list {
-    width: 240px;
+    width: 280px;  /* 稍微增加列表宽度 */
     flex-shrink: 0;
     overflow-y: auto;
     padding-right: 12px;
@@ -1097,6 +1097,8 @@ code {
     min-width: 0;
     position: sticky;
     top: 0;
+    overflow: auto;  /* 添加滚动条 */
+    padding: 10px;  /* 添加内边距 */
 }
 
 .theme-group {
@@ -1165,6 +1167,7 @@ code {
 @media (max-width: 768px) {
     .theme-modal {
         width: 95vw;
+        height: 90vh;  /* 在移动端增加高度 */
     }
 
     .code-theme-options {
@@ -1178,7 +1181,7 @@ code {
     }
 
     .theme-preview {
-        height: 300px;
+        height: 400px;  /* 增加移动端预览高度 */
         position: static;
     }
 }
@@ -1346,7 +1349,7 @@ code {
 .close-button svg {
     width: 16px;
     height: 16px;
-    display: block; /* 确保图标居中对齐 */
+    display: block; /* 确保图标居中���齐 */
 }
 
 @keyframes modalFadeIn {
