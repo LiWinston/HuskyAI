@@ -40,6 +40,8 @@
     margin: 4px 8px;
     transition: all 0.2s ease;
     position: relative;
+    transform-origin: left center;
+    transition: transform 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
 }
 
 .conversation-item:hover {
@@ -1395,7 +1397,7 @@ code {
     background-color: var(--bg-secondary);
 }
 
-/* 全局滚动条基础样式 */
+/* 全局滚动条基础���式 */
 :root {
     /* 添加滚动条相关变量 */
     --scrollbar-width: 8px;
@@ -1789,4 +1791,84 @@ pre:hover::-webkit-scrollbar-thumb {
 
 .conversation-list, .chat-container {
     position: relative;
+}
+
+/* 删除动画相关样式 */
+.conversation-item {
+    transform-origin: left center;
+    transition: all 0.3s ease;
+}
+
+.conversation-item.deleting {
+    transform: translateX(-100%);
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* 确保动画不影响其他元素 */
+.conversation-item.deleting ~ .conversation-item,
+.conversation-item.deleting ~ .time-group-divider {
+    transform: translateY(calc(-1 * var(--element-height)));
+    transition: transform 0.3s ease;
+}
+
+@media (max-width: 1079px) {
+    .conversation-list h3 {
+        display: none;
+    }
+
+    .conversation-list {
+        width: 100%;
+        height: auto;
+        max-height: 10vh;
+        overflow-y: auto;
+        border-right: none;
+        border-bottom: 1px solid #d2d2d7;
+        padding: 5px;
+    }
+
+    .conversation-item {
+        padding: 5px;
+        font-size: 10px;
+        margin-bottom: 2px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+
+    .chat-container {
+        height: calc(100vh - 30vh);
+    }
+
+    .message {
+        max-width: 100%;
+        max-height: 200vh;
+    }
+
+
+    .input-container {
+        padding: 10px;
+    }
+
+    textarea {
+        font-size: 14px;
+    }
+
+    button {
+        padding: 0 15px;
+        font-size: 14px;
+    }
+
+    .notification-banner {
+        padding: 10px 20px;
+        font-size: 16px;
+        bottom: 15px;
+        min-width: 150px;
+    }
+
+
 }

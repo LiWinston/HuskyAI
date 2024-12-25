@@ -151,9 +151,26 @@ const ConversationItem = ({
     const handleDelete = async () => {
         const uuid = localStorage.getItem('userUUID');
         try {
-            await axios.delete(
-                `/api/chat/${uuid}/${conversation.id}`);
-            // Get the updated session list.
+            // 获取要删除的元素
+            const conversationElement = titleRef.current.closest('.conversation-item');
+            
+            // 获取元素的完整高度（包括margin）
+            const elementHeight = conversationElement.offsetHeight + 
+                parseInt(window.getComputedStyle(conversationElement).marginTop) +
+                parseInt(window.getComputedStyle(conversationElement).marginBottom);
+
+            // 为后续元素设置自定义属性，用于CSS计算位移
+            conversationElement.style.setProperty('--element-height', `${elementHeight}px`);
+            
+            // 添加删除动画类
+            conversationElement.classList.add('deleting');
+
+            // 等待动画完成
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            await axios.delete(`/api/chat/${uuid}/${conversation.id}`);
+            
+            // 获取更新后的会话列表
             const updatedConversations = await fetchConversations();
 
             if (selectedConversation === conversation.id) {
@@ -170,6 +187,10 @@ const ConversationItem = ({
             setTimeout(() => setNotification(null), 2000);
         } catch (error) {
             console.error('Failed to delete conversation', error);
+            // 如果删除失败，移除动画类
+            const conversationElement = titleRef.current.closest('.conversation-item');
+            conversationElement.classList.remove('deleting');
+            conversationElement.style.removeProperty('--element-height');
         }
     };
 
