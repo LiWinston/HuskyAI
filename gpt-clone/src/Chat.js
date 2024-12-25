@@ -272,15 +272,44 @@ function Chat() {
         }
     };
 
-    const handleShareStart = async () => {
+    const handleShareStart = async (conversationId) => {
         try {
-            const response = await axios.get(`/api/chat/${localStorage.getItem('userUUID')}/${selectedConversation}`);
-            console.log('Entering share mode with messages:', response.data.data); 
-            setShareMessages(response.data.data);
-            setSharedCid(selectedConversation);
-            setIsShareMode(true);
-            setSelectedMessages([]);
-            setNotification('进入分享模式，请选择要分享的消息');
+            // 先加载对话内容
+            const response = await axios.get(`/api/chat/${localStorage.getItem('userUUID')}/${conversationId}`);
+            
+            // 设置选中的对话
+            setSelectedConversation(conversationId);
+            
+            // 使用动画过渡更新消息
+            const chatWindow = chatWindowRef.current;
+            if (chatWindow) {
+                // 添加淡出动画
+                chatWindow.style.opacity = '0';
+                chatWindow.style.transition = 'opacity 0.3s ease';
+                
+                // 等待淡出动画完成
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                // 更新消息内容
+                setMessages(response.data.data.map(msg => ({
+                    sender: msg.role,
+                    text: msg.content,
+                    timestamp: msg.timestamp,
+                })));
+                
+                // 设置分享相关状态
+                setShareMessages(response.data.data);
+                setSharedCid(conversationId);
+                setIsShareMode(true);
+                setSelectedMessages([]);
+                
+                // 添加淡入动画
+                setTimeout(() => {
+                    chatWindow.style.opacity = '1';
+                }, 50);
+                
+                setNotification('进入分享模式，请选择要分享的消息');
+            }
         } catch (error) {
             console.error('Error fetching messages for share:', error);
             setNotification('获取消息失败，请重试');
@@ -705,7 +734,7 @@ function Chat() {
         currentLight: isZH ? "当前：浅色" : "Current: Light",
     };
 
-    // 代码主题选项名称映射（保持英文，因为是专有名词）
+    // 代码主题选项名称映射（保持英文，因为专有名词）
     const themeNames = {
         vscDarkPlus: 'VS Code Dark+',
         dracula: 'Dracula',

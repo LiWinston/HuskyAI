@@ -174,7 +174,7 @@ const ConversationItem = ({
     };
 
     const handleShare = async () => {
-        handleShareStart();
+        handleShareStart(conversation.id);
         setShowOptions(false);
     };
 
