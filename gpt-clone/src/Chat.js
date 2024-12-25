@@ -49,6 +49,28 @@ function Chat() {
     const [streamingMessage, setStreamingMessage] = useState(null);
     const navigate = useNavigate();
 
+    // 添加语言检测
+    const userLang = navigator.language || navigator.userLanguage;
+    
+    // 定义多语言文本
+    const i18n = {
+        zh: {
+            conversations: "对话",
+            newChat: "新对话"
+        },
+        en: {
+            conversations: "Chats",
+            newChat: "New Chat"
+        },
+        // 可以继续添加其他语言...
+    };
+    
+    // 获取当前语言的文本,默认使用英文
+    const getText = (key) => {
+        const lang = userLang.startsWith('zh') ? 'zh' : 'en';
+        return i18n[lang][key];
+    };
+
     const handleInputChange = (event) => {
         const text = event.target.value;
         setInput(text);
@@ -642,9 +664,10 @@ function Chat() {
             <div className="conversation-list">
                 {/* Head */}
                 <div className="conversation-header">
-                    <h3>Conversations</h3>
+                    <h3>{getText('conversations')}</h3>
                     <button className="new-conversation-btn" onClick={createNewConversation}>
-                        <FaPlus/>
+                        <FaPlus size={12} />
+                        <span>{getText('newChat')}</span>
                     </button>
                 </div>
 

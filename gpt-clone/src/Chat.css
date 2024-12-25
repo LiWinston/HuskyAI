@@ -504,25 +504,44 @@ code {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0 4px;
+    margin-bottom: 20px;
+}
+
+.conversation-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin: 0; /* 移除默认边距 */
 }
 
 .new-conversation-btn {
     background-color: #007aff;
     color: white;
     border: none;
-    border-radius: 50%;
-    padding: 4px;
+    border-radius: 20px; /* 改成圆角矩形 */
+    padding: 8px 16px; /* 调整内边距使按钮更扁平 */
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s ease;
-    width: 40px;
-    height: 40px;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    gap: 6px; /* 图标和文字之间的间距 */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    width: auto; /* 取消固定宽度 */
+    height: 32px;
 }
 
 .new-conversation-btn:hover {
     background-color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.new-conversation-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Share Modal */
@@ -812,8 +831,9 @@ code {
     }
 
     .new-conversation-btn {
-        width: 30px;
-        height: 30px;
+        padding: 6px 12px;
+        font-size: 12px;
+        height: 28px;
     }
 }
 
@@ -844,8 +864,9 @@ code {
     }
 
     .new-conversation-btn {
-        width: 25px;
-        height: 25px;
+        padding: 4px 10px;
+        font-size: 12px;
+        height: 26px;
     }
 }
 
