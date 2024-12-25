@@ -267,7 +267,7 @@ function Chat() {
             cancel: "取消",
             copySuccess: "分享链接已复制到剪贴板",
             shareFailed: "分享失败，请重试",
-            loadFailed: "获取消��失败，请重试",
+            loadFailed: "获取消息失败，请重试",
             shareInstructions: "进入分享模式, 点击对话内容区域选择要分享的消息",
             shareExited: "已退出分享模式，所有选择已清除",
         },
@@ -942,7 +942,7 @@ function Chat() {
 
     const [showThemeModal, setShowThemeModal] = useState(false);
     const [currentTheme, setCurrentTheme] = useState('light');
-    const [codeTheme, setCodeTheme] = useState('vscDarkPlus');
+    const [codeTheme, setCodeTheme] = useState('synthwave84');
     
     // 菜单文本的双语配置
     const menuText = {
@@ -987,7 +987,7 @@ function Chat() {
     useEffect(() => {
         const loadSavedThemes = () => {
             const savedTheme = localStorage.getItem('theme') || 'light';
-            const savedCodeTheme = localStorage.getItem('codeTheme') || 'vscDarkPlus';
+            const savedCodeTheme = localStorage.getItem('codeTheme') || 'synthwave84';
             
             setCurrentTheme(savedTheme);
             setCodeTheme(savedCodeTheme);
@@ -1310,7 +1310,7 @@ function formatMessageTime(timestamp) {
     const isPM = hour >= 12;
     const hour12 = hour % 12 || 12;
     
-    // 格��化具体时间
+    // 格式化具体时间
     const timeStr = isZH 
         ? `${texts[isPM ? 'afternoon' : 'morning']}${hour12}:${minute.toString().padStart(2, '0')}`
         : `${hour12}:${minute.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
@@ -1352,7 +1352,7 @@ function formatMessageTime(timestamp) {
     startOfWeek.setDate(today.getDate() - today.getDay());
     const isThisWeek = date >= startOfWeek;
     
-    // 本��内
+    // 本周内
     if (isThisWeek) {
         const weekday = texts.weekdays[isZH ? 'zh' : 'en'][date.getDay()];
         return `${weekday} ${timeStr}`;
