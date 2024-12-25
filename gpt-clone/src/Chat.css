@@ -4,12 +4,14 @@
     height: 100vh;
     width: 100vw;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .conversation-list {
     width: 250px;
-    background-color: #f5f5f7;
-    border-right: 1px solid #d2d2d7;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
     padding: 20px;
     overflow-y: auto;
 }
@@ -279,8 +281,8 @@
 
 .message.assistant {
     align-self: flex-start;
-    background-color: #f5f5f7;
-    color: #1d1d1f;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
     margin-right: auto;
     text-align: left;
 }
@@ -340,11 +342,11 @@
     margin-top: 1px;
     margin-bottom: 5px;
     opacity: 0.9;
-    margin: 2px 8px;
 }
 
 .user-timestamp {
     text-align: right;
+    padding: 0px 8px;
     color: #828291;
 }
 
@@ -943,4 +945,209 @@ code {
         top: 10px;
         right: 10px;
     }
+}
+
+/* 主题设置按钮样式 */
+.theme-button {
+    position: fixed;
+    top: 20px;
+    right: 70px; /* 位于登出按钮左侧 */
+    width: 40px;
+    height: 40px;
+    background-color: #4834d4;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.theme-button:hover {
+    background-color: #686de0;
+    transform: translateY(-1px);
+}
+
+/* 主题设置弹窗样式 */
+.theme-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--modal-bg, #fff);
+    color: var(--text-primary, #1d1d1f);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    width: 400px;
+    max-width: 90vw;
+}
+
+.theme-modal h2 {
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+.theme-section {
+    margin-bottom: 24px;
+}
+
+.theme-section h3 {
+    margin-bottom: 12px;
+    font-size: 1.1em;
+}
+
+.theme-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.theme-option {
+    padding: 8px 12px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.theme-option.selected {
+    border-color: var(--accent-color, #007aff);
+    background-color: var(--accent-bg, rgba(0, 122, 255, 0.1));
+}
+
+/* 夜间模式变量 */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f7;
+    --text-primary: #1d1d1f;
+    --text-secondary: #86868b;
+    --border-color: #d2d2d7;
+    --accent-color: #007aff;
+    --modal-bg: #ffffff;
+    --code-bg: rgba(40, 44, 52, 0.56);
+}
+
+/* 夜间模式样式 */
+[data-theme='dark'] {
+    --bg-primary: #1c1c1e;
+    --bg-secondary: #2c2c2e;
+    --text-primary: #ffffff;
+    --text-secondary: #98989d;
+    --border-color: #3a3a3c;
+    --accent-color: #0a84ff;
+    --modal-bg: #2c2c2e;
+    --code-bg: rgba(0, 0, 0, 0.6);
+}
+
+/* 应用主题变量到现有元素 */
+.chat-interface {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.conversation-list {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+.message.assistant {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* 其他相关样式调整... */
+
+@media (max-width: 768px) {
+    .theme-button {
+        width: 32px;
+        height: 32px;
+        top: 10px;
+        right: 50px;
+    }
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.theme-modal {
+    /* ... 现有样式 ... */
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+.theme-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    position: relative; /* 为绝对定位的关闭按钮提供参考 */
+}
+
+.close-button {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 18px; /* 调整图标大小 */
+}
+
+.close-button:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
+.close-button svg {
+    width: 16px;
+    height: 16px;
+    display: block; /* 确保图标居中对齐 */
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -48%) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* 确保模态框内容在深色模式下也清晰可见 */
+[data-theme='dark'] .theme-modal {
+    background-color: var(--modal-bg);
+    color: var(--text-primary);
+}
+
+[data-theme='dark'] .theme-option {
+    border-color: var(--border-color);
+}
+
+[data-theme='dark'] .theme-option:hover {
+    background-color: var(--bg-secondary);
 }

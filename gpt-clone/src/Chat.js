@@ -4,8 +4,8 @@ import ReactMarkdown from 'react-markdown';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
-import {vscDarkPlus} from 'react-syntax-highlighter/dist/esm/styles/prism';
-import {FaPlus, FaSignOutAlt} from 'react-icons/fa';
+import {vscDarkPlus, dracula, tomorrow, materialDark, oneDark} from 'react-syntax-highlighter/dist/esm/styles/prism';
+import {FaPlus, FaSignOutAlt, FaAdjust, FaTimes} from 'react-icons/fa';
 import ConversationItem from './ConversationItem'; // Introduce the plus icon.
 import './Component/Toggle.css';
 import {showSweetAlertWithRetVal} from './Component/sweetAlertUtil';
@@ -15,6 +15,15 @@ import {MathJax, MathJaxContext} from 'better-react-mathjax';
 import { useNavigate } from 'react-router-dom';
 
 const CONVERSATION_SUMMARY_GENERATED = '#CVSG##CVSG##CVSG#';
+
+// 在文件顶部定义主题映射
+const themes = {
+    vscDarkPlus,
+    dracula,
+    tomorrow,
+    materialDark,
+    oneDark
+};
 
 function Chat() {
     const [messages, setMessages] = useState([]);
@@ -51,7 +60,8 @@ function Chat() {
 
     // 添加语言检测
     const userLang = navigator.language || navigator.userLanguage;
-    
+    const isZH = userLang.startsWith('zh');
+
     // 定义多语言文本
     const i18n = {
         zh: {
@@ -656,11 +666,142 @@ function Chat() {
         navigate('/');
     };
 
+    const [showThemeModal, setShowThemeModal] = useState(false);
+    const [currentTheme, setCurrentTheme] = useState('light');
+    const [codeTheme, setCodeTheme] = useState('vscDarkPlus');
+    
+    // 菜单文本的双语配置
+    const menuText = {
+        themeSettings: isZH ? "主题设置" : "Theme Settings",
+        interfaceTheme: isZH ? "界面主题" : "Interface Theme",
+        lightMode: isZH ? "浅色模式" : "Light Mode",
+        darkMode: isZH ? "深色模式" : "Dark Mode",
+        codeTheme: isZH ? "代码主题" : "Code Theme",
+        close: isZH ? "关闭" : "Close"
+    };
+
+    // 代码主题选项名称映射（保持英文，因为是专有名词）
+    const themeNames = {
+        vscDarkPlus: 'VS Code Dark+',
+        dracula: 'Dracula',
+        tomorrow: 'Tomorrow',
+        materialDark: 'Material Dark',
+        oneDark: 'One Dark'
+    };
+
+    // 处理 ESC 键关闭弹窗
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                setShowThemeModal(false);
+            }
+        };
+        
+        if (showThemeModal) {
+            document.addEventListener('keydown', handleEsc);
+        }
+        
+        return () => {
+            document.removeEventListener('keydown', handleEsc);
+        };
+    }, [showThemeModal]);
+
+    // 加载保存的主题设置
+    useEffect(() => {
+        const loadSavedThemes = () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedCodeTheme = localStorage.getItem('codeTheme') || 'vscDarkPlus';
+            
+            setCurrentTheme(savedTheme);
+            setCodeTheme(savedCodeTheme);
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        };
+
+        loadSavedThemes();
+    }, []);
+
+    // 切换主题
+    const toggleTheme = (theme) => {
+        setCurrentTheme(theme);
+        localStorage.setItem('theme', theme);
+        document.documentElement.setAttribute('data-theme', theme);
+    };
+
+    // 切换代码主题
+    const changeCodeTheme = (theme) => {
+        setCodeTheme(theme);
+        localStorage.setItem('codeTheme', theme);
+    };
+
+    // 主题设置弹窗组件
+    const ThemeModal = () => (
+        <>
+            <div 
+                className="modal-backdrop" 
+                onClick={() => setShowThemeModal(false)} 
+            />
+            <div className="theme-modal">
+                <div className="theme-modal-header">
+                    <h2>{menuText.themeSettings}</h2>
+                    <button 
+                        className="close-button"
+                        onClick={() => setShowThemeModal(false)}
+                        aria-label={menuText.close}
+                    >
+                        <FaTimes />
+                    </button>
+                </div>
+                
+                <div className="theme-section">
+                    <h3>{menuText.interfaceTheme}</h3>
+                    <div className="theme-options">
+                        <div 
+                            className={`theme-option ${currentTheme === 'light' ? 'selected' : ''}`}
+                            onClick={() => toggleTheme('light')}
+                        >
+                            {menuText.lightMode}
+                        </div>
+                        <div 
+                            className={`theme-option ${currentTheme === 'dark' ? 'selected' : ''}`}
+                            onClick={() => toggleTheme('dark')}
+                        >
+                            {menuText.darkMode}
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="theme-section">
+                    <h3>{menuText.codeTheme}</h3>
+                    <div className="theme-options">
+                        {Object.entries(themeNames).map(([key, name]) => (
+                            <div 
+                                key={key}
+                                className={`theme-option ${codeTheme === key ? 'selected' : ''}`}
+                                onClick={() => changeCodeTheme(key)}
+                            >
+                                {name}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+
     return (
         <div className="chat-interface">
+            <button className="theme-button" onClick={() => setShowThemeModal(true)}>
+                <FaAdjust />
+            </button>
             <button className="logout-button" onClick={handleLogout}>
                 <FaSignOutAlt />
             </button>
+            {showThemeModal && (
+                <>
+                    <div className="modal-backdrop" onClick={() => setShowThemeModal(false)} />
+                    <ThemeModal />
+                </>
+            )}
             <div className="conversation-list">
                 {/* Head */}
                 <div className="conversation-header">
@@ -762,14 +903,24 @@ function Chat() {
                     <AnimatePresence>
                         {messages.map((msg, index) => (
                             <ErrorBoundary key={index}>
-                                <MessageComponent msg={msg} messages={messages} index={index}/>
+                                <MessageComponent 
+                                    msg={msg} 
+                                    messages={messages} 
+                                    index={index}
+                                    codeTheme={codeTheme}
+                                />
                             </ErrorBoundary>
                         ))}
                     </AnimatePresence>
                     {streamingMessage && (
-                        <MessageComponent msg={streamingMessage} messages={messages}
-                                          index={messages.length}
-                                          isStreaming={true}/>)}
+                        <MessageComponent 
+                            msg={streamingMessage} 
+                            messages={messages}
+                            index={messages.length}
+                            isStreaming={true}
+                            codeTheme={codeTheme}
+                        />
+                    )}
 
                 </div>
 
@@ -862,70 +1013,7 @@ class ErrorBoundary extends React.Component {
     }
 }
 
-function formatMessageTime(timestamp) {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now - date;
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const isThisYear = date.getFullYear() === now.getFullYear();
-    
-    // 检测用户语言
-    const userLang = navigator.language || navigator.userLanguage;
-    const isZH = userLang.startsWith('zh');
-    
-    // 双语文本配置
-    const texts = {
-        today: isZH ? "今天" : "Today",
-        yesterday: isZH ? "昨天" : "Yesterday",
-        weekdays: {
-            zh: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
-            en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-        }
-    };
-
-    // 获取时间部分
-    const timeStr = date.toLocaleTimeString(userLang, {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-
-    // 今天
-    if (days === 0) {
-        return `${texts.today} ${timeStr}`;
-    }
-    
-    // 昨天
-    if (days === 1) {
-        return `${texts.yesterday} ${timeStr}`;
-    }
-    
-    // 本周内 (7天内)
-    if (days < 7) {
-        const weekday = texts.weekdays[isZH ? 'zh' : 'en'][date.getDay()];
-        return `${weekday} ${timeStr}`;
-    }
-    
-    // 本年内
-    if (isThisYear) {
-        return date.toLocaleDateString(userLang, {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-    
-    // 去年及更早
-    return date.toLocaleDateString(userLang, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
-function MessageComponent({msg, messages, index, isStreaming = false}) {
+function MessageComponent({msg, messages, index, isStreaming = false, codeTheme}) {
     const mathJaxRef = useRef(null);
 
     const mathJaxConfig = {
@@ -1012,7 +1100,7 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
                                         </code>
                                     ) : (
                                         <SyntaxHighlighter
-                                            style={vscDarkPlus}
+                                            style={themes[codeTheme]}
                                             language={match ? match[1] : 'plaintext'}
                                             PreTag="div"
                                             children={codeContent}
@@ -1026,7 +1114,17 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
                     </div>
                 </div>
                 <div className={`timestamp ${msg.sender}-timestamp`}>
-                    {formatMessageTime(msg.timestamp)}
+                    {messageDate.toLocaleString(navigator.language, {
+                        year: 'numeric',
+                        month: navigator.language.startsWith('zh') ?
+                            'long' :
+                            'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        second: 'numeric',
+                        dayPeriod: 'short',
+                    })}
                 </div>
             </motion.div>
         </MathJaxContext>
