@@ -8,7 +8,7 @@ public class HealthCheckController {
 
     @GetMapping("/health")
     public String healthCheck() {
-        return "Service is running";
+        return "Service is running : HuskyAI_Backend";
     }
 
 }
