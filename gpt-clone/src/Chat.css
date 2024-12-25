@@ -1369,3 +1369,100 @@ pre:hover::-webkit-scrollbar-thumb {
 [data-theme='dark'] .theme-option.selected {
     background-color: var(--accent-color);
 }
+
+/* 分享模式相关样式 */
+.message-container.share-mode {
+    padding-left: 40px;
+    transform: translateX(10px);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.message-checkbox {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.message-container:hover .message-checkbox {
+    opacity: 1;
+}
+
+.message-container.selected {
+    box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+/* 分享控制器样式 */
+.share-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: auto;
+    min-width: 300px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideUp 0.3s ease;
+}
+
+.share-controls-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+}
+
+.selected-count {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.share-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.share-buttons button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.share-submit {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.share-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.share-cancel {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+/* 深色模式适配 */
+[data-theme='dark'] .share-controls {
+    background: var(--bg-tertiary);
+}

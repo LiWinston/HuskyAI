@@ -13,13 +13,9 @@ const ConversationItem = ({
                               setSelectedConversation,
                               setMessages,
                               setNotification,
-                              openShareModal,
-                              setShareMessages,
-                              setSharedCid,
+                              handleShareStart,
                           }) => {
     const [showOptions, setShowOptions] = useState(false);
-    // eslint-disable-next-line no-unused-vars
-    const [showShareModal, setShowShareModal] = useState(false);
 
     const titleRef = useRef(null);
     const [isLongTitle, setIsLongTitle] = useState(false);
@@ -178,20 +174,8 @@ const ConversationItem = ({
     };
 
     const handleShare = async () => {
-        const uuid = localStorage.getItem('userUUID');
-
-
-
-        try {
-            const response = await axios.get(
-                `/api/chat/${uuid}/${conversation.id}`);
-            const fetchedMessages = response.data.data;
-            setShareMessages(fetchedMessages);
-            setSharedCid(conversation.id);
-            openShareModal(conversation.id);
-        } catch (error) {
-            console.error('Failed to sync conversation history for sharing', error);
-        }
+        handleShareStart();
+        setShowOptions(false);
     };
 
     const toggleOptionsMenu = (e) => {

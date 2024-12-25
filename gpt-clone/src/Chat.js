@@ -5,7 +5,7 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
 import {vscDarkPlus, dracula, tomorrow, materialDark, oneDark} from 'react-syntax-highlighter/dist/esm/styles/prism';
-import {FaPlus, FaSignOutAlt, FaAdjust, FaTimes} from 'react-icons/fa';
+import {FaPlus, FaSignOutAlt, FaAdjust, FaTimes, FaEllipsisV} from 'react-icons/fa';
 import ConversationItem from './ConversationItem'; // Introduce the plus icon.
 import './Component/Toggle.css';
 import {showSweetAlertWithRetVal} from './Component/sweetAlertUtil';
@@ -51,9 +51,9 @@ function Chat() {
     const textareaRef = useRef(null);
     // eslint-disable-next-line no-unused-vars
     const [animatingTitle, setAnimatingTitle] = useState(null);
-    const [showShareModal, setShowShareModal] = useState(false); // Control sharing popup.
-    const [selectedMessages, setSelectedMessages] = useState([]); // Store selected messages.
-    const [shareMessages, setShareMessages] = useState([]); // Store messages to share.
+    const [isShareMode, setIsShareMode] = useState(false);
+    const [selectedMessages, setSelectedMessages] = useState([]);
+    const [shareMessages, setShareMessages] = useState([]);
     const [sharedCid, setSharedCid] = useState(null);
     const [streamingMessage, setStreamingMessage] = useState(null);
     const navigate = useNavigate();
@@ -272,52 +272,75 @@ function Chat() {
         }
     };
 
-    const openShareModal = async (conversationId) => {
+    const handleShareStart = async () => {
         try {
-            // const uuid = localStorage.getItem('userUUID');
-            // const response = await axios.get(`${window.API_BASE_URL}/chat/${uuid}/${conversationId}`);
-            // setShareMessages(response.data.data);  // Set sharing message.
-            setShowShareModal(true);  // Show sharing modal.
+            const response = await axios.get(`/api/chat/${localStorage.getItem('userUUID')}/${selectedConversation}`);
+            console.log('Entering share mode with messages:', response.data.data); 
+            setShareMessages(response.data.data);
+            setSharedCid(selectedConversation);
+            setIsShareMode(true);
+            setSelectedMessages([]);
+            setNotification('进入分享模式，请选择要分享的消息');
         } catch (error) {
-            console.error('Error syncing conversation history', error);
+            console.error('Error fetching messages for share:', error);
+            setNotification('获取消息失败，请重试');
         }
     };
 
-    const handleSelectMessage = (messageId) => {
+    const handleShareCancel = () => {
+        setIsShareMode(false);
+        setSelectedMessages([]);
+        setShareMessages([]);
+        setSharedCid(null);
+        setNotification('分享模式已取消');
+        setTimeout(() => setNotification(null), 2000);
+    };
+
+    const handleMessageClick = (index) => {
+        if (!isShareMode) return;
+        
         setSelectedMessages(prev => {
-            if (prev.includes(messageId)) {
-                return prev.filter(id => id !== messageId);
+            const isSelected = prev.includes(index);
+            if (isSelected) {
+                return prev.filter(i => i !== index);
             } else {
-                return [...prev, messageId];
+                return [...prev, index];
             }
         });
     };
 
     const handleShareConfirm = async () => {
+        if (selectedMessages.length === 0) return;
+
         try {
-            const uuid = localStorage.getItem('userUUID');
+            const selectedMsgs = selectedMessages.map(index => shareMessages[index]);
             const response = await axios.post('/api/chat/share', {
-                uuid, conversationId: sharedCid, messageIndexes: selectedMessages,
-            });
-            const shareLink = window.location.origin + '/chat/share/' +
-                response.data.data;
-            setShowShareModal(false);
-            // alert(`Share link generated: ${shareLink}`);
-            showSweetAlertWithRetVal(`Share link generated: ${shareLink}`, {
-                title: 'Share Link',
-                icon: 'success',
-                confirmButtonText: 'Copy Link',
-                confirmButtonColor: '#3085d6',
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    navigator.clipboard.writeText(shareLink);
-                    setNotification('Link copied to clipboard');
-                    setTimeout(() => setNotification(null), 2000);
-                }
+                uuid: localStorage.getItem('userUUID'),
+                conversationId: sharedCid,
+                messageIndexes: selectedMessages,
             });
 
+            if (response.data.code === 1) {
+                const shareLink = `${window.location.origin}/share/${response.data.data}`;
+                const result = await showSweetAlertWithRetVal({
+                    title: "Share link generated!",
+                    text: shareLink,
+                    icon: "success",
+                    confirmButtonText: "Copy Link",
+                    confirmButtonColor: "#3085d6",
+                });
+                
+                if (result.isConfirmed) {
+                    navigator.clipboard.writeText(shareLink);
+                    setNotification('分享链接已复制到剪贴板');
+                    setTimeout(() => setNotification(null), 2000);
+                }
+                handleShareCancel();
+            }
         } catch (error) {
-            console.error('Error sharing conversation', error);
+            console.error('Error sharing messages:', error);
+            setNotification('分享失败，请重试');
+            setTimeout(() => setNotification(null), 2000);
         }
     };
 
@@ -802,6 +825,23 @@ function Chat() {
         </>
     );
 
+    useEffect(() => {
+        if (!isShareMode) return;
+
+        const handleClickOutside = (e) => {
+            const chatWindow = chatWindowRef.current;
+            if (!chatWindow) return;
+
+            if (!e.target.closest('.message-container') && 
+                !e.target.closest('.share-controls')) {
+                handleShareCancel();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isShareMode]);
+
     return (
         <div className="chat-interface">
             <button className="theme-button" onClick={() => setShowThemeModal(true)}>
@@ -840,13 +880,8 @@ function Chat() {
                         // Render dialogue entry.
                         return (
                             <ConversationItem
-                                key={item.id} // Unique ID for each conversation.
-                                conversation={{
-                                    ...item,
-                                    title: animatingTitle && animatingTitle.id === item.id
-                                        ? animatingTitle.currentTitle
-                                        : item.title,
-                                }} // set the data of the conversation.
+                                key={item.id}
+                                conversation={item}
                                 conversations={conversations}
                                 messages={messages}
                                 loadConversation={loadConversation}
@@ -855,35 +890,11 @@ function Chat() {
                                 setSelectedConversation={setSelectedConversation}
                                 setMessages={setMessages}
                                 setNotification={setNotification}
-                                openShareModal={openShareModal}
-                                setShareMessages={setShareMessages}
-                                setSharedCid={setSharedCid}
+                                handleShareStart={handleShareStart}
                             />
                         );
                     })}
             </div>
-
-            {/* Share Popup Window */}
-            {showShareModal && (<div className="share-modal">
-                <h3>Select messages to share</h3>
-                <div className="message-list">
-                    {shareMessages && shareMessages.length > 0 ? (shareMessages.map(
-                        (msg, index) => (<div key={index}>
-                            <input
-                                type="checkbox"
-                                checked={selectedMessages.includes(index)}
-                                onChange={() => handleSelectMessage(index)}
-                            />
-                            <span>{msg.content || msg.text}</span>
-                            {/* Fix for different message formats */
-                                // msg.content for GetResponse
-                                // msg.text for current messages in frontend
-                            }
-                        </div>))) : (<p>No messages available to share.</p>)}
-                </div>
-                <button onClick={handleShareConfirm}>Share</button>
-                <button onClick={() => setShowShareModal(false)}>Cancel</button>
-            </div>)}
 
             <div className="chat-container">
                 <div className="chat-window" ref={chatWindowRef}
@@ -918,10 +929,15 @@ function Chat() {
                         {messages.map((msg, index) => (
                             <ErrorBoundary key={index}>
                                 <MessageComponent 
-                                    msg={msg} 
-                                    messages={messages} 
+                                    key={index}
+                                    msg={msg}
+                                    messages={messages}
                                     index={index}
+                                    isStreaming={streamingMessage === index}
                                     codeTheme={codeTheme}
+                                    isShareMode={isShareMode}
+                                    selectedMessages={selectedMessages}
+                                    handleMessageClick={handleMessageClick}
                                 />
                             </ErrorBoundary>
                         ))}
@@ -994,6 +1010,30 @@ function Chat() {
                 </motion.div>)}
             </AnimatePresence>
 
+            {isShareMode && (
+                <div className="share-controls">
+                    <div className="share-controls-content">
+                        <span className="selected-count">
+                            已选择 {selectedMessages.length} 条消息
+                        </span>
+                        <div className="share-buttons">
+                            <button 
+                                className="share-submit"
+                                onClick={handleShareConfirm}
+                                disabled={selectedMessages.length === 0}
+                            >
+                                分享
+                            </button>
+                            <button 
+                                className="share-cancel"
+                                onClick={handleShareCancel}
+                            >
+                                取消
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>);
 }
 
@@ -1134,7 +1174,7 @@ function formatMessageTime(timestamp) {
     }
 }
 
-function MessageComponent({msg, messages, index, isStreaming = false, codeTheme}) {
+function MessageComponent({msg, messages, index, isStreaming = false, codeTheme, isShareMode, selectedMessages, handleMessageClick}) {
     const mathJaxRef = useRef(null);
 
     const mathJaxConfig = {
@@ -1191,11 +1231,12 @@ function MessageComponent({msg, messages, index, isStreaming = false, codeTheme}
         <motion.div
             className={`message-container ${msg.sender} ${isRecent
                 ? 'recent-message'
-                : ''} ${isStreaming ? 'streaming' : ''}`}
+                : ''} ${isStreaming ? 'streaming' : ''} ${isShareMode ? 'share-mode' : ''} ${selectedMessages.includes(index) ? 'selected' : ''}`}
             initial={{opacity: 0, y: 20}}
             animate={{opacity: 1, y: 0}}
             exit={{opacity: 0, y: -20}}
             transition={{duration: 0.3}}
+            onClick={() => isShareMode && handleMessageClick(index)}
         >
             <div className={`message ${msg.sender}`}>
                 <div className="markdown-table-container" ref={mathJaxRef}>
