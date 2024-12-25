@@ -1028,8 +1028,6 @@ code {
     gap: 24px;
     flex: 1;
     min-height: 0;
-    margin-top: 20px;
-    overflow-y: auto;
 }
 
 .theme-modal h2 {
@@ -1046,6 +1044,7 @@ code {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0; /* 确保flex布局正常工作 */
 }
 
 .theme-section h3 {
@@ -1053,11 +1052,34 @@ code {
     font-size: 1.1em;
 }
 
+/* 界面主题选项布局 */
+.theme-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.theme-option {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 代码主题部分布局 */
 .code-theme-options {
     display: flex;
     gap: 24px;
     flex: 1;
     min-height: 0;
+    height: 400px; /* 固定高度 */
 }
 
 .theme-list {
@@ -1073,6 +1095,8 @@ code {
 .theme-preview {
     flex: 1;
     min-width: 0;
+    position: sticky;
+    top: 0;
 }
 
 .theme-group {
@@ -1088,21 +1112,13 @@ code {
     margin-bottom: 4px;
     padding-bottom: 4px;
     border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    background: var(--modal-bg);
+    z-index: 1;
 }
 
-.theme-option {
-    padding: 8px 12px;
-    border: 2px solid transparent;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: left;
-    font-size: 0.9em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
+/* 主题选项样式 */
 .theme-option:hover {
     background-color: var(--bg-tertiary);
 }
@@ -1151,12 +1167,9 @@ code {
         width: 95vw;
     }
 
-    .theme-modal-content {
-        flex-direction: column;
-    }
-
     .code-theme-options {
         flex-direction: column;
+        height: auto;
     }
 
     .theme-list {
@@ -1166,6 +1179,7 @@ code {
 
     .theme-preview {
         height: 300px;
+        position: static;
     }
 }
 
