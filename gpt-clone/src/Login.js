@@ -126,14 +126,14 @@ function Login() {
                 // Check user roles and admin verification status.
                 if (role === 'admin' && confirmedAdmin) {
                     Swal.fire({
-                        title: 'Admin Login',
-                        text: 'Where to go?',
+                        title: text.loginSuccess.title,
+                        text: text.loginSuccess.text,
                         icon: 'success',
-                        confirmButtonText: 'Chat',
+                        confirmButtonText: text.loginSuccess.chat,
                         showCancelButton: true,
-                        cancelButtonText: 'Dashboard',
+                        cancelButtonText: text.loginSuccess.dashboard,
                         showDenyButton: true,
-                        denyButtonText: 'Logout',
+                        denyButtonText: text.loginSuccess.logout,
                         showCloseButton: true,
                     }).then((result) => {
                         if (result.isConfirmed) {
@@ -221,9 +221,45 @@ function Login() {
         }
     };
 
+    // 检测用户语言
+    const userLang = navigator.language || navigator.userLanguage;
+    const isZH = userLang.startsWith('zh');
+
+    // 文本的双语配置
+    const text = {
+        login: isZH ? "登录" : "Login",
+        register: isZH ? "注册" : "Register",
+        username: isZH ? "用户名" : "Username",
+        password: isZH ? "密码" : "Password",
+        loginButton: isZH ? "登录" : "Login",
+        registerButton: isZH ? "注册" : "Register",
+        switchToRegister: isZH ? "切换到注册" : "Switch to Register",
+        switchToLogin: isZH ? "切换到登录" : "Switch to Login",
+        asAdmin: isZH ? "管理员身份" : "As Admin",
+        adminEmail: isZH ? "管理员邮箱" : "Admin Email",
+        usernameExists: isZH ? "用户名已存在，建议：" : "Username already exists. Try:",
+        loginSuccess: {
+            title: isZH ? "管理员登录" : "Admin Login",
+            text: isZH ? "去往何处？" : "Where to go?",
+            chat: isZH ? "聊天" : "Chat",
+            dashboard: isZH ? "控制台" : "Dashboard",
+            logout: isZH ? "登出" : "Logout",
+        },
+        registerSuccess: {
+            title: isZH ? "注册成功" : "Registration Success",
+            text: isZH ? "注册成功！" : "Registration successful!",
+            button: isZH ? "去登录" : "Go to Login",
+        },
+        errors: {
+            network: isZH ? "网络错误，请重试" : "Network error. Please try again.",
+            unknown: isZH ? "未知错误，请重试" : "Unknown error. Please try again.",
+            registration: isZH ? "注册失败，请重试" : "Registration failed. Please try again.",
+        }
+    };
+
     return (
         <div className="auth-container">
-            <h2>{isLogin ? 'Login' : 'Register'}</h2>
+            <h2>{isLogin ? text.login : text.register}</h2>
             <form onSubmit={handleSubmit}>
                 <div className="username-container">
                     <input
@@ -232,10 +268,10 @@ function Login() {
                         value={username}
                         onChange={(e) => {
                             setUsername(e.target.value);
-                            setIsUsernameValid(false); // 重置验证状态
+                            setIsUsernameValid(false);
                         }}
                         onBlur={handleUsernameBlur}
-                        placeholder="Username"
+                        placeholder={text.username}
                         required
                         className={isUsernameValid ? 'valid' : ''}
                     />
@@ -248,9 +284,8 @@ function Login() {
                     {showSuggestionPopup && (
                         <div className="suggestion-popup">
                             <span className="close-button"
-                                  onClick={() => setShowSuggestionPopup(false)}>&times;
-                            </span>
-                            <p>Username already exists. Try:</p>
+                                  onClick={() => setShowSuggestionPopup(false)}>&times;</span>
+                            <p>{text.usernameExists}</p>
                             {suggestions.map((suggestion, index) => (
                                 <div
                                     key={index}
@@ -268,7 +303,7 @@ function Login() {
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Password"
+                        placeholder={text.password}
                         required
                     />
                     <button
@@ -282,9 +317,7 @@ function Login() {
                 {!isLogin && (
                     <>
                         <div className="admin-checkbox">
-                            <label>
-                                As admin
-                            </label>
+                            <label>{text.asAdmin}</label>
                             <input
                                 type="checkbox"
                                 checked={isAdmin}
@@ -297,17 +330,19 @@ function Login() {
                                     type="email"
                                     value={adminEmail}
                                     onChange={(e) => setAdminEmail(e.target.value)}
-                                    placeholder="Admin Email"
+                                    placeholder={text.adminEmail}
                                     required
                                 />
                             </div>
                         )}
                     </>
                 )}
-                <button type="submit" className="auth-button">{isLogin ? 'Login' : 'Register'}</button>
+                <button type="submit" className="auth-button">
+                    {isLogin ? text.loginButton : text.registerButton}
+                </button>
             </form>
             <button onClick={() => setIsLogin(!isLogin)} className="auth-button">
-                {isLogin ? 'Switch to Register' : 'Switch to Login'}
+                {isLogin ? text.switchToRegister : text.switchToLogin}
             </button>
             {errorMessage && <p className="error-message">{errorMessage}</p>}
         </div>
