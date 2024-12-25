@@ -241,10 +241,40 @@
 
 .message.user {
     align-self: flex-end;
-    background-color: #007aff;
+    background-color: rgba(59, 130, 246, 0.9);
     color: white;
     margin-left: auto;
     text-align: left;
+    padding: 12px 20px;
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+    -webkit-font-smoothing: antialiased;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.message.user code, .message.user .inline-code {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: #e3e3e3;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.message.user pre {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    margin: 8px 0;
+}
+
+.message.user pre code {
+    background-color: transparent;
+    color: #e3e3e3;
+    padding: 0;
 }
 
 .message.assistant {
