@@ -355,6 +355,7 @@ function Chat() {
     }, [input]);
 
     const fetchModels = async () => {
+        document.body.style.cursor = 'wait'; // 设置鼠标为等待状态
         try {
             const response = await axios.post('/api/chat/models'
                 , {
@@ -382,6 +383,8 @@ function Chat() {
             }
         } catch (error) {
             console.error('Failed to fetch models:', error);
+        } finally {
+            document.body.style.cursor = 'default'; // 恢复默认鼠标样式
         }
     };
 
