@@ -1228,7 +1228,7 @@ code {
     --modal-border: #e5e5e5;
 }
 
-/* 夜��模式样式 */
+/* 夜模式样式 */
 [data-theme='dark'] {
     --bg-primary: #1c1c1e;
     --bg-secondary: #2c2c2e;
@@ -1457,7 +1457,7 @@ pre::-webkit-scrollbar-thumb:hover {
     }
 }
 
-/* 当内容滚动���才显示滚动条 */
+/* 当内容滚动才显示滚动条 */
 .chat-window,
 .conversation-list,
 textarea,
@@ -1754,4 +1754,39 @@ pre:hover::-webkit-scrollbar-thumb {
 [data-code-border='double'] .message.user pre > div {
     border: 4px double rgba(255, 255, 255, 0.2) !important;
     box-shadow: none !important;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+[data-theme='dark'] .loading-overlay {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.loading-text {
+    font-size: 14px;
+    color: var(--text-color);
+    text-align: center;
+    margin-top: 10px;
+}
+
+.conversation-list, .chat-container {
+    position: relative;
 }

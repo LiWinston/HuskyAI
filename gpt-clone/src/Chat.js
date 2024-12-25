@@ -442,7 +442,13 @@ function Chat() {
         loadInitialConversation();
     }, [conversations]);
 
+    // 在现有的状态中添加新的加载状态
+    const [isLoadingConversations, setIsLoadingConversations] = useState(false);
+    const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+
+    // 修改 fetchConversations 函数
     const fetchConversations = async () => {
+        setIsLoadingConversations(true);
         try {
             const response = await axios.get(`/api/chat`, {
                 params: {uuid: localStorage.getItem('userUUID')},
@@ -455,19 +461,23 @@ function Chat() {
             }));
 
             setConversations(conversationsData);
-
             return conversationsData;
         } catch (error) {
             console.error('Error fetching conversations:', error);
             throw error;
+        } finally {
+            setTimeout(() => {
+                setIsLoadingConversations(false);
+            }, 500); // 添加一个小延迟，使动画更流畅
         }
     };
 
+    // 修改 loadConversation 函数
     const loadConversation = async (conversationId) => {
+        setIsLoadingConversation(true);
         try {
             const uuid = localStorage.getItem('userUUID');
-            const response = await axios.get(
-                `/api/chat/${uuid}/${conversationId}`);
+            const response = await axios.get(`/api/chat/${uuid}/${conversationId}`);
 
             const loadedMessages = response.data.data.length
                 ? response.data.data.map(msg => ({
@@ -475,24 +485,26 @@ function Chat() {
                     text: msg.content,
                     timestamp: msg.timestamp,
                 }))
-                : [
-                    {
-                        sender: 'system',
-                        text: 'No messages yet in this conversation. Start the conversation now!',
-                        timestamp: new Date(),
-                    }];
+                : [{
+                    sender: 'system',
+                    text: 'No messages yet in this conversation. Start the conversation now!',
+                    timestamp: new Date(),
+                }];
 
             setMessages(loadedMessages);
             setSelectedConversation(conversationId);
             localStorage.setItem('selectedConversation', conversationId);
         } catch (error) {
             console.error('Error loading conversation:', error);
-            setMessages([
-                {
-                    sender: 'system',
-                    text: 'Failed to load conversation. Please try again later.',
-                    timestamp: new Date(),
-                }]);
+            setMessages([{
+                sender: 'system',
+                text: 'Failed to load conversation. Please try again later.',
+                timestamp: new Date(),
+            }]);
+        } finally {
+            setTimeout(() => {
+                setIsLoadingConversation(false);
+            }, 500); // 添加一个小延迟，使动画更流畅
         }
     };
 
@@ -1089,7 +1101,6 @@ function Chat() {
                 />
             )}
             <div className="conversation-list">
-                {/* Head */}
                 <div className="conversation-header">
                     <h3>{getText('conversations')}</h3>
                     <button className="new-conversation-btn" onClick={createNewConversation}>
@@ -1098,8 +1109,21 @@ function Chat() {
                     </button>
                 </div>
 
-                {/* Conversations grouped by time. */}
-                {Array.isArray(conversations) &&
+                {isLoadingConversations ? (
+                    <div className="loading-overlay">
+                        <div className="loading-container">
+                            <Lottie 
+                                animationData={loadingAnimation}
+                                loop={true}
+                                style={{ width: 80, height: 80 }}
+                            />
+                            <div className="loading-text">
+                                {isZH ? "加载对话列表..." : "Loading conversations..."}
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    Array.isArray(conversations) &&
                     groupConversationsByTimeGroup(conversations).map((item, index) => {
                         if (item.type === 'time-group-divider') {
                             return (
@@ -1125,66 +1149,82 @@ function Chat() {
                                 handleShareStart={handleShareStart}
                             />
                         );
-                    })}
+                    })
+                )}
             </div>
 
             <div className="chat-container">
-                <div className="chat-window" ref={chatWindowRef}
-                     style={{height: 'calc(100vh - 100px)', overflowY: 'scroll'}}>
-                    {/*<h3>Chat</h3>*/}
-                    <div className="model-selector" ref={modelSelectorRef}>
-                        <button className="floating-model-btn" onClick={() => {
-                            if (showModelOptions) {
-                                setShowModelOptions(false);
-                            } else {
-                                fetchModels().then(r => {
-                                    setShowModelOptions(true);
-                                });
-                            }
-                        }}>
-                            Current Model: {selectedModel}
-                        </button>
-
-                        <div className={`model-options ${showModelOptions ? 'show' : ''}`}>
-                            {models.length > 0 ? (models.map(
-                                (model) => (<button key={model} onClick={() => {
-                                    setSelectedModel(model);
-                                    setShowModelOptions(false);
-                                }}>
-                                    {model}
-                                </button>))) : (<p>No models available</p>)}
+                {isLoadingConversation ? (
+                    <div className="loading-overlay">
+                        <div className="loading-container">
+                            <Lottie 
+                                animationData={loadingAnimation}
+                                loop={true}
+                                style={{ width: 80, height: 80 }}
+                            />
+                            <div className="loading-text">
+                                {isZH ? "加载对话内容..." : "Loading messages..."}
+                            </div>
                         </div>
                     </div>
+                ) : (
+                    <div className="chat-window" ref={chatWindowRef}
+                         style={{height: 'calc(100vh - 100px)', overflowY: 'scroll'}}>
+                        {/*<h3>Chat</h3>*/}
+                        <div className="model-selector" ref={modelSelectorRef}>
+                            <button className="floating-model-btn" onClick={() => {
+                                if (showModelOptions) {
+                                    setShowModelOptions(false);
+                                } else {
+                                    fetchModels().then(r => {
+                                        setShowModelOptions(true);
+                                    });
+                                }
+                            }}>
+                                Current Model: {selectedModel}
+                            </button>
+
+                            <div className={`model-options ${showModelOptions ? 'show' : ''}`}>
+                                {models.length > 0 ? (models.map(
+                                    (model) => (<button key={model} onClick={() => {
+                                        setSelectedModel(model);
+                                        setShowModelOptions(false);
+                                    }}>
+                                        {model}
+                                    </button>))) : (<p>No models available</p>)}
+                            </div>
+                        </div>
 
 
-                    <AnimatePresence>
-                        {messages.map((msg, index) => (
-                            <ErrorBoundary key={index}>
-                                <MessageComponent 
-                                    key={index}
-                                    msg={msg}
-                                    messages={messages}
-                                    index={index}
-                                    isStreaming={streamingMessage === index}
-                                    codeTheme={codeTheme}
-                                    isShareMode={isShareMode}
-                                    selectedMessages={selectedMessages}
-                                    handleMessageClick={handleMessageClick}
-                                />
-                            </ErrorBoundary>
-                        ))}
-                    </AnimatePresence>
-                    {streamingMessage && (
-                        <MessageComponent 
-                            msg={streamingMessage} 
-                            messages={messages}
-                            index={messages.length}
-                            isStreaming={true}
-                            codeTheme={codeTheme}
-                        />
-                    )}
+                        <AnimatePresence>
+                            {messages.map((msg, index) => (
+                                <ErrorBoundary key={index}>
+                                    <MessageComponent 
+                                        key={index}
+                                        msg={msg}
+                                        messages={messages}
+                                        index={index}
+                                        isStreaming={streamingMessage === index}
+                                        codeTheme={codeTheme}
+                                        isShareMode={isShareMode}
+                                        selectedMessages={selectedMessages}
+                                        handleMessageClick={handleMessageClick}
+                                    />
+                                </ErrorBoundary>
+                            ))}
+                        </AnimatePresence>
+                        {streamingMessage && (
+                            <MessageComponent 
+                                msg={streamingMessage} 
+                                messages={messages}
+                                index={messages.length}
+                                isStreaming={true}
+                                codeTheme={codeTheme}
+                            />
+                        )}
 
-                </div>
+                    </div>
+                )}
 
                 <div className="input-container">
                     <textarea
