@@ -340,11 +340,11 @@
     margin-top: 1px;
     margin-bottom: 5px;
     opacity: 0.9;
+    margin: 2px 8px;
 }
 
 .user-timestamp {
     text-align: right;
-    padding: 0px 8px;
     color: #828291;
 }
 

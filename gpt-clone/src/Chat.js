@@ -862,6 +862,69 @@ class ErrorBoundary extends React.Component {
     }
 }
 
+function formatMessageTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const isThisYear = date.getFullYear() === now.getFullYear();
+    
+    // 检测用户语言
+    const userLang = navigator.language || navigator.userLanguage;
+    const isZH = userLang.startsWith('zh');
+    
+    // 双语文本配置
+    const texts = {
+        today: isZH ? "今天" : "Today",
+        yesterday: isZH ? "昨天" : "Yesterday",
+        weekdays: {
+            zh: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+            en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        }
+    };
+
+    // 获取时间部分
+    const timeStr = date.toLocaleTimeString(userLang, {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
+    // 今天
+    if (days === 0) {
+        return `${texts.today} ${timeStr}`;
+    }
+    
+    // 昨天
+    if (days === 1) {
+        return `${texts.yesterday} ${timeStr}`;
+    }
+    
+    // 本周内 (7天内)
+    if (days < 7) {
+        const weekday = texts.weekdays[isZH ? 'zh' : 'en'][date.getDay()];
+        return `${weekday} ${timeStr}`;
+    }
+    
+    // 本年内
+    if (isThisYear) {
+        return date.toLocaleDateString(userLang, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    // 去年及更早
+    return date.toLocaleDateString(userLang, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
 function MessageComponent({msg, messages, index, isStreaming = false}) {
     const mathJaxRef = useRef(null);
 
@@ -963,17 +1026,7 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
                     </div>
                 </div>
                 <div className={`timestamp ${msg.sender}-timestamp`}>
-                    {messageDate.toLocaleString(navigator.language, {
-                        year: 'numeric',
-                        month: navigator.language.startsWith('zh') ?
-                            'long' :
-                            'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        second: 'numeric',
-                        dayPeriod: 'short',
-                    })}
+                    {formatMessageTime(msg.timestamp)}
                 </div>
             </motion.div>
         </MathJaxContext>
