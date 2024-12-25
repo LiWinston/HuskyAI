@@ -677,7 +677,10 @@ function Chat() {
         lightMode: isZH ? "浅色模式" : "Light Mode",
         darkMode: isZH ? "深色模式" : "Dark Mode",
         codeTheme: isZH ? "代码主题" : "Code Theme",
-        close: isZH ? "关闭" : "Close"
+        close: isZH ? "关闭" : "Close",
+        autoMode: isZH ? "自动模式" : "Auto Mode",
+        currentDark: isZH ? "当前：深色" : "Current: Dark",
+        currentLight: isZH ? "当前：浅色" : "Current: Light",
     };
 
     // 代码主题选项名称映射（保持英文，因为是专有名词）
@@ -759,13 +762,24 @@ function Chat() {
                             className={`theme-option ${currentTheme === 'light' ? 'selected' : ''}`}
                             onClick={() => toggleTheme('light')}
                         >
-                            {menuText.lightMode}
+                            <span>☀️ {menuText.lightMode}</span>
                         </div>
                         <div 
                             className={`theme-option ${currentTheme === 'dark' ? 'selected' : ''}`}
                             onClick={() => toggleTheme('dark')}
                         >
-                            {menuText.darkMode}
+                            <span>🌙 {menuText.darkMode}</span>
+                        </div>
+                        <div 
+                            className={`theme-option ${currentTheme === 'auto' ? 'selected' : ''}`}
+                            onClick={() => toggleTheme('auto')}
+                        >
+                            <span>🌓 {menuText.autoMode}</span>
+                            {currentTheme === 'auto' && (
+                                <span className="auto-mode-status">
+                                    ({localStorage.getItem('actualTheme') === 'dark' ? menuText.currentDark : menuText.currentLight})
+                                </span>
+                            )}
                         </div>
                     </div>
                 </div>

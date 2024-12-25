@@ -1353,3 +1353,19 @@ pre:hover::-webkit-scrollbar-thumb {
 [data-theme='dark'] .conversation-item.selected:hover {
     background-color: var(--accent-color);  /* 选中状态的hover保持高亮色 */
 }
+
+.auto-mode-status {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-left: 8px;
+}
+
+.theme-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+[data-theme='dark'] .theme-option.selected {
+    background-color: var(--accent-color);
+}
