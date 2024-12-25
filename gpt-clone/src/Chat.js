@@ -13,6 +13,8 @@ import remarkGfm from 'remark-gfm';
 
 import {MathJax, MathJaxContext} from 'better-react-mathjax';
 import { useNavigate } from 'react-router-dom';
+import Lottie from 'lottie-react';
+import loadingAnimation from './assets/loading.json'; // 需要添加一个 loading 动画 JSON 文件
 
 const CONVERSATION_SUMMARY_GENERATED = '#CVSG##CVSG##CVSG#';
 
@@ -57,6 +59,7 @@ function Chat() {
     const [sharedCid, setSharedCid] = useState(null);
     const [streamingMessage, setStreamingMessage] = useState(null);
     const navigate = useNavigate();
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
     // 添加语言检测
     const userLang = navigator.language || navigator.userLanguage;
@@ -274,6 +277,7 @@ function Chat() {
 
     const handleShareStart = async (conversationId) => {
         try {
+            setIsLoadingMessages(true);
             // 先加载对话内容
             const response = await axios.get(`/api/chat/${localStorage.getItem('userUUID')}/${conversationId}`);
             
@@ -313,6 +317,8 @@ function Chat() {
         } catch (error) {
             console.error('Error fetching messages for share:', error);
             setNotification('获取消息失败，请重试');
+        } finally {
+            setIsLoadingMessages(false);
         }
     };
 
@@ -1059,6 +1065,19 @@ function Chat() {
                                 取消
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {isLoadingMessages && (
+                <div className="global-loading-overlay">
+                    <div className="loading-container">
+                        <Lottie 
+                            animationData={loadingAnimation}
+                            loop={true}
+                            style={{ width: 120, height: 120 }}
+                        />
+                        <div className="loading-text">加载对话内容...</div>
                     </div>
                 </div>
             )}
