@@ -1,361 +1,236 @@
-/* Container styles */
+/* 全局变量 */
+:root {
+  --primary-color: #165DFF;
+  --primary-hover: #0E42D2;
+  --background-color: #F7F8FA;
+  --container-bg: #FFFFFF;
+  --text-primary: #1D2129;
+  --text-secondary: #86909C;
+  --border-color: #E5E6EB;
+  --error-color: #F53F3F;
+  --success-color: #00B42A;
+}
+
+/* 容器样式 */
 .auth-container {
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    width: 320px;
-    max-width: 350px;
+    background-color: var(--container-bg);
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    width: 400px;
+    max-width: 90vw;
     margin: 0 auto;
     box-sizing: border-box;
 }
 
 .auth-container h2 {
-    margin-bottom: 20px;
-    color: #333;
-}
-
-.admin-checkbox {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 15px;
-    cursor: pointer;
-}
-
-.admin-checkbox label {
-    display: flex;
-    padding: 10px;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    cursor: pointer;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+    font-size: 24px;
+    font-weight: 600;
     text-align: center;
-    position: relative;
-    top: -5px;
 }
 
-.admin-checkbox input[type="checkbox"] {
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #007bff;
-    border-radius: 4px;
-    display: inline-block;
-    position: relative;
-    outline: none;
-    cursor: pointer;
-    transition: background-color 0.3s, border-color 0.3s;
-}
-
-.admin-checkbox input[type="checkbox"]:checked {
-    background-color: #007bff;
-    border-color: #007bff;
-}
-
-.admin-checkbox input[type="checkbox"]:checked::after {
-    content: '✓';
-    color: white;
-    font-size: 14px;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.admin-checkbox input[type="checkbox"]:focus {
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-}
-
-/* Show admin email input box. */
-.admin-email-container input {
-    border: 1px solid #4CAF50;
-}
-
-.admin-email-container input:focus {
-    border-color: #333;
-}
-
-.suspension-window p {
-    margin-bottom: 20px;
-}
-
-.suspension-window button {
-    background-color: #f44336;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.suspension-window button:hover {
-    background-color: #d32f2f;
-}
-
-.admin-checkbox label {
-    font-size: 14px;
-    color: #333;
-}
-
+/* 输入框容器通用样式 */
+.username-container,
+.password-container,
 .admin-email-container {
-    margin-bottom: 15px;
+    width: 100%;
+    position: relative;
+    margin-bottom: 20px;
+    box-sizing: border-box;
 }
 
+/* 输入框通用样式 */
+.auth-container input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background-color: var(--container-bg);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.auth-container input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
+    outline: none;
+}
+
+.auth-container input::placeholder {
+    color: var(--text-secondary);
+}
+
+/* 用户名输入框容器 */
 .username-container {
     position: relative;
-    width: 100%;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
-/* 添加用户名验证成功的样式 */
 .username-container .success-icon {
     position: absolute;
-    right: 10px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #4CAF50;
-    font-size: 20px;
+    color: var(--success-color);
+    font-size: 16px;
 }
 
 .username-container input.valid {
-    border-color: #4CAF50;
+    border-color: var(--success-color);
 }
 
-/* Form element styles */
-.auth-container form {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-/* Input styles */
-.auth-container input,
-.password-container {
-    width: 100%;
-    margin-bottom: 15px;
-    box-sizing: border-box;
-}
-
-.auth-container input,
-.password-container input {
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    font-size: 16px;
-}
-
-/* Password container styles */
+/* 密码输入框容器 */
 .password-container {
     position: relative;
-    width: 100%;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .password-container input {
-    width: 100%;
-    padding: 12px;
-    padding-right: 40px; /* Make room for the toggle button */
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    font-size: 16px;
-    box-sizing: border-box;
+    padding-right: 40px; /* 为眼睛图标留出空间 */
 }
 
 .password-container .toggle-password {
     position: absolute;
-    right: 10px;
+    right: 12px;
     top: 50%;
-    transform: translateY(-75%);
+    transform: translateY(-50%);
     background: none;
     border: none;
+    color: var(--text-secondary);
     cursor: pointer;
-    font-size: 1.5em;
-    padding: 5px;
-    color: #333;
+    padding: 4px;
+    font-size: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
+    transition: color 0.2s;
 }
 
-/* When hovering the mouse, the little monkey icon changes color. */
 .password-container .toggle-password:hover {
-    color: #000;
+    color: var(--primary-color);
 }
 
-/* Ensure other inputs match the password input's appearance */
-.auth-container input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    font-size: 16px;
-    box-sizing: border-box;
-    margin-bottom: 15px;
+/* 移除按钮的默认样式 */
+.password-container .toggle-password:focus {
+    outline: none;
 }
 
-/* Button styles */
-.auth-container .auth-button {
+/* 按钮样式 */
+.auth-button {
     width: 100%;
     padding: 12px;
     border: none;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #73a5ff, #5477f5);
+    border-radius: 8px;
+    background-color: var(--primary-color);
     color: white;
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background 0.3s ease;
-    margin-bottom: 15px;
+    transition: background-color 0.2s ease;
 }
 
-.auth-container .auth-button:hover {
-    background: linear-gradient(135deg, #5477f5, #73a5ff);
+.auth-button:hover {
+    background-color: var(--primary-hover);
 }
 
-/* Error message styles */
-.auth-container .error-message {
-    color: red;
-    margin-top: 10px;
-    text-align: center;
+/* 切换按钮样式 */
+button.auth-button:last-of-type {
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    margin-top: 12px;
 }
 
-
-.loading-spinner {
-    position: absolute;
-    right: 10px;
-    top: 40%;
-    transform: translateY(-50%);
-    font-size: 20px;
+button.auth-button:last-of-type:hover {
+    background-color: rgba(22, 93, 255, 0.05);
 }
 
+/* 管理员选项样式 */
+.admin-checkbox {
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.admin-checkbox label {
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+.admin-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* 建议弹窗样式 */
 .suggestion-popup {
     position: absolute;
-    top: 40px;
-    left: 10px;
-    background-color: white;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 10px;
-    margin-top: 5px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    text-align: left;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.suggestion-popup p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 8px;
 }
 
 .suggestion-item {
-    padding: 5px;
-    cursor: pointer;
+    padding: 8px 12px;
+    color: var(--text-primary);
     font-size: 14px;
-    position: relative;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
 }
 
 .suggestion-item:hover {
-    background-color: #f0f0f0;
+    background-color: var(--background-color);
 }
 
-@keyframes flyToInput {
-    0% {
-        transform: translate(0, 0);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(var(--fly-to-left), var(--fly-to-top));
-        opacity: 0;
-    }
-}
-
-.suggestion-item.clicked {
-    animation: flyToInput 0.25s ease-in-out forwards;
+/* 加载动画 */
+.loading-spinner {
     position: absolute;
-    z-index: 20;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
 }
 
-/* New close button style. */
-.close-button {
-    position: absolute;
-    top: 5px;
-    right: 10px;
-    cursor: pointer;
-    font-size: 20px;
-    color: #888;
-}
-
-.close-button:hover {
-    color: #333;
-}
-
-.uuid-input-parent {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
-.uuid-input-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    background-color: #f9f9f9;
-}
-
-.auth-container, .uuid-input-container {
-    background-color: #f9f9f9; /* Ensure that the input box container has a slight background contrast. */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    border-radius: 15px;
-}
-
-.uuid-input-container h2 {
+/* 错误消息 */
+.error-message {
+    color: var(--error-color);
+    font-size: 13px;
+    margin-top: 12px;
     text-align: center;
-    color: #333;
-    margin-bottom: 20px;
 }
 
-.uuid-input-container form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.uuid-input-container input[type="text"] {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 16px;
-}
-
-.uuid-input-container button {
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-bottom: 10px; /* Consistent button spacing. */
-}
-
-.uuid-input-container button:hover {
-    background-color: #0056b3;
-}
-
-.uuid-input-container button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+/* 响应式调整 */
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 24px;
+        margin: 20px auto;
+    }
+    
+    .auth-container h2 {
+        font-size: 20px;
+    }
 }

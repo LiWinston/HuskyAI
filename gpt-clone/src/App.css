@@ -31,7 +31,7 @@
     text-align: left;
 }
 
-input[type="text"] {
+.chat-container input[type="text"] {
     width: 80%;
     padding: 10px;
     border-radius: 4px;
