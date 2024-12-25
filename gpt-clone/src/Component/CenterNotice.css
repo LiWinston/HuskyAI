@@ -1,0 +1,27 @@
+.center-notice {
+    position: fixed;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    min-width: 200px;
+    max-width: 80%;
+}
+
+.notice-content {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 16px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    line-height: 1.5;
+}
+
+[data-theme='light'] .notice-content {
+    background: rgba(255, 255, 255, 0.9);
+    color: black;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+} 

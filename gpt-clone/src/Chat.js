@@ -15,6 +15,7 @@ import {MathJax, MathJaxContext} from 'better-react-mathjax';
 import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import loadingAnimation from './assets/loading.json'; // 需要添加一个 loading 动画 JSON 文件
+import CenterNotice from './Component/CenterNotice';
 
 const CONVERSATION_SUMMARY_GENERATED = '#CVSG##CVSG##CVSG#';
 
@@ -60,6 +61,7 @@ function Chat() {
     const [streamingMessage, setStreamingMessage] = useState(null);
     const navigate = useNavigate();
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+    const [centerNotice, setCenterNotice] = useState({ visible: false, message: '' });
 
     // 添加语言检测
     const userLang = navigator.language || navigator.userLanguage;
@@ -78,7 +80,9 @@ function Chat() {
             cancel: "取消",
             copySuccess: "分享链接已复制到剪贴板",
             shareFailed: "分享失败，请重试",
-            loadFailed: "获取消息失败，请重试"
+            loadFailed: "获取消息失败，请重试",
+            shareInstructions: "进入分享模式, 点击对话内容区域选择要分享的消息",
+            shareExited: "已退出分享模式，所有选择已清除",
         },
         en: {
             conversations: "Chats",
@@ -91,7 +95,9 @@ function Chat() {
             cancel: "Cancel",
             copySuccess: "Share link copied to clipboard",
             shareFailed: "Failed to share, please try again",
-            loadFailed: "Failed to load messages, please try again"
+            loadFailed: "Failed to load messages, please try again",
+            shareInstructions: "Click on messages to select them for sharing",
+            shareExited: "Share mode exited, all selections cleared",
         },
         // 可以继续添加其他语言...
     };
@@ -330,7 +336,10 @@ function Chat() {
                     chatWindow.style.opacity = '1';
                 }, 50);
                 
-                setNotification(getText('enterShareMode'));
+                setCenterNotice({
+                    visible: true,
+                    message: getText('shareInstructions')
+                });
             }
         } catch (error) {
             console.error('Error fetching messages for share:', error);
@@ -345,8 +354,11 @@ function Chat() {
         setSelectedMessages([]);
         setShareMessages([]);
         setSharedCid(null);
-        setNotification(getText('exitShareMode'));
-        setTimeout(() => setNotification(null), 2000);
+        setCenterNotice({
+            visible: true,
+            message: getText('shareExited'),
+            duration: 1500
+        });
     };
 
     const handleMessageClick = (index) => {
@@ -1099,6 +1111,13 @@ function Chat() {
                     </div>
                 </div>
             )}
+
+            <CenterNotice 
+                message={centerNotice.message}
+                isVisible={centerNotice.visible}
+                onClose={() => setCenterNotice({ visible: false, message: '' })}
+                duration={5000}  // 5秒
+            />
         </div>);
 }
 
