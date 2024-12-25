@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import axios from 'axios';
 import {useParams} from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import VscDarkPlus from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus';
 import html2canvas from 'html2canvas';
@@ -238,6 +239,7 @@ function SharePage() {
             <div className="share-page__message-content">
                 <ReactMarkdown
                     children={content}
+                    remarkPlugins={[remarkGfm]}
                     components={{
                         code({node, inline, className, children, ...props}) {
                             const match = /language-(\w+)/.exec(className || '');
@@ -273,6 +275,13 @@ function SharePage() {
                                     >
                                         <FaCopy />
                                     </button>
+                                </div>
+                            );
+                        },
+                        table({node, ...props}) {
+                            return (
+                                <div className="table-container">
+                                    <table {...props} />
                                 </div>
                             );
                         }

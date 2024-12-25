@@ -316,3 +316,72 @@
     background-color: rgba(40, 44, 52, 0.56);
     color: #e3e3e3;
 }
+
+/* 表格样式 */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin: 16px 0;
+}
+
+.table-container table {
+    border-collapse: collapse;
+    margin: 2em 0;
+    background-color: var(--bg-secondary);
+    width: 100%;
+}
+
+.table-container th,
+.table-container td {
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    text-align: left;
+}
+
+.table-container th {
+    background-color: var(--bg-tertiary);
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.table-container tr:hover td {
+    background-color: var(--bg-hover);
+}
+
+/* 代码块样式 */
+.share-page__message-content code,
+.share-page__message-content .inline-code {
+    background-color: var(--bg-code);
+    color: var(--text-code);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.share-page__message-content pre {
+    background-color: var(--bg-code);
+    border-radius: 6px;
+    margin: 8px 0;
+}
+
+.share-page__message-content pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .table-container table,
+    .table-container th,
+    .table-container td {
+        font-size: 0.9em;
+    }
+    
+    .share-page__message-content pre {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+}
