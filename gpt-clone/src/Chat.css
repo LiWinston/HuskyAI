@@ -860,3 +860,36 @@ code {
     white-space: pre-wrap;
     word-break: break-word;
 }
+
+.logout-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logout-button:hover {
+    background-color: #ff6b81;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .logout-button {
+        width: 32px;
+        height: 32px;
+        top: 10px;
+        right: 10px;
+    }
+}

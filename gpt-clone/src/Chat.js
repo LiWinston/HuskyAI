@@ -5,13 +5,14 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
 import {vscDarkPlus} from 'react-syntax-highlighter/dist/esm/styles/prism';
-import {FaPlus} from 'react-icons/fa';
+import {FaPlus, FaSignOutAlt} from 'react-icons/fa';
 import ConversationItem from './ConversationItem'; // Introduce the plus icon.
 import './Component/Toggle.css';
 import {showSweetAlertWithRetVal} from './Component/sweetAlertUtil';
 import remarkGfm from 'remark-gfm';
 
 import {MathJax, MathJaxContext} from 'better-react-mathjax';
+import { useNavigate } from 'react-router-dom';
 
 const CONVERSATION_SUMMARY_GENERATED = '#CVSG##CVSG##CVSG#';
 
@@ -46,6 +47,7 @@ function Chat() {
     const [shareMessages, setShareMessages] = useState([]); // Store messages to share.
     const [sharedCid, setSharedCid] = useState(null);
     const [streamingMessage, setStreamingMessage] = useState(null);
+    const navigate = useNavigate();
 
     const handleInputChange = (event) => {
         const text = event.target.value;
@@ -624,8 +626,22 @@ function Chat() {
         return groupedConversations;
     };
 
+    const handleLogout = () => {
+        // 清除所有登录相关的本地存储
+        localStorage.removeItem('token');
+        localStorage.removeItem('userUUID');
+        localStorage.removeItem('selectedConversation');
+        localStorage.removeItem('conversations');
+        
+        // 跳转到登录页面
+        navigate('/');
+    };
+
     return (
         <div className="chat-interface">
+            <button className="logout-button" onClick={handleLogout}>
+                <FaSignOutAlt />
+            </button>
             <div className="conversation-list">
                 {/* Head */}
                 <div className="conversation-header">
