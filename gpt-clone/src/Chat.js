@@ -86,6 +86,14 @@ const themeStyles = {
     lucario: { name: 'Lucario', type: 'dark', style: lucario },
 };
 
+// 添加代码块边框样式定义
+const codeBlockBorders = {
+    none: { name: '无边框', style: 'none' },
+    default: { name: '默认灰框', style: 'default' },
+    glow: { name: '蓝色光晕', style: 'glow' },
+    double: { name: '双层实线', style: 'double' }
+};
+
 // 将主题选择组件提取出来
 const ThemeSelector = React.memo(({ currentTheme, onThemeChange, isZH }) => {
     return (
@@ -172,7 +180,9 @@ const ThemeModal = React.memo(({
     codeTheme,
     changeCodeTheme,
     themeStyles,
-    isZH 
+    isZH,
+    codeBorderStyle,
+    changeCodeBorderStyle 
 }) => (
     <>
         <div 
@@ -209,6 +219,24 @@ const ThemeModal = React.memo(({
                         themeStyles={themeStyles}
                         isZH={isZH}
                     />
+                </div>
+
+                <div className="theme-section">
+                    <h3>{isZH ? "代码块边框样式" : "Code Block Border Style"}</h3>
+                    <div className="border-style-options">
+                        {Object.entries(codeBlockBorders).map(([key, border]) => (
+                            <div
+                                key={key}
+                                className={`border-style-option ${codeBorderStyle === key ? 'selected' : ''}`}
+                                onClick={() => changeCodeBorderStyle(key)}
+                            >
+                                <div className={`preview-block border-${key}`}>
+                                    {isZH ? "预览效果" : "Preview"}
+                                </div>
+                                <span>{isZH ? border.name : border.name}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
@@ -249,6 +277,7 @@ function Chat() {
     const navigate = useNavigate();
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
     const [centerNotice, setCenterNotice] = useState({ visible: false, message: '' });
+    const [codeBorderStyle, setCodeBorderStyle] = useState('default');
 
     // 添加语言检测
     const userLang = navigator.language || navigator.userLanguage;
@@ -988,10 +1017,13 @@ function Chat() {
         const loadSavedThemes = () => {
             const savedTheme = localStorage.getItem('theme') || 'light';
             const savedCodeTheme = localStorage.getItem('codeTheme') || 'synthwave84';
+            const savedBorderStyle = localStorage.getItem('codeBorderStyle') || 'default';
             
             setCurrentTheme(savedTheme);
             setCodeTheme(savedCodeTheme);
+            setCodeBorderStyle(savedBorderStyle);
             document.documentElement.setAttribute('data-theme', savedTheme);
+            document.documentElement.setAttribute('data-code-border', savedBorderStyle);
         };
 
         loadSavedThemes();
@@ -1008,6 +1040,13 @@ function Chat() {
     const changeCodeTheme = (theme) => {
         setCodeTheme(theme);
         localStorage.setItem('codeTheme', theme);
+    };
+
+    // 切换代码块边框样式
+    const changeCodeBorderStyle = (style) => {
+        setCodeBorderStyle(style);
+        localStorage.setItem('codeBorderStyle', style);
+        document.documentElement.setAttribute('data-code-border', style);
     };
 
     useEffect(() => {
@@ -1045,6 +1084,8 @@ function Chat() {
                     changeCodeTheme={changeCodeTheme}
                     themeStyles={themeStyles}
                     isZH={isZH}
+                    codeBorderStyle={codeBorderStyle}
+                    changeCodeBorderStyle={changeCodeBorderStyle}
                 />
             )}
             <div className="conversation-list">

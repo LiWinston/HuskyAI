@@ -1349,7 +1349,7 @@ code {
 .close-button svg {
     width: 16px;
     height: 16px;
-    display: block; /* 确保图标居中���齐 */
+    display: block; /* 确保图标居中齐 */
 }
 
 @keyframes modalFadeIn {
@@ -1628,4 +1628,104 @@ pre:hover::-webkit-scrollbar-thumb {
 /* 深色模式适配 */
 [data-theme='dark'] .share-controls {
     background: var(--bg-tertiary);
+}
+
+/* 代码块边框样式选项 */
+.border-style-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 10px;
+}
+
+.border-style-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.border-style-option:hover {
+    background-color: var(--bg-secondary);
+}
+
+.border-style-option.selected {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.preview-block {
+    width: 100%;
+    height: 80px;
+    background-color: var(--bg-secondary);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+/* 边框样式定义 */
+.preview-block.border-none {
+    border: none;
+}
+
+.preview-block.border-default {
+    border: 1px solid var(--border-color);
+}
+
+.preview-block.border-glow {
+    border: 1px solid rgba(0, 122, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0, 122, 255, 0.2);
+}
+
+.preview-block.border-double {
+    border: 4px double var(--border-color);
+}
+
+/* 应用边框样式到实际代码块 */
+[data-code-border='none'] .message pre {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+[data-code-border='default'] .message pre {
+    border: 1px solid var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+[data-code-border='glow'] .message pre {
+    border: 1px solid rgba(0, 122, 255, 0.3) !important;
+    box-shadow: 0 0 10px rgba(0, 122, 255, 0.2) !important;
+}
+
+[data-code-border='double'] .message pre {
+    border: 4px double var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+/* 深色模式适配 */
+[data-theme='dark'] .preview-block {
+    background-color: var(--bg-tertiary);
+}
+
+[data-theme='dark'] .border-style-option:hover {
+    background-color: var(--bg-tertiary);
+}
+
+[data-theme='dark'] .preview-block.border-glow {
+    border-color: rgba(0, 122, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 122, 255, 0.3);
+}
+
+/* 确保在深色模式下代码块边框样式正确显示 */
+[data-theme='dark'][data-code-border='glow'] .message pre {
+    border-color: rgba(0, 122, 255, 0.4) !important;
+    box-shadow: 0 0 10px rgba(0, 122, 255, 0.3) !important;
 }
