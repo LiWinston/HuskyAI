@@ -13,9 +13,6 @@ import {FaCopy, FaDownload} from 'react-icons/fa'; // Add download icon.
 const userAvatarUrl = 'https://img.icons8.com/?size=100&id=23265&format=png&color=000000';  // 示例头像：用户
 const assistantAvatarUrl = 'https://img.icons8.com/?size=100&id=37410&format=png&color=000000';  // 示例头像：机器人
 
-const LOCAL_URLS = ['http://localhost:8090/health'];
-const REMOTE_URL = '/health';
-
 function SharePage() {
     const {shareCode} = useParams();
     const [messages, setMessages] = useState([]);
@@ -24,48 +21,19 @@ function SharePage() {
     const chatWindowRef = useRef(null);
     const [copyNotification, setCopyNotification] = useState(false);
 
-    const detectEnvironment = async () => {
-        let isLocalServiceAvailable = false;
-        for (const url of LOCAL_URLS) {
-            try {
-                await axios.get(url);
-                window.API_BASE_URL = url.replace('/health', '');
-                isLocalServiceAvailable = true;
-                return;
-            } catch (error) {
-                console.log(`Failed to connect to local service: ${url}`);
-            }
-        }
-
-        if (!isLocalServiceAvailable) {
-            try {
-                await axios.get(REMOTE_URL);
-                window.API_BASE_URL = REMOTE_URL.replace('/health', '/api');
-            } catch (error) {
-                setError('Failed to connect to any service.');
-            }
-        }
-    };
-
     useEffect(() => {
-        const detectEnvironmentAndFetchMessages = async () => {
-            if (!window.API_BASE_URL) {
-                await detectEnvironment();
-            }
-            if (window.API_BASE_URL) {
-                try {
-                    const response = await axios.get(
-                        `${window.API_BASE_URL}/chat/share/${shareCode}`);
-                    setMessages(response.data.data || []);
-                    setLoading(false);
-                } catch (error) {
-                    setError('Failed to load shared conversation.');
-                    setLoading(false);
-                }
+        const fetchMessages = async () => {
+            try {
+                const response = await axios.get(`/api/chat/share/${shareCode}`);
+                setMessages(response.data.data || []);
+                setLoading(false);
+            } catch (error) {
+                setError('Failed to load shared conversation.');
+                setLoading(false);
             }
         };
 
-        detectEnvironmentAndFetchMessages();
+        fetchMessages();
     }, [shareCode]);
 
     useEffect(() => {

@@ -156,7 +156,7 @@ const ConversationItem = ({
         const uuid = localStorage.getItem('userUUID');
         try {
             await axios.delete(
-                `${window.API_BASE_URL}/chat/${uuid}/${conversation.id}`);
+                `/api/chat/${uuid}/${conversation.id}`);
             // Get the updated session list.
             const updatedConversations = await fetchConversations();
 
@@ -184,7 +184,7 @@ const ConversationItem = ({
 
         try {
             const response = await axios.get(
-                `${window.API_BASE_URL}/chat/${uuid}/${conversation.id}`);
+                `/api/chat/${uuid}/${conversation.id}`);
             const fetchedMessages = response.data.data;
             setShareMessages(fetchedMessages);
             setSharedCid(conversation.id);

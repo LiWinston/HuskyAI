@@ -14,7 +14,7 @@ function UserManagement() {
     // Get user status.
     const fetchUsers = async () => {
         try {
-            const response = await axios.get(window.API_BASE_URL + '/admin/user');
+            const response = await axios.get('/api/admin/user');
             setUsers(response.data.data);
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -23,7 +23,7 @@ function UserManagement() {
 
     const fetchUserModelAccess = async () => {
         try {
-            const response = await axios.get(window.API_BASE_URL + '/admin/user/modelAccess');
+            const response = await axios.get('/api/admin/user/modelAccess');
             const modelAccessData = response.data.data.reduce((acc, config) => {
                 acc[config.userId] = config.allowedModels;
                 return acc;
@@ -41,7 +41,7 @@ function UserManagement() {
 
     const updateUser = async (userId, updatedData) => {
         try {
-            await axios.post(`${window.API_BASE_URL}/admin/users/${userId}`, updatedData);
+            await axios.post(`/api/admin/users/${userId}`, updatedData);
             fetchUsers();
         } catch (error) {
             console.error('Error updating user:', error);
@@ -112,7 +112,7 @@ function UserManagement() {
                 additionalAttributes: modelAccess.additionalAttributes || {}
             }));
 
-            await axios.put(`${window.API_BASE_URL}/admin/user/modelAccess/${userId}`, updatedModelAccess)
+            await axios.put(`/api/admin/user/modelAccess/${userId}`, updatedModelAccess)
                 .then(res => {
                     if (res.data.code) {
                         // Success: allow user to choose whether to refresh

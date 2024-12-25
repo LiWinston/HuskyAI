@@ -45,7 +45,7 @@ export default function Confirm() {
             }
 
             // Initiate a GET request to the confirmation controller.
-            axios.get(`${window.API_BASE_URL}/user/register/confirm/${token}`).then((response) => {
+            axios.get(`/api/user/register/confirm/${token}`).then((response) => {
                 const data = response.data;
 
                 if (data.code === 1) {

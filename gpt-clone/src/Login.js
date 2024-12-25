@@ -22,6 +22,7 @@ function Login() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [adminEmail, setAdminEmail] = useState('');
 
+    const [isUsernameValid, setIsUsernameValid] = useState(false);
 
     const location = useLocation();
     useEffect(() => {
@@ -38,21 +39,28 @@ function Login() {
 
         if (!isLogin) {
             if (username === '' || username === null || isBlank(username)) {
+                setIsUsernameValid(false);
                 return;
             }
             setIsCheckingUsername(true);
             try {
-                const response = await axios.get(`${window.API_BASE_URL}/user/register/checkUsername`, {params: {username}});
+                const response = await axios.get(`/api/user/register/checkUsername`, {params: {username}});
                 const result = response.data;
                 if (result.code === 0) {
                     setSuggestions(result.data);
                     setShowSuggestionPopup(true);
+                    setIsUsernameValid(false);
+                } else {
+                    // 用户名可用
+                    setIsUsernameValid(true);
+                    setShowSuggestionPopup(false);
                 }
-                setCheckDone(true); // if you want to check username only once after blur, uncomment this line and use "if (!isLogin && !checkDone) {"
+                setCheckDone(true);
             } catch (error) {
                 console.error('Username check failed', error);
+                setIsUsernameValid(false);
             } finally {
-                setIsCheckingUsername(false); // Check completed, hide loading icon.
+                setIsCheckingUsername(false);
             }
         }
     };
@@ -86,10 +94,10 @@ function Login() {
             const ipInfo = await detectIP();
             console.log(ipInfo);
             const loginDto = {username, password};
-            axios.post(`${window.API_BASE_URL}/user/login/ip`,
+            axios.post(`/api/user/login/ip`,
                 {
-                    loginDTO: loginDto
-                    , ipInfoDTO: ipInfo
+                    loginDTO: loginDto,
+                    ipInfoDTO: ipInfo
                 })
                 .catch((error) => {
                     console.error('IP info failed', error);
@@ -99,7 +107,7 @@ function Login() {
         try {
             UserIpInfo(username, password);
             // Send login request.
-            const response = await axios.post(`${window.API_BASE_URL}/user/login`,
+            const response = await axios.post(`/api/user/login`,
                 {username, password},
                 {headers: {'Content-Type': 'application/json'}});
             const result = response.data;
@@ -183,7 +191,7 @@ function Login() {
                 requestData.isAdmin = false;
             }
 
-            const response = await axios.post(`${window.API_BASE_URL}/user/register`, requestData);
+            const response = await axios.post(`/api/user/register`, requestData);
             const result = response.data;
 
             if (result.code === 1) {
@@ -222,13 +230,20 @@ function Login() {
                         ref={usernameInputRef}
                         type="text"
                         value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        onChange={(e) => {
+                            setUsername(e.target.value);
+                            setIsUsernameValid(false); // 重置验证状态
+                        }}
                         onBlur={handleUsernameBlur}
                         placeholder="Username"
                         required
+                        className={isUsernameValid ? 'valid' : ''}
                     />
                     {isCheckingUsername && (
                         <div className="loading-spinner">⏳</div>
+                    )}
+                    {!isLogin && isUsernameValid && !isCheckingUsername && (
+                        <div className="success-icon">✓</div>
                     )}
                     {showSuggestionPopup && (
                         <div className="suggestion-popup">

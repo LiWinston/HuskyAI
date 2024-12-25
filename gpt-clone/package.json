@@ -11,6 +11,7 @@
     "dompurify": "^2.3.3",
     "framer-motion": "^6.5.1",
     "html2canvas": "^1.4.1",
+    "http-proxy-middleware": "^3.0.3",
     "jspdf": "^2.5.1",
     "katex": "^0.16.11",
     "lucide-react": "^0.451.0",
@@ -51,7 +52,6 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "https://lmsgpt.bitsleep.cn",
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@babel/preset-env": "^7.25.4",

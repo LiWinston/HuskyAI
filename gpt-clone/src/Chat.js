@@ -81,7 +81,8 @@ function Chat() {
 
     const fetchModels = async () => {
         try {
-            const response = await axios.post(`${window.API_BASE_URL}/chat/models`, {
+            const response = await axios.post('/api/chat/models'
+                , {
                     uuid: localStorage.getItem('userUUID'),
                 },
             );
@@ -115,8 +116,6 @@ function Chat() {
                 const userUUID = localStorage.getItem('userUUID');
                 setNotification('Fetching conversations...'); // Set notification
                 console.log('Fetching conversations for user:', userUUID); // Print user UUID
-
-                console.log(`${window.API_BASE_URL}/chat`, {uuid: userUUID});
                 await fetchConversations(); // Wait for conversations to be fetched
                 setNotification(null); // Clear notification
             } catch (e) {
@@ -170,7 +169,7 @@ function Chat() {
 
     const fetchConversations = async () => {
         try {
-            const response = await axios.get(`${window.API_BASE_URL}/chat`, {
+            const response = await axios.get(`/api/chat`, {
                 params: {uuid: localStorage.getItem('userUUID')},
             });
             const conversationsData = response.data.data.map(conv => ({
@@ -193,7 +192,7 @@ function Chat() {
         try {
             const uuid = localStorage.getItem('userUUID');
             const response = await axios.get(
-                `${window.API_BASE_URL}/chat/${uuid}/${conversationId}`);
+                `/api/chat/${uuid}/${conversationId}`);
 
             const loadedMessages = response.data.data.length
                 ? response.data.data.map(msg => ({
@@ -236,8 +235,6 @@ function Chat() {
             setConversations(
                 prevConversations => [newConversation, ...prevConversations]);
             await loadConversation(newConversationId);
-            // await axios.get(
-            //     `${window.API_BASE_URL}/chat/${uuid}/${newConversationId}`);
         } catch (error) {
             console.error('Failed to create new conversation', error);
         }
@@ -267,7 +264,7 @@ function Chat() {
     const handleShareConfirm = async () => {
         try {
             const uuid = localStorage.getItem('userUUID');
-            const response = await axios.post(`${window.API_BASE_URL}/chat/share`, {
+            const response = await axios.post('/api/chat/share', {
                 uuid, conversationId: sharedCid, messageIndexes: selectedMessages,
             });
             const shareLink = window.location.origin + '/chat/share/' +
@@ -318,7 +315,7 @@ function Chat() {
             if (!cid) {
                 cid = new Date().getTime().toString();
                 setSelectedConversation(cid);
-                await axios.get(`${window.API_BASE_URL}/chat/${localStorage.getItem('userUUID')}/${cid}`);
+                await axios.get(`/api/chat/${localStorage.getItem('userUUID')}/${cid}`);
             }
 
             const conversationIndex = conversations.findIndex(conv => conv.id === selectedConversation);
@@ -338,7 +335,7 @@ function Chat() {
                 setStreamingMessage(
                     {sender: 'assistant', text: '', timestamp: timestamp});
 
-                const response = await fetch(`${window.API_BASE_URL}/chat/stream`, {
+                const response = await fetch(`/api/chat/stream`, {
                     method: 'POST', headers: {
                         'Content-Type': 'application/json',
                     }, body: JSON.stringify({
@@ -418,7 +415,7 @@ function Chat() {
                 setStreamingMessage(null);
             } else {
                 // Non-streaming handling remains the same
-                const response = await axios.post(`${window.API_BASE_URL}/chat`, {
+                const response = await axios.post('/api/chat', {
                     prompt: input,
                     conversationId: selectedConversation,
                     model: selectedModel,
@@ -632,7 +629,7 @@ function Chat() {
         localStorage.removeItem('userUUID');
         localStorage.removeItem('selectedConversation');
         localStorage.removeItem('conversations');
-        
+
         // 跳转到登录页面
         navigate('/');
     };
@@ -915,14 +912,14 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
                                 code({node, inline, className, children, ...props}) {
                                     const match = /language-(\w+)/.exec(className || '');
                                     const codeContent = String(children).replace(/\n$/, '');
-                                    
+
                                     // 判断是否应该内联显示
-                                    const shouldInline = inline || 
+                                    const shouldInline = inline ||
                                         (codeContent.length < 50 && !codeContent.includes('\n'));
-                                    
+
                                     return shouldInline ? (
-                                        <code 
-                                            className={`inline-code ${className || ''}`} 
+                                        <code
+                                            className={`inline-code ${className || ''}`}
                                             {...props}
                                         >
                                             {children}

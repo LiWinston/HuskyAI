@@ -112,6 +112,20 @@
     margin-bottom: 15px;
 }
 
+/* 添加用户名验证成功的样式 */
+.username-container .success-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4CAF50;
+    font-size: 20px;
+}
+
+.username-container input.valid {
+    border-color: #4CAF50;
+}
+
 /* Form element styles */
 .auth-container form {
     display: flex;
