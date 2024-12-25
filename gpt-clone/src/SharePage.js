@@ -11,10 +11,18 @@ import './SharePage.css';
 import {FaCopy, FaDownload, FaHome} from 'react-icons/fa';
 import Lottie from 'lottie-react';
 import loadingAnimation from './assets/loading.json';
+import {MathJax, MathJaxContext} from 'better-react-mathjax';
 
 // 使用开源头像链接
 const userAvatarUrl = 'https://img.icons8.com/?size=100&id=23265&format=png&color=000000';  // 示例头像：用户
 const assistantAvatarUrl = 'https://img.icons8.com/?size=100&id=37410&format=png&color=000000';  // 示例头像：机器人
+
+// 预处理文本，将"\(...)"和"\[...]"转换为"$$...$$"的格式
+function preprocessText(text) {
+    return text
+    .replace(/\\\((.*?)\\\)/g, '$$$$ $1 $$$$')
+    .replace(/\\\[([\s\S]*?)\\\]/g, '$$$$ $1 $$$$');
+}
 
 function SharePage() {
     const {shareCode} = useParams();
@@ -235,58 +243,96 @@ function SharePage() {
     };
 
     const MessageContent = ({ content, onCopy }) => {
+        const mathJaxRef = useRef(null);
+
+        const mathJaxConfig = {
+            loader: { load: ["input/tex", "output/chtml"] },
+            tex: { packages: { "[+]": ["color"] } },
+            startup: {
+                typeset: false,  // 防止自动排版
+            }
+        };
+
+        useEffect(() => {
+            // 清理函数
+            return () => {
+                if (mathJaxRef.current) {
+                    try {
+                        const jaxElements = mathJaxRef.current.getElementsByClassName('MathJax');
+                        while (jaxElements.length > 0 && jaxElements[0].parentNode === mathJaxRef.current) {
+                            jaxElements[0].remove();
+                        }
+
+                        // 移除MathJax脚本缓存
+                        const scriptElements = mathJaxRef.current.getElementsByTagName('script');
+                        while (scriptElements.length > 0 && scriptElements[0].parentNode === mathJaxRef.current) {
+                            scriptElements[0].remove();
+                        }
+                    } catch (error) {
+                        console.error('MathJax cleanup error:', error);
+                    }
+                }
+            };
+        }, [content]);
+
+        const processedText = preprocessText(content || '');
+
         return (
             <div className="share-page__message-content">
-                <ReactMarkdown
-                    children={content}
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                        code({node, inline, className, children, ...props}) {
-                            const match = /language-(\w+)/.exec(className || '');
-                            const codeContent = String(children).replace(/\n$/, '');
+                <div className="markdown-table-container" ref={mathJaxRef}>
+                    <MathJax dynamic>
+                        <ReactMarkdown
+                            children={processedText}
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                                code({node, inline, className, children, ...props}) {
+                                    const match = /language-(\w+)/.exec(className || '');
+                                    const codeContent = String(children).replace(/\n$/, '');
 
-                            // 判断是否应该内联显示
-                            const shouldInline = inline || 
-                                (codeContent.length < 50 && !codeContent.includes('\n'));
+                                    // 判断是否应该内联显示
+                                    const shouldInline = inline || 
+                                        (codeContent.length < 50 && !codeContent.includes('\n'));
 
-                            return shouldInline ? (
-                                <code
-                                    className={`inline-code ${className || ''}`}
-                                    {...props}
-                                >
-                                    {children}
-                                </code>
-                            ) : (
-                                <div className="code-block">
-                                    <SyntaxHighlighter
-                                        style={VscDarkPlus}
-                                        language={match ? match[1] : 'text'}
-                                        PreTag="div"
-                                        {...props}
-                                    >
-                                        {codeContent}
-                                    </SyntaxHighlighter>
-                                    <button 
-                                        className="copy-button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onCopy(codeContent);
-                                        }}
-                                    >
-                                        <FaCopy />
-                                    </button>
-                                </div>
-                            );
-                        },
-                        table({node, ...props}) {
-                            return (
-                                <div className="table-container">
-                                    <table {...props} />
-                                </div>
-                            );
-                        }
-                    }}
-                />
+                                    return shouldInline ? (
+                                        <code
+                                            className={`inline-code ${className || ''}`}
+                                            {...props}
+                                        >
+                                            {children}
+                                        </code>
+                                    ) : (
+                                        <div className="code-block">
+                                            <SyntaxHighlighter
+                                                style={VscDarkPlus}
+                                                language={match ? match[1] : 'text'}
+                                                PreTag="div"
+                                                {...props}
+                                            >
+                                                {codeContent}
+                                            </SyntaxHighlighter>
+                                            <button 
+                                                className="copy-button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onCopy(codeContent);
+                                                }}
+                                            >
+                                                <FaCopy />
+                                            </button>
+                                        </div>
+                                    );
+                                },
+                                table({node, ...props}) {
+                                    return (
+                                        <div className="table-container">
+                                            <table {...props} />
+                                        </div>
+                                    );
+                                }
+                            }}
+                        />
+                    </MathJax>
+                </div>
                 <button 
                     className="copy-button"
                     onClick={(e) => {
@@ -366,67 +412,69 @@ function SharePage() {
     }
 
     return (
-        <div className="share-page">
-            <div className="share-page__header">
-                <div className="share-page__title">
-                    Share ID: <span className="share-page__title-code">{shareCode}</span>
-                </div>
-                <div className="share-page__actions">
-                    <button 
-                        className="share-page__button" 
-                        onClick={handleExportAsImage}
-                        title="Export as Image"
-                    >
-                        <FaDownload/> Image
-                    </button>
-                    <button 
-                        className="share-page__button" 
-                        onClick={handleExportAsPDF}
-                        title="Export as PDF"
-                    >
-                        <FaDownload/> PDF
-                    </button>
-                    <a 
-                        href="https://lmsgpt.bitsleep.cn" 
-                        className="share-page__home-link"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <FaHome /> Home
-                    </a>
-                </div>
-            </div>
-            <div className="share-page__chat-window" ref={chatWindowRef}>
-                {messages.length > 0 ? (
-                    messages.map((msg, index) => (
-                        <div
-                            key={index}
-                            className={`share-page__message-container ${
-                                msg.role === 'user'
-                                    ? 'share-page__message--user'
-                                    : 'share-page__message--assistant'
-                            }`}
+        <MathJaxContext>
+            <div className="share-page">
+                <div className="share-page__header">
+                    <div className="share-page__title">
+                        Share ID: <span className="share-page__title-code">{shareCode}</span>
+                    </div>
+                    <div className="share-page__actions">
+                        <button 
+                            className="share-page__button" 
+                            onClick={handleExportAsImage}
+                            title="Export as Image"
                         >
-                            <div className="share-page__avatar">
-                                {msg.role === 'user' ? (
-                                    <img src={userAvatarUrl} alt="User"/>
-                                ) : (
-                                    <img src={assistantAvatarUrl} alt="Assistant"/>
-                                )}
+                            <FaDownload/> Image
+                        </button>
+                        <button 
+                            className="share-page__button" 
+                            onClick={handleExportAsPDF}
+                            title="Export as PDF"
+                        >
+                            <FaDownload/> PDF
+                        </button>
+                        <a 
+                            href="https://lmsgpt.bitsleep.cn" 
+                            className="share-page__home-link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <FaHome /> Home
+                        </a>
+                    </div>
+                </div>
+                <div className="share-page__chat-window" ref={chatWindowRef}>
+                    {messages.length > 0 ? (
+                        messages.map((msg, index) => (
+                            <div
+                                key={index}
+                                className={`share-page__message-container ${
+                                    msg.role === 'user'
+                                        ? 'share-page__message--user'
+                                        : 'share-page__message--assistant'
+                                }`}
+                            >
+                                <div className="share-page__avatar">
+                                    {msg.role === 'user' ? (
+                                        <img src={userAvatarUrl} alt="User"/>
+                                    ) : (
+                                        <img src={assistantAvatarUrl} alt="Assistant"/>
+                                    )}
+                                </div>
+                                <MessageContent content={msg.content} onCopy={handleCopyText} />
+                                <p className="share-page__timestamp">
+                                    {formatTimestamp(msg.timestamp)}
+                                </p>
                             </div>
-                            <MessageContent content={msg.content} onCopy={handleCopyText} />
-                            <p className="share-page__timestamp">
-                                {formatTimestamp(msg.timestamp)}
-                            </p>
-                        </div>
-                    ))
-                ) : (
-                    <p>No messages to display.</p>
-                )}
+                        ))
+                    ) : (
+                        <p>No messages to display.</p>
+                    )}
+                </div>
+                {copyNotification &&
+                    <div className="copy-notification">Copied to clipboard!</div>}
             </div>
-            {copyNotification &&
-                <div className="copy-notification">Copied to clipboard!</div>}
-        </div>
+        </MathJaxContext>
     );
 }
 
