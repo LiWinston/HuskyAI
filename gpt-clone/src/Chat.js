@@ -4,28 +4,86 @@ import ReactMarkdown from 'react-markdown';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {AnimatePresence, motion} from 'framer-motion';
 import './Chat.css';
-import {vscDarkPlus, dracula, tomorrow, materialDark, oneDark} from 'react-syntax-highlighter/dist/esm/styles/prism';
+import {
+    vscDarkPlus,
+    dracula,
+    tomorrow,
+    materialDark,
+    oneDark,
+    okaidia,
+    solarizedlight,
+    nord,
+    atomDark,
+    duotoneDark,
+    duotoneLight,
+    materialLight,
+    nightOwl,
+    shadesOfPurple,
+    synthwave84,
+    vs,
+    xonokai,
+    coldarkDark,
+    coldarkCold,
+    gruvboxDark,
+    gruvboxLight,
+    materialOceanic,
+    oneLight,
+    twilight,
+    darcula,
+    a11yDark,
+    base16AteliersulphurpoolLight,
+    hopscotch,
+    lucario,
+} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {FaPlus, FaSignOutAlt, FaAdjust, FaTimes, FaEllipsisV} from 'react-icons/fa';
-import ConversationItem from './ConversationItem'; // Introduce the plus icon.
+import ConversationItem from './ConversationItem';
 import './Component/Toggle.css';
 import {showSweetAlertWithRetVal} from './Component/sweetAlertUtil';
 import remarkGfm from 'remark-gfm';
+import CodeThemePreview from './Component/CodeThemePreview';
 
 import {MathJax, MathJaxContext} from 'better-react-mathjax';
 import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
-import loadingAnimation from './assets/loading.json'; // 需要添加一个 loading 动画 JSON 文件
+import loadingAnimation from './assets/loading.json';
 import CenterNotice from './Component/CenterNotice';
 
 const CONVERSATION_SUMMARY_GENERATED = '#CVSG##CVSG##CVSG#';
 
 // 在文件顶部定义主题映射
-const themes = {
-    vscDarkPlus,
-    dracula,
-    tomorrow,
-    materialDark,
-    oneDark
+const themeStyles = {
+    // 浅色主题
+    vs: { name: 'Visual Studio', type: 'light', style: vs },
+    oneLight: { name: 'One Light', type: 'light', style: oneLight },
+    materialLight: { name: 'Material Light', type: 'light', style: materialLight },
+    tomorrow: { name: 'Tomorrow', type: 'light', style: tomorrow },
+    solarizedlight: { name: 'Solarized Light', type: 'light', style: solarizedlight },
+    duotoneLight: { name: 'Duotone Light', type: 'light', style: duotoneLight },
+    coldarkCold: { name: 'Coldark Cold', type: 'light', style: coldarkCold },
+    gruvboxLight: { name: 'Gruvbox Light', type: 'light', style: gruvboxLight },
+    base16AteliersulphurpoolLight: { name: 'Base16 Ateliersulphurpool', type: 'light', style: base16AteliersulphurpoolLight },
+
+    // 深色主题
+    vscDarkPlus: { name: 'VS Code Dark+', type: 'dark', style: vscDarkPlus },
+    dracula: { name: 'Dracula', type: 'dark', style: dracula },
+    darcula: { name: 'Darcula', type: 'dark', style: darcula },
+    materialDark: { name: 'Material Dark', type: 'dark', style: materialDark },
+    materialOceanic: { name: 'Material Oceanic', type: 'dark', style: materialOceanic },
+    oneDark: { name: 'One Dark', type: 'dark', style: oneDark },
+    okaidia: { name: 'Okaidia', type: 'dark', style: okaidia },
+    nord: { name: 'Nord', type: 'dark', style: nord },
+    atomDark: { name: 'Atom Dark', type: 'dark', style: atomDark },
+    duotoneDark: { name: 'Duotone Dark', type: 'dark', style: duotoneDark },
+    nightOwl: { name: 'Night Owl', type: 'dark', style: nightOwl },
+    shadesOfPurple: { name: 'Shades of Purple', type: 'dark', style: shadesOfPurple },
+    synthwave84: { name: 'Synthwave 84', type: 'dark', style: synthwave84 },
+    xonokai: { name: 'Xonokai', type: 'dark', style: xonokai },
+    coldarkDark: { name: 'Coldark Dark', type: 'dark', style: coldarkDark },
+    gruvboxDark: { name: 'Gruvbox Dark', type: 'dark', style: gruvboxDark },
+    twilight: { name: 'Twilight', type: 'dark', style: twilight },
+    a11yDark: { name: 'A11y Dark', type: 'dark', style: a11yDark },
+    hopscotch: { name: 'Hopscotch', type: 'dark', style: hopscotch },
+    lucario: { name: 'Lucario', type: 'dark', style: lucario },
 };
 
 function Chat() {
@@ -842,47 +900,78 @@ function Chat() {
                     </button>
                 </div>
                 
-                <div className="theme-section">
-                    <h3>{menuText.interfaceTheme}</h3>
-                    <div className="theme-options">
-                        <div 
-                            className={`theme-option ${currentTheme === 'light' ? 'selected' : ''}`}
-                            onClick={() => toggleTheme('light')}
-                        >
-                            <span>☀️ {menuText.lightMode}</span>
-                        </div>
-                        <div 
-                            className={`theme-option ${currentTheme === 'dark' ? 'selected' : ''}`}
-                            onClick={() => toggleTheme('dark')}
-                        >
-                            <span>🌙 {menuText.darkMode}</span>
-                        </div>
-                        <div 
-                            className={`theme-option ${currentTheme === 'auto' ? 'selected' : ''}`}
-                            onClick={() => toggleTheme('auto')}
-                        >
-                            <span>🌓 {menuText.autoMode}</span>
-                            {currentTheme === 'auto' && (
-                                <span className="auto-mode-status">
-                                    ({localStorage.getItem('actualTheme') === 'dark' ? menuText.currentDark : menuText.currentLight})
-                                </span>
-                            )}
+                <div className="theme-modal-content">
+                    <div className="theme-section">
+                        <h3>{menuText.interfaceTheme}</h3>
+                        <div className="theme-options">
+                            <div 
+                                className={`theme-option ${currentTheme === 'light' ? 'selected' : ''}`}
+                                onClick={() => toggleTheme('light')}
+                            >
+                                <span>☀️ {menuText.lightMode}</span>
+                            </div>
+                            <div 
+                                className={`theme-option ${currentTheme === 'dark' ? 'selected' : ''}`}
+                                onClick={() => toggleTheme('dark')}
+                            >
+                                <span>🌙 {menuText.darkMode}</span>
+                            </div>
+                            <div 
+                                className={`theme-option ${currentTheme === 'auto' ? 'selected' : ''}`}
+                                onClick={() => toggleTheme('auto')}
+                            >
+                                <span>🌓 {menuText.autoMode}</span>
+                                {currentTheme === 'auto' && (
+                                    <span className="auto-mode-status">
+                                        ({localStorage.getItem('actualTheme') === 'dark' ? menuText.currentDark : menuText.currentLight})
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <div className="theme-section">
-                    <h3>{menuText.codeTheme}</h3>
-                    <div className="theme-options">
-                        {Object.entries(themeNames).map(([key, name]) => (
-                            <div 
-                                key={key}
-                                className={`theme-option ${codeTheme === key ? 'selected' : ''}`}
-                                onClick={() => changeCodeTheme(key)}
-                            >
-                                {name}
+                    
+                    <div className="theme-section">
+                        <h3>{menuText.codeTheme}</h3>
+                        <div className="code-theme-options">
+                            <div className="theme-list">
+                                <div className="theme-group">
+                                    <div className="theme-group-title">{isZH ? "浅色主题" : "Light Themes"}</div>
+                                    {Object.entries(themeStyles)
+                                        .filter(([_, theme]) => theme.type === 'light')
+                                        .map(([key, theme]) => (
+                                            <div 
+                                                key={key}
+                                                className={`theme-option ${codeTheme === key ? 'selected' : ''}`}
+                                                onClick={() => changeCodeTheme(key)}
+                                            >
+                                                {theme.name}
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                                <div className="theme-group">
+                                    <div className="theme-group-title">{isZH ? "深色主题" : "Dark Themes"}</div>
+                                    {Object.entries(themeStyles)
+                                        .filter(([_, theme]) => theme.type === 'dark')
+                                        .map(([key, theme]) => (
+                                            <div 
+                                                key={key}
+                                                className={`theme-option ${codeTheme === key ? 'selected' : ''}`}
+                                                onClick={() => changeCodeTheme(key)}
+                                            >
+                                                {theme.name}
+                                            </div>
+                                        ))
+                                    }
+                                </div>
                             </div>
-                        ))}
+                            <div className="theme-preview">
+                                <CodeThemePreview 
+                                    theme={themeStyles[codeTheme]} 
+                                    isZH={isZH}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -914,12 +1003,7 @@ function Chat() {
             <button className="logout-button" onClick={handleLogout}>
                 <FaSignOutAlt />
             </button>
-            {showThemeModal && (
-                <>
-                    <div className="modal-backdrop" onClick={() => setShowThemeModal(false)} />
-                    <ThemeModal />
-                </>
-            )}
+            {showThemeModal && <ThemeModal />}
             <div className="conversation-list">
                 {/* Head */}
                 <div className="conversation-header">
@@ -1121,7 +1205,7 @@ function Chat() {
         </div>);
 }
 
-// 预处理文本，将"\(...)"和"\[...]"转换为"$$...$$"的格式
+// 预处理文本，将"\(...)"和"\[...]"转换为"$$...$$"的式
 function preprocessText(text) {
     return text
     .replace(/\\\((.*?)\\\)/g, '$$$$ $1 $$$$')
@@ -1346,7 +1430,7 @@ function MessageComponent({msg, messages, index, isStreaming = false, codeTheme,
                                         </code>
                                     ) : (
                                         <SyntaxHighlighter
-                                            style={themes[codeTheme]}
+                                            style={themeStyles[codeTheme].style}
                                             language={match ? match[1] : 'plaintext'}
                                             PreTag="div"
                                             children={codeContent}
