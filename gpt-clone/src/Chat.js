@@ -896,29 +896,32 @@ function MessageComponent({msg, messages, index, isStreaming = false}) {
                             children={processedText || ''}
                             remarkPlugins={[remarkGfm]}
                             components={{
-                                code({
-                                         node,
-                                         inline,
-                                         className,
-                                         children,
-                                         ...props
-                                     }) {
-                                    const match = /language-(\w+)/.exec(
-                                        className || '');
-                                    return !inline ? (<SyntaxHighlighter
-                                        style={vscDarkPlus}
-                                        language={match ? match[1] : 'plaintext'}
-                                        PreTag="div"
-                                        children={String(children).
-                                            replace(/\n$/, '')}
+                                code({node, inline, className, children, ...props}) {
+                                    const match = /language-(\w+)/.exec(className || '');
+                                    const codeContent = String(children).replace(/\n$/, '');
+                                    
+                                    // 判断是否应该内联显示
+                                    const shouldInline = inline || 
+                                        (codeContent.length < 50 && !codeContent.includes('\n'));
+                                    
+                                    return shouldInline ? (
+                                        <code 
+                                            className={`inline-code ${className || ''}`} 
                                             {...props}
-                                        />) : (
-                                            <code className={className} {...props}>
-                                                {children}
-                                            </code>
-                                        );
-                                    },
-                                }}
+                                        >
+                                            {children}
+                                        </code>
+                                    ) : (
+                                        <SyntaxHighlighter
+                                            style={vscDarkPlus}
+                                            language={match ? match[1] : 'plaintext'}
+                                            PreTag="div"
+                                            children={codeContent}
+                                            {...props}
+                                        />
+                                    );
+                                },
+                            }}
                             />
                         </MathJax>
                     </div>
