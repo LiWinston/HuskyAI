@@ -292,7 +292,7 @@ function Chat() {
         setSelectedMessages([]);
         setShareMessages([]);
         setSharedCid(null);
-        setNotification('分享模式已取消');
+        setNotification('已退出分享模式');
         setTimeout(() => setNotification(null), 2000);
     };
 
@@ -321,20 +321,19 @@ function Chat() {
             });
 
             if (response.data.code === 1) {
-                const shareLink = `${window.location.origin}/share/${response.data.data}`;
-                const result = await showSweetAlertWithRetVal({
-                    title: "Share link generated!",
-                    text: shareLink,
-                    icon: "success",
-                    confirmButtonText: "Copy Link",
-                    confirmButtonColor: "#3085d6",
+                const shareLink = `${window.location.origin}/chat/share/${response.data.data}`;
+                showSweetAlertWithRetVal(`Share link generated: ${shareLink}`, {
+                    title: 'Share Link',
+                    icon: 'success',
+                    confirmButtonText: 'Copy Link',
+                    confirmButtonColor: '#3085d6',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        navigator.clipboard.writeText(shareLink);
+                        setNotification('分享链接已复制到剪贴板');
+                        setTimeout(() => setNotification(null), 2000);
+                    }
                 });
-                
-                if (result.isConfirmed) {
-                    navigator.clipboard.writeText(shareLink);
-                    setNotification('分享链接已复制到剪贴板');
-                    setTimeout(() => setNotification(null), 2000);
-                }
                 handleShareCancel();
             }
         } catch (error) {
