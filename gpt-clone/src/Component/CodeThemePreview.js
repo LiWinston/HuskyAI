@@ -6,15 +6,13 @@ import './CodeThemePreview.css';
 // 使用localStorage来保存上次选择的语言
 const LAST_SELECTED_LANGUAGE_KEY = 'lastSelectedCodeLanguage';
 
-const CodeThemePreview = ({ theme, isZH }) => {
+const CodeThemePreview = React.memo(({ theme, isZH }) => {
     const [selectedLanguage, setSelectedLanguage] = useState(() => {
-        // 从localStorage读取上次选择的语言，如果没有则默认为javascript
         return localStorage.getItem(LAST_SELECTED_LANGUAGE_KEY) || 'javascript';
     });
     
     const languages = Object.keys(CODE_EXAMPLES);
 
-    // 当语言改变时保存到localStorage
     useEffect(() => {
         localStorage.setItem(LAST_SELECTED_LANGUAGE_KEY, selectedLanguage);
     }, [selectedLanguage]);
@@ -46,6 +44,12 @@ const CodeThemePreview = ({ theme, isZH }) => {
             </div>
         </div>
     );
-};
+}, (prevProps, nextProps) => {
+    // 只有当主题样式或语言真正改变时才重新渲染
+    return (
+        prevProps.theme.style === nextProps.theme.style &&
+        prevProps.isZH === nextProps.isZH
+    );
+});
 
 export default CodeThemePreview; 

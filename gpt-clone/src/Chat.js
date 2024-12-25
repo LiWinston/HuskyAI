@@ -86,6 +86,135 @@ const themeStyles = {
     lucario: { name: 'Lucario', type: 'dark', style: lucario },
 };
 
+// 将主题选择组件提取出来
+const ThemeSelector = React.memo(({ currentTheme, onThemeChange, isZH }) => {
+    return (
+        <div className="theme-options">
+            <div 
+                className={`theme-option ${currentTheme === 'light' ? 'selected' : ''}`}
+                onClick={() => onThemeChange('light')}
+            >
+                <span>☀️ {isZH ? "浅色模式" : "Light Mode"}</span>
+            </div>
+            <div 
+                className={`theme-option ${currentTheme === 'dark' ? 'selected' : ''}`}
+                onClick={() => onThemeChange('dark')}
+            >
+                <span>🌙 {isZH ? "深色模式" : "Dark Mode"}</span>
+            </div>
+            <div 
+                className={`theme-option ${currentTheme === 'auto' ? 'selected' : ''}`}
+                onClick={() => onThemeChange('auto')}
+            >
+                <span>🌓 {isZH ? "自动模式" : "Auto Mode"}</span>
+                {currentTheme === 'auto' && (
+                    <span className="auto-mode-status">
+                        ({localStorage.getItem('actualTheme') === 'dark' ? isZH ? "当前：深色" : "Current: Dark" : isZH ? "当前：浅色" : "Current: Light"})
+                    </span>
+                )}
+            </div>
+        </div>
+    );
+});
+
+// 将代码主题选择组件提取出来
+const CodeThemeSelector = React.memo(({ codeTheme, onCodeThemeChange, themeStyles, isZH }) => {
+    return (
+        <div className="code-theme-options">
+            <div className="theme-list">
+                <div className="theme-group">
+                    <div className="theme-group-title">{isZH ? "浅色主题" : "Light Themes"}</div>
+                    {Object.entries(themeStyles)
+                        .filter(([_, theme]) => theme.type === 'light')
+                        .map(([key, theme]) => (
+                            <div 
+                                key={key}
+                                className={`theme-option ${codeTheme === key ? 'selected' : ''}`}
+                                onClick={() => onCodeThemeChange(key)}
+                            >
+                                {theme.name}
+                            </div>
+                        ))
+                    }
+                </div>
+                <div className="theme-group">
+                    <div className="theme-group-title">{isZH ? "深色主题" : "Dark Themes"}</div>
+                    {Object.entries(themeStyles)
+                        .filter(([_, theme]) => theme.type === 'dark')
+                        .map(([key, theme]) => (
+                            <div 
+                                key={key}
+                                className={`theme-option ${codeTheme === key ? 'selected' : ''}`}
+                                onClick={() => onCodeThemeChange(key)}
+                            >
+                                {theme.name}
+                            </div>
+                        ))
+                    }
+                </div>
+            </div>
+            <div className="theme-preview">
+                <CodeThemePreview 
+                    theme={themeStyles[codeTheme]} 
+                    isZH={isZH}
+                />
+            </div>
+        </div>
+    );
+});
+
+// 将 ThemeModal 组件提到外部
+const ThemeModal = React.memo(({ 
+    onClose, 
+    menuText, 
+    currentTheme,
+    toggleTheme,
+    codeTheme,
+    changeCodeTheme,
+    themeStyles,
+    isZH 
+}) => (
+    <>
+        <div 
+            className="modal-backdrop" 
+            onClick={onClose} 
+        />
+        <div className="theme-modal">
+            <div className="theme-modal-header">
+                <h2>{menuText.themeSettings}</h2>
+                <button 
+                    className="close-button"
+                    onClick={onClose}
+                    aria-label={menuText.close}
+                >
+                    <FaTimes />
+                </button>
+            </div>
+            
+            <div className="theme-modal-content">
+                <div className="theme-section">
+                    <h3>{menuText.interfaceTheme}</h3>
+                    <ThemeSelector 
+                        currentTheme={currentTheme}
+                        onThemeChange={toggleTheme}
+                        isZH={isZH}
+                    />
+                </div>
+                
+                <div className="theme-section">
+                    <h3>{menuText.codeTheme}</h3>
+                    <CodeThemeSelector 
+                        codeTheme={codeTheme}
+                        onCodeThemeChange={changeCodeTheme}
+                        themeStyles={themeStyles}
+                        isZH={isZH}
+                    />
+                </div>
+            </div>
+        </div>
+    </>
+));
+
 function Chat() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -138,7 +267,7 @@ function Chat() {
             cancel: "取消",
             copySuccess: "分享链接已复制到剪贴板",
             shareFailed: "分享失败，请重试",
-            loadFailed: "获取消息失败，请重试",
+            loadFailed: "获取消��失败，请重试",
             shareInstructions: "进入分享模式, 点击对话内容区域选择要分享的消息",
             shareExited: "已退出分享模式，所有选择已清除",
         },
@@ -881,103 +1010,6 @@ function Chat() {
         localStorage.setItem('codeTheme', theme);
     };
 
-    // 主题设置弹窗组件
-    const ThemeModal = () => (
-        <>
-            <div 
-                className="modal-backdrop" 
-                onClick={() => setShowThemeModal(false)} 
-            />
-            <div className="theme-modal">
-                <div className="theme-modal-header">
-                    <h2>{menuText.themeSettings}</h2>
-                    <button 
-                        className="close-button"
-                        onClick={() => setShowThemeModal(false)}
-                        aria-label={menuText.close}
-                    >
-                        <FaTimes />
-                    </button>
-                </div>
-                
-                <div className="theme-modal-content">
-                    <div className="theme-section">
-                        <h3>{menuText.interfaceTheme}</h3>
-                        <div className="theme-options">
-                            <div 
-                                className={`theme-option ${currentTheme === 'light' ? 'selected' : ''}`}
-                                onClick={() => toggleTheme('light')}
-                            >
-                                <span>☀️ {menuText.lightMode}</span>
-                            </div>
-                            <div 
-                                className={`theme-option ${currentTheme === 'dark' ? 'selected' : ''}`}
-                                onClick={() => toggleTheme('dark')}
-                            >
-                                <span>🌙 {menuText.darkMode}</span>
-                            </div>
-                            <div 
-                                className={`theme-option ${currentTheme === 'auto' ? 'selected' : ''}`}
-                                onClick={() => toggleTheme('auto')}
-                            >
-                                <span>🌓 {menuText.autoMode}</span>
-                                {currentTheme === 'auto' && (
-                                    <span className="auto-mode-status">
-                                        ({localStorage.getItem('actualTheme') === 'dark' ? menuText.currentDark : menuText.currentLight})
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div className="theme-section">
-                        <h3>{menuText.codeTheme}</h3>
-                        <div className="code-theme-options">
-                            <div className="theme-list">
-                                <div className="theme-group">
-                                    <div className="theme-group-title">{isZH ? "浅色主题" : "Light Themes"}</div>
-                                    {Object.entries(themeStyles)
-                                        .filter(([_, theme]) => theme.type === 'light')
-                                        .map(([key, theme]) => (
-                                            <div 
-                                                key={key}
-                                                className={`theme-option ${codeTheme === key ? 'selected' : ''}`}
-                                                onClick={() => changeCodeTheme(key)}
-                                            >
-                                                {theme.name}
-                                            </div>
-                                        ))
-                                    }
-                                </div>
-                                <div className="theme-group">
-                                    <div className="theme-group-title">{isZH ? "深色主题" : "Dark Themes"}</div>
-                                    {Object.entries(themeStyles)
-                                        .filter(([_, theme]) => theme.type === 'dark')
-                                        .map(([key, theme]) => (
-                                            <div 
-                                                key={key}
-                                                className={`theme-option ${codeTheme === key ? 'selected' : ''}`}
-                                                onClick={() => changeCodeTheme(key)}
-                                            >
-                                                {theme.name}
-                                            </div>
-                                        ))
-                                    }
-                                </div>
-                            </div>
-                            <div className="theme-preview">
-                                <CodeThemePreview 
-                                    theme={themeStyles[codeTheme]} 
-                                    isZH={isZH}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </>
-    );
-
     useEffect(() => {
         if (!isShareMode) return;
 
@@ -1003,7 +1035,18 @@ function Chat() {
             <button className="logout-button" onClick={handleLogout}>
                 <FaSignOutAlt />
             </button>
-            {showThemeModal && <ThemeModal />}
+            {showThemeModal && (
+                <ThemeModal 
+                    onClose={() => setShowThemeModal(false)}
+                    menuText={menuText}
+                    currentTheme={currentTheme}
+                    toggleTheme={toggleTheme}
+                    codeTheme={codeTheme}
+                    changeCodeTheme={changeCodeTheme}
+                    themeStyles={themeStyles}
+                    isZH={isZH}
+                />
+            )}
             <div className="conversation-list">
                 {/* Head */}
                 <div className="conversation-header">
@@ -1267,7 +1310,7 @@ function formatMessageTime(timestamp) {
     const isPM = hour >= 12;
     const hour12 = hour % 12 || 12;
     
-    // 格式化具体时间
+    // 格��化具体时间
     const timeStr = isZH 
         ? `${texts[isPM ? 'afternoon' : 'morning']}${hour12}:${minute.toString().padStart(2, '0')}`
         : `${hour12}:${minute.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
@@ -1309,7 +1352,7 @@ function formatMessageTime(timestamp) {
     startOfWeek.setDate(today.getDate() - today.getDay());
     const isThisWeek = date >= startOfWeek;
     
-    // 本周内
+    // 本��内
     if (isThisWeek) {
         const weekday = texts.weekdays[isZH ? 'zh' : 'en'][date.getDay()];
         return `${weekday} ${timeStr}`;
