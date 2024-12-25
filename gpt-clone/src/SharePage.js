@@ -7,7 +7,9 @@ import VscDarkPlus from 'react-syntax-highlighter/dist/esm/styles/prism/vsc-dark
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import './SharePage.css';
-import {FaCopy, FaDownload} from 'react-icons/fa'; // Add download icon.
+import {FaCopy, FaDownload, FaHome} from 'react-icons/fa';
+import Lottie from 'lottie-react';
+import loadingAnimation from './assets/loading.json';
 
 // 使用开源头像链接
 const userAvatarUrl = 'https://img.icons8.com/?size=100&id=23265&format=png&color=000000';  // 示例头像：用户
@@ -25,7 +27,11 @@ function SharePage() {
         const fetchMessages = async () => {
             try {
                 const response = await axios.get(`/api/chat/share/${shareCode}`);
-                setMessages(response.data.data || []);
+                // 确保消息按时间顺序排序
+                const sortedMessages = (response.data.data || []).sort((a, b) => 
+                    new Date(a.timestamp) - new Date(b.timestamp)
+                );
+                setMessages(sortedMessages);
                 setLoading(false);
             } catch (error) {
                 setError('Failed to load shared conversation.');
@@ -53,55 +59,242 @@ function SharePage() {
         });
     };
 
-    const handleExportAsImage = () => {
-        const container = chatWindowRef.current; // 直接使用 chatWindowRef
-
-        html2canvas(container, {
-            scale: 1.5,
-            backgroundColor: null, // 设置背景颜色为透明
-            logging: true,
-        }).then((canvas) => {
+    const handleExportAsImage = async () => {
+        const container = chatWindowRef.current;
+        
+        try {
+            // 保存原始样式
+            const originalStyle = container.style.cssText;
+            const originalWidth = container.offsetWidth;
+            const originalHeight = container.offsetHeight;
+            
+            // 临时调整样式以获得更好的截图效果
+            container.style.width = '1200px';
+            container.style.height = 'auto';  // 确保高度自适应
+            container.style.padding = '40px';
+            container.style.background = '#ffffff';
+            container.style.position = 'relative';
+            container.style.overflow = 'visible';
+            
+            // 等待所有图片加载完成
+            const images = container.getElementsByTagName('img');
+            await Promise.all(Array.from(images).map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => {
+                    img.onload = resolve;
+                    img.onerror = resolve;
+                });
+            }));
+            
+            // 使用 html2canvas 截图
+            const canvas = await html2canvas(container, {
+                scale: 2,  // 提高清晰度
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                windowWidth: 1200,
+                windowHeight: container.scrollHeight,
+                height: container.scrollHeight,
+                width: 1200,
+                onclone: (clonedDoc) => {
+                    // 处理克隆的 DOM，确保样式正确应用
+                    const clonedContainer = clonedDoc.querySelector('.share-page__chat-window');
+                    if (clonedContainer) {
+                        clonedContainer.style.transform = 'none';
+                        clonedContainer.style.width = '1200px';
+                        clonedContainer.style.height = 'auto';
+                    }
+                }
+            });
+            
+            // 恢复原始样式
+            container.style.cssText = originalStyle;
+            container.style.width = originalWidth + 'px';
+            container.style.height = originalHeight + 'px';
+            
+            // 创建下载链接
+            const image = canvas.toDataURL('image/png', 1.0);
             const link = document.createElement('a');
-            link.download = 'conversation.png';
-            link.href = canvas.toDataURL('image/png');
+            link.download = `chat-${new Date().toISOString().slice(0,10)}.png`;
+            link.href = image;
             link.click();
-        });
+        } catch (error) {
+            console.error('Export failed:', error);
+            // TODO: 显示错误通知
+        }
     };
 
-    const handleExportAsPDF = () => {
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4',
-        });
+    const handleExportAsPDF = async () => {
+        const container = chatWindowRef.current;
+        
+        try {
+            // 保存原始样式
+            const originalStyle = container.style.cssText;
+            
+            // 设置临时样式
+            container.style.width = '800px';
+            container.style.padding = '40px';
+            container.style.background = '#ffffff';
+            
+            // 等待图片加载
+            await Promise.all(
+                Array.from(container.getElementsByTagName('img'))
+                    .map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    }))
+            );
 
-        const container = chatWindowRef.current; // 直接使用 chatWindowRef
+            // 创建 PDF
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'pt',
+                format: 'a4',
+                compress: true
+            });
 
-        html2canvas(container, {scale: 1, backgroundColor: null}).then((canvas) => {
-            const imgData = canvas.toDataURL('image/png');
-            const imgWidth = 210;
-            const pageHeight = 297;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            // 获取页面尺寸（以点为单位）
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const margin = 40;
 
-            let heightLeft = imgHeight;
-            let position = 0;
+            // 计算可用内容区域
+            const contentWidth = pageWidth - (2 * margin);
+            const contentHeight = pageHeight - (2 * margin);
 
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
+            // 生成完整内容的画布
+            const canvas = await html2canvas(container, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                width: 800,
+                windowWidth: 800
+            });
 
-            while (heightLeft >= 0) {
-                position = heightLeft - imgHeight;
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
+            // 计算缩放后的尺寸
+            const imgWidth = contentWidth;
+            const imgHeight = (canvas.height * contentWidth) / canvas.width;
+            
+            // 计算总页数
+            const pageCount = Math.ceil(imgHeight / contentHeight);
+            
+            // 逐页添加内容
+            for (let page = 0; page < pageCount; page++) {
+                if (page > 0) {
+                    pdf.addPage();
+                }
+
+                // 计算当前页的裁剪区域
+                const yStart = page * contentHeight * (canvas.height / imgHeight);
+                const yHeight = Math.min(
+                    canvas.height - yStart,
+                    contentHeight * (canvas.height / imgHeight)
+                );
+
+                // 创建临时画布进行裁剪
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = yHeight;
+                
+                const ctx = tempCanvas.getContext('2d');
+                ctx.drawImage(
+                    canvas,
+                    0, yStart,
+                    canvas.width, yHeight,
+                    0, 0,
+                    canvas.width, yHeight
+                );
+
+                // 将裁剪后的内容添加到 PDF
+                const imgData = tempCanvas.toDataURL('image/jpeg', 1.0);
+                
+                // 计算当前页图片高度
+                const currentPageImgHeight = (yHeight * contentWidth) / canvas.width;
+                
+                pdf.addImage(
+                    imgData,
+                    'JPEG',
+                    margin,
+                    margin,
+                    contentWidth,
+                    currentPageImgHeight
+                );
             }
 
-            pdf.save('conversation.pdf');
-        });
+            // 恢复原始样式
+            container.style.cssText = originalStyle;
+            
+            // 保存 PDF
+            pdf.save(`chat-${new Date().toISOString().slice(0,10)}.pdf`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            // TODO: 添加错误提示
+        }
+    };
+
+    const MessageContent = ({ content, onCopy }) => {
+        return (
+            <div className="share-page__message-content">
+                <ReactMarkdown
+                    children={content}
+                    components={{
+                        code({node, inline, className, children, ...props}) {
+                            const match = /language-(\w+)/.exec(className || '');
+                            const codeContent = String(children).replace(/\n$/, '');
+                            
+                            return !inline ? (
+                                <div className="code-block">
+                                    <SyntaxHighlighter
+                                        style={VscDarkPlus}
+                                        language={match ? match[1] : 'text'}
+                                        PreTag="div"
+                                        {...props}
+                                    >
+                                        {codeContent}
+                                    </SyntaxHighlighter>
+                                    <button 
+                                        className="copy-button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onCopy(codeContent);
+                                        }}
+                                    >
+                                        <FaCopy />
+                                    </button>
+                                </div>
+                            ) : (
+                                <code className={className} {...props}>
+                                    {children}
+                                </code>
+                            );
+                        }
+                    }}
+                />
+                <button 
+                    className="copy-button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onCopy(content);
+                    }}
+                >
+                    <FaCopy />
+                </button>
+            </div>
+        );
     };
 
     if (loading) {
-        return <p>Loading...</p>;
+        return (
+            <div className="share-page__loading">
+                <Lottie 
+                    animationData={loadingAnimation}
+                    loop={true}
+                    style={{ width: 120, height: 120 }}
+                />
+                <div>Loading shared conversation...</div>
+            </div>
+        );
     }
 
     if (error) {
@@ -110,17 +303,33 @@ function SharePage() {
 
     return (
         <div className="share-page">
-            <div className="share-page__username-header">
-                <h2>Shared by: {shareCode}</h2>
-                <div className="share-page__export-buttons">
-                    <button className="share-page__button" onClick={handleExportAsImage}
-                            title="Export as Image">
+            <div className="share-page__header">
+                <div className="share-page__title">
+                    Share ID: <span className="share-page__title-code">{shareCode}</span>
+                </div>
+                <div className="share-page__actions">
+                    <button 
+                        className="share-page__button" 
+                        onClick={handleExportAsImage}
+                        title="Export as Image"
+                    >
                         <FaDownload/> Image
                     </button>
-                    <button className="share-page__button" onClick={handleExportAsPDF}
-                            title="Export as PDF">
+                    <button 
+                        className="share-page__button" 
+                        onClick={handleExportAsPDF}
+                        title="Export as PDF"
+                    >
                         <FaDownload/> PDF
                     </button>
+                    <a 
+                        href="https://lmsgpt.bitsleep.cn" 
+                        className="share-page__home-link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <FaHome /> Home
+                    </a>
                 </div>
             </div>
             <div className="share-page__chat-window" ref={chatWindowRef}>
@@ -141,77 +350,7 @@ function SharePage() {
                                     <img src={assistantAvatarUrl} alt="Assistant"/>
                                 )}
                             </div>
-                            <div
-                                className="share-page__message-content"
-                                onMouseEnter={() => {
-                                    if (!msg.content.includes('```')) {
-                                        const copyIcon = chatWindowRef.current.querySelectorAll(
-                                            '.copy-icon')[index];
-                                        copyIcon.style.display = 'block';
-                                    }
-                                }}
-                                onMouseLeave={() => {
-                                    if (!msg.content.includes('```')) {
-                                        const copyIcon = chatWindowRef.current.querySelectorAll(
-                                            '.copy-icon')[index];
-                                        copyIcon.style.display = 'none';
-                                    }
-                                }}
-                            >
-                                <ReactMarkdown
-                                    // children={DOMPurify.sanitize(msg.content)}
-                                    children={msg.content}
-                                    components={{
-                                        code({
-                                                 node,
-                                                 inline,
-                                                 className,
-                                                 children,
-                                                 ...props
-                                             }) {
-                                            const match = /language-(\w+)/.exec(
-                                                className || '');
-                                            return !inline ? (
-                                                <div
-                                                    className="code-block"
-                                                    onMouseEnter={() => {
-                                                        const copyIcon = chatWindowRef.current.querySelectorAll(
-                                                            '.copy-icon')[index];
-                                                        copyIcon.style.display = 'block';
-                                                    }}
-                                                    onMouseLeave={() => {
-                                                        const copyIcon = chatWindowRef.current.querySelectorAll(
-                                                            '.copy-icon')[index];
-                                                        copyIcon.style.display = 'none';
-                                                    }}
-                                                >
-                                                    <SyntaxHighlighter
-                                                        style={VscDarkPlus}
-                                                        language={match
-                                                            ? match[1]
-                                                            : 'plaintext'}
-                                                        PreTag="div"
-                                                        {...props}
-                                                    >
-                                                        {String(children).trim()}
-                                                    </SyntaxHighlighter>
-                                                    <FaCopy className="copy-icon"
-                                                            onClick={() => handleCopyText(
-                                                                String(children).trim())}/>
-                                                </div>
-                                            ) : (
-                                                <code className={className} {...props}>
-                                                    {children}
-                                                </code>
-                                            );
-                                        },
-                                    }}
-                                />
-                                {!msg.content.includes('```') && (
-                                    <FaCopy className="copy-icon"
-                                            onClick={() => handleCopyText(msg.content)}/>
-                                )}
-                            </div>
+                            <MessageContent content={msg.content} onCopy={handleCopyText} />
                             <p className="share-page__timestamp">{new Date(
                                 msg.timestamp).toLocaleString()}</p>
                         </div>
