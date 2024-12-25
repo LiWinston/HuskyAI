@@ -1027,6 +1027,113 @@ class ErrorBoundary extends React.Component {
     }
 }
 
+function formatMessageTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    
+    // 检测用户语言
+    const userLang = navigator.language || navigator.userLanguage;
+    const isZH = userLang.startsWith('zh');
+    
+    // 双语文本配置
+    const texts = {
+        justNow: isZH ? "刚刚" : "just now",
+        minutesAgo: isZH ? "分钟前" : " mins ago",
+        today: isZH ? "今天" : "Today",
+        yesterday: isZH ? "昨天" : "Yesterday",
+        dayBeforeYesterday: isZH ? "前天" : "2 days ago",
+        morning: isZH ? "上午" : "AM",
+        afternoon: isZH ? "下午" : "PM",
+        weekdays: {
+            zh: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'],
+            en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        }
+    };
+
+    // 获取时间和时段
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+    const isPM = hour >= 12;
+    const hour12 = hour % 12 || 12;
+    
+    // 格式化具体时间
+    const timeStr = isZH 
+        ? `${texts[isPM ? 'afternoon' : 'morning']}${hour12}:${minute.toString().padStart(2, '0')}`
+        : `${hour12}:${minute.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
+
+    // 1分钟内
+    if (seconds < 60) {
+        return texts.justNow;
+    }
+    
+    // 59分钟内
+    if (minutes < 60) {
+        return `${minutes}${texts.minutesAgo}`;
+    }
+
+    // 判断日期
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dayBeforeYesterday = new Date(today);
+    dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 2);
+
+    const isToday = date >= today;
+    const isYesterday = date >= yesterday && date < today;
+    const isDayBeforeYesterday = date >= dayBeforeYesterday && date < yesterday;
+
+    // 三天内
+    if (isToday) {
+        return `${texts.today} ${timeStr}`;
+    }
+    if (isYesterday) {
+        return `${texts.yesterday} ${timeStr}`;
+    }
+    if (isDayBeforeYesterday) {
+        return `${texts.dayBeforeYesterday} ${timeStr}`;
+    }
+
+    // 计算是否在本周内
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    const isThisWeek = date >= startOfWeek;
+    
+    // 本周内
+    if (isThisWeek) {
+        const weekday = texts.weekdays[isZH ? 'zh' : 'en'][date.getDay()];
+        return `${weekday} ${timeStr}`;
+    }
+
+    // 判断是否在本年内
+    const isThisYear = date.getFullYear() === now.getFullYear();
+    
+    // 本年内
+    if (isThisYear) {
+        if (isZH) {
+            return `${date.getMonth() + 1}月${date.getDate()}日 ${timeStr}`;
+        } else {
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            }) + ` ${timeStr}`;
+        }
+    }
+    
+    // 超出本年
+    if (isZH) {
+        return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${timeStr}`;
+    } else {
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        }) + ` ${timeStr}`;
+    }
+}
+
 function MessageComponent({msg, messages, index, isStreaming = false, codeTheme}) {
     const mathJaxRef = useRef(null);
 
@@ -1128,17 +1235,7 @@ function MessageComponent({msg, messages, index, isStreaming = false, codeTheme}
                     </div>
                 </div>
                 <div className={`timestamp ${msg.sender}-timestamp`}>
-                    {messageDate.toLocaleString(navigator.language, {
-                        year: 'numeric',
-                        month: navigator.language.startsWith('zh') ?
-                            'long' :
-                            'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        second: 'numeric',
-                        dayPeriod: 'short',
-                    })}
+                    {formatMessageTime(msg.timestamp)}
                 </div>
             </motion.div>
         </MathJaxContext>
