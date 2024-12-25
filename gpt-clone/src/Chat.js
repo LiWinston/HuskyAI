@@ -69,11 +69,29 @@ function Chat() {
     const i18n = {
         zh: {
             conversations: "对话",
-            newChat: "新对话"
+            newChat: "新对话",
+            enterShareMode: "进入分享模式，请选择要分享的消息",
+            exitShareMode: "已退出分享模式",
+            loadingMessages: "加载对话内容...",
+            selectedMessages: "已选择 {count} 条消息",
+            share: "分享",
+            cancel: "取消",
+            copySuccess: "分享链接已复制到剪贴板",
+            shareFailed: "分享失败，请重试",
+            loadFailed: "获取消息失败，请重试"
         },
         en: {
             conversations: "Chats",
-            newChat: "New Chat"
+            newChat: "New Chat",
+            enterShareMode: "Share mode, please select messages",
+            exitShareMode: "Share mode exited",
+            loadingMessages: "Loading messages...",
+            selectedMessages: "{count} messages selected",
+            share: "Share",
+            cancel: "Cancel",
+            copySuccess: "Share link copied to clipboard",
+            shareFailed: "Failed to share, please try again",
+            loadFailed: "Failed to load messages, please try again"
         },
         // 可以继续添加其他语言...
     };
@@ -312,11 +330,11 @@ function Chat() {
                     chatWindow.style.opacity = '1';
                 }, 50);
                 
-                setNotification('进入分享模式，请选择要分享的消息');
+                setNotification(getText('enterShareMode'));
             }
         } catch (error) {
             console.error('Error fetching messages for share:', error);
-            setNotification('获取消息失败，请重试');
+            setNotification(getText('loadFailed'));
         } finally {
             setIsLoadingMessages(false);
         }
@@ -327,7 +345,7 @@ function Chat() {
         setSelectedMessages([]);
         setShareMessages([]);
         setSharedCid(null);
-        setNotification('已退出分享模式');
+        setNotification(getText('exitShareMode'));
         setTimeout(() => setNotification(null), 2000);
     };
 
@@ -365,7 +383,7 @@ function Chat() {
                 }).then((result) => {
                     if (result.isConfirmed) {
                         navigator.clipboard.writeText(shareLink);
-                        setNotification('分享链接已复制到剪贴板');
+                        setNotification(getText('copySuccess'));
                         setTimeout(() => setNotification(null), 2000);
                     }
                 });
@@ -373,7 +391,7 @@ function Chat() {
             }
         } catch (error) {
             console.error('Error sharing messages:', error);
-            setNotification('分享失败，请重试');
+            setNotification(getText('shareFailed'));
             setTimeout(() => setNotification(null), 2000);
         }
     };
@@ -1048,7 +1066,7 @@ function Chat() {
                 <div className="share-controls">
                     <div className="share-controls-content">
                         <span className="selected-count">
-                            已选择 {selectedMessages.length} 条消息
+                            {getText('selectedMessages').replace('{count}', selectedMessages.length)}
                         </span>
                         <div className="share-buttons">
                             <button 
@@ -1056,13 +1074,13 @@ function Chat() {
                                 onClick={handleShareConfirm}
                                 disabled={selectedMessages.length === 0}
                             >
-                                分享
+                                {getText('share')}
                             </button>
                             <button 
                                 className="share-cancel"
                                 onClick={handleShareCancel}
                             >
-                                取消
+                                {getText('cancel')}
                             </button>
                         </div>
                     </div>
@@ -1077,7 +1095,7 @@ function Chat() {
                             loop={true}
                             style={{ width: 120, height: 120 }}
                         />
-                        <div className="loading-text">加载对话内容...</div>
+                        <div className="loading-text">{getText('loadingMessages')}</div>
                     </div>
                 </div>
             )}
