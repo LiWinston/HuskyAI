@@ -242,8 +242,19 @@ function SharePage() {
                         code({node, inline, className, children, ...props}) {
                             const match = /language-(\w+)/.exec(className || '');
                             const codeContent = String(children).replace(/\n$/, '');
-                            
-                            return !inline ? (
+
+                            // 判断是否应该内联显示
+                            const shouldInline = inline || 
+                                (codeContent.length < 50 && !codeContent.includes('\n'));
+
+                            return shouldInline ? (
+                                <code
+                                    className={`inline-code ${className || ''}`}
+                                    {...props}
+                                >
+                                    {children}
+                                </code>
+                            ) : (
                                 <div className="code-block">
                                     <SyntaxHighlighter
                                         style={VscDarkPlus}
@@ -263,10 +274,6 @@ function SharePage() {
                                         <FaCopy />
                                     </button>
                                 </div>
-                            ) : (
-                                <code className={className} {...props}>
-                                    {children}
-                                </code>
                             );
                         }
                     }}
@@ -282,6 +289,54 @@ function SharePage() {
                 </button>
             </div>
         );
+    };
+
+    // 添加时间格式化函数
+    const formatTimestamp = (timestamp) => {
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diff = now - date;
+        
+        // 如果是今天的消息
+        if (date.toDateString() === now.toDateString()) {
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+        
+        // 如果是昨天的消息
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (date.toDateString() === yesterday.toDateString()) {
+            return 'Yesterday ' + date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+        
+        // 如果是今年的消息
+        if (date.getFullYear() === now.getFullYear()) {
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+        
+        // 其他情况显示完整日期
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
     };
 
     if (loading) {
@@ -351,8 +406,9 @@ function SharePage() {
                                 )}
                             </div>
                             <MessageContent content={msg.content} onCopy={handleCopyText} />
-                            <p className="share-page__timestamp">{new Date(
-                                msg.timestamp).toLocaleString()}</p>
+                            <p className="share-page__timestamp">
+                                {formatTimestamp(msg.timestamp)}
+                            </p>
                         </div>
                     ))
                 ) : (

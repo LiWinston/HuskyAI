@@ -132,9 +132,10 @@
 
 .share-page__timestamp {
     font-size: 12px;
-    color: var(--text-secondary);
+    color: #666;
     margin-top: 6px;
     text-align: right;
+    opacity: 0.8;
 }
 
 /* 代码块样式 */
@@ -243,4 +244,19 @@
         padding: 6px 12px;
         font-size: 13px;
     }
+}
+
+/* 内联代码样式 */
+.inline-code {
+    background-color: rgba(40, 44, 52, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-size: 0.9em;
+    color: #333;
+}
+
+[data-theme='dark'] .inline-code {
+    background-color: rgba(40, 44, 52, 0.56);
+    color: #e3e3e3;
 }
