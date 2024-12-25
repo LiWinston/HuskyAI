@@ -1258,7 +1258,7 @@ function formatMessageTime(timestamp) {
     }
 }
 
-function MessageComponent({msg, messages, index, isStreaming = false, codeTheme, isShareMode, selectedMessages, handleMessageClick}) {
+function MessageComponent({msg, messages, index, isStreaming = false, codeTheme, isShareMode = false, selectedMessages = [], handleMessageClick}) {
     const mathJaxRef = useRef(null);
 
     const mathJaxConfig = {
@@ -1320,7 +1320,7 @@ function MessageComponent({msg, messages, index, isStreaming = false, codeTheme,
             animate={{opacity: 1, y: 0}}
             exit={{opacity: 0, y: -20}}
             transition={{duration: 0.3}}
-            onClick={() => isShareMode && handleMessageClick(index)}
+            onClick={() => isShareMode && handleMessageClick && handleMessageClick(index)}
         >
             <div className={`message ${msg.sender}`}>
                 <div className="markdown-table-container" ref={mathJaxRef}>
