@@ -5,6 +5,8 @@ import './login.css';
 import {showSweetAlert, showSweetAlertWithRetVal, showSweetError} from './Component/sweetAlertUtil';
 import Swal from "sweetalert2";
 import detectIP from "./Component/ip";
+import Lottie from "lottie-react";
+import loadingAnimation from "./assets/loading.json";
 
 function Login() {
     const [isLogin, setIsLogin] = useState(true);
@@ -88,8 +90,10 @@ function Login() {
         }, 250);
     };
 
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleLogin = async () => {
+        setIsLoading(true);
         async function UserIpInfo(username, password) {
             const ipInfo = await detectIP();
             console.log(ipInfo);
@@ -105,25 +109,21 @@ function Login() {
         }
 
         try {
-            UserIpInfo(username, password);
-            // Send login request.
+            await UserIpInfo(username, password);
             const response = await axios.post(`/api/user/login`,
                 {username, password},
                 {headers: {'Content-Type': 'application/json'}});
             const result = response.data;
 
             if (result.code === 1) {
-                // Login successful, processing post-login logic.
                 const token = result.token;
                 const uuid = result.uuid;
                 const role = result.role;
                 const confirmedAdmin = result.confirmedAdmin;
 
-                // Save token and uuid to localStorage.
                 localStorage.setItem('token', token);
                 localStorage.setItem('userUUID', uuid);
 
-                // Check user roles and admin verification status.
                 if (role === 'admin' && confirmedAdmin) {
                     Swal.fire({
                         title: text.loginSuccess.title,
@@ -149,7 +149,6 @@ function Login() {
                         }
                     });
                 } else if (role === 'admin' && !confirmedAdmin) {
-                    // Unconfirmed administrators, display unique prompts.
                     showSweetAlertWithRetVal('Admin not yet verified. Please contact support.', {
                         title: 'Admin Verification',
                         icon: 'warning',
@@ -161,13 +160,11 @@ function Login() {
                         navigate('/chat');
                     });
                 } else {
-                    // Regular user, redirect to the chat page.
                     localStorage.removeItem("selectedConversation");
                     localStorage.removeItem("conversations");
                     navigate('/chat');
                 }
             } else {
-                // Login failed, show error message.
                 showSweetAlertWithRetVal(result.msg || 'Login failed. Please try again.', {
                     title: 'Login Failed',
                     icon: 'error',
@@ -178,10 +175,13 @@ function Login() {
             }
         } catch (error) {
             setErrorMessage(error.response?.data?.msg || 'An error occurred during login. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleRegister = async () => {
+        setIsLoading(true);
         try {
             const requestData = {username, password, isAdmin, adminEmail};
             if (isAdmin) {
@@ -195,7 +195,6 @@ function Login() {
             const result = response.data;
 
             if (result.code === 1) {
-                // alert(result.msg);
                 showSweetAlert(result.msg, {
                     title: 'Registration Success',
                     icon: 'success',
@@ -209,6 +208,8 @@ function Login() {
         } catch (error) {
             showSweetError('Registration failed due to network error. Please try again.');
             setErrorMessage(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -345,6 +346,23 @@ function Login() {
                 {isLogin ? text.switchToRegister : text.switchToLogin}
             </button>
             {errorMessage && <p className="error-message">{errorMessage}</p>}
+            
+            {isLoading && (
+                <div className="global-loading-overlay">
+                    <div className="loading-container">
+                        <Lottie 
+                            animationData={loadingAnimation}
+                            loop={true}
+                            style={{ width: 80, height: 80 }}
+                        />
+                        <div className="loading-text">
+                            {isZH ? 
+                                (isLogin ? "登录中..." : "注册中...") : 
+                                (isLogin ? "Logging in..." : "Registering...")}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
