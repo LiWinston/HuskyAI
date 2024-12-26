@@ -1884,3 +1884,66 @@ pre:hover::-webkit-scrollbar-thumb {
 
 
 }
+
+/* 修复黑暗模式下的标题颜色 */
+[data-theme='dark'] .conversation-list h3 {
+    color: #ffffff;  /* 纯白色确保最大可见度 */
+    opacity: 0.95;   /* 轻微降低不透明度使其看起来更柔和 */
+}
+
+[data-theme='dark'] .time-group-divider {
+    color: #ffffff;  /* 纯白色 */
+    opacity: 0.9;    /* 稍微调低不透明度 */
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);  /* 添加文字阴影提高可读性 */
+}
+
+/* 修复主题选择器中的文字颜色 */
+[data-theme='dark'] .theme-option {
+    color: rgba(255, 255, 255, 0.9);  /* 接近白色但不刺眼 */
+    background-color: rgba(255, 255, 255, 0.05);  /* 微弱的白色背景 */
+    border: 1px solid rgba(255, 255, 255, 0.1);   /* 细微的边框 */
+    transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .theme-option:not(.selected):hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+[data-theme='dark'] .theme-option.selected {
+    background-color: #0a84ff;  /* 使用更鲜明的蓝色 */
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(10, 132, 255, 0.3);  /* 添加发光效果 */
+}
+
+/* 黑暗模式下的表格样式 */
+[data-theme='dark'] .markdown-table-container table {
+    background-color: rgba(255, 255, 255, 0.03);  /* 非常淡的背景 */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);    /* 添加阴影提升层次感 */
+}
+
+[data-theme='dark'] .markdown-table-container th {
+    background-color: rgba(255, 255, 255, 0.08);  /* 稍深的背景色 */
+    color: #ffffff;
+    font-weight: 600;
+    border-color: rgba(255, 255, 255, 0.15);
+    padding: 12px 16px;  /* 增加内边距 */
+}
+
+[data-theme='dark'] .markdown-table-container td {
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+    padding: 10px 16px;
+}
+
+[data-theme='dark'] .markdown-table-container tr:hover td {
+    background-color: rgba(255, 255, 255, 0.06);  /* 更明显的悬停效果 */
+}
+
+[data-theme='dark'] .markdown-table-container tr {
+    transition: background-color 0.2s ease;  /* 平滑过渡 */
+}
