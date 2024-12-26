@@ -168,6 +168,14 @@ const ConversationItem = ({
             // 等待动画完成
             await new Promise(resolve => setTimeout(resolve, 300));
 
+            // 设置删除标记
+            localStorage.setItem('isDeleting', 'true');
+
+            // 如果删除的是当前选中的对话，先清除 localStorage
+            if (selectedConversation === conversation.id) {
+                localStorage.removeItem('selectedConversation');
+            }
+
             await axios.delete(`/api/chat/${uuid}/${conversation.id}`);
             
             // 获取更新后的会话列表
@@ -175,18 +183,25 @@ const ConversationItem = ({
 
             if (selectedConversation === conversation.id) {
                 if (updatedConversations.length > 0) {
-                    loadConversation(updatedConversations[0].id);
+                    // 加载新的第一个对话，并更新 localStorage
+                    const newSelectedId = updatedConversations[0].id;
+                    await loadConversation(newSelectedId);
+                    localStorage.setItem('selectedConversation', newSelectedId);
                 } else {
                     setSelectedConversation(null);
                     setMessages([]);
-                    localStorage.removeItem('selectedConversation');
                 }
             }
+
+            // 清除删除标记
+            localStorage.removeItem('isDeleting');
 
             setNotification('Conversation deleted successfully');
             setTimeout(() => setNotification(null), 2000);
         } catch (error) {
             console.error('Failed to delete conversation', error);
+            // 清除删除标记
+            localStorage.removeItem('isDeleting');
             // 如果删除失败，移除动画类
             const conversationElement = titleRef.current.closest('.conversation-item');
             conversationElement.classList.remove('deleting');

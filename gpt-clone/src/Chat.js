@@ -278,8 +278,9 @@ function Chat() {
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
     const [centerNotice, setCenterNotice] = useState({ visible: false, message: '' });
     const [codeBorderStyle, setCodeBorderStyle] = useState('default');
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-    // 添加语言检测
+    // 添加���言检测
     const userLang = navigator.language || navigator.userLanguage;
     const isZH = userLang.startsWith('zh');
 
@@ -392,12 +393,38 @@ function Chat() {
         const fetchAndLoadConversation = async () => {
             try {
                 const userUUID = localStorage.getItem('userUUID');
+                const storedConversationId = localStorage.getItem('selectedConversation');
+                
                 setNotification('Fetching conversations...'); // Set notification
                 console.log('Fetching conversations for user:', userUUID); // Print user UUID
-                await fetchConversations(); // Wait for conversations to be fetched
+                
+                const conversationsData = await fetchConversations(); // Wait for conversations to be fetched
+                
+                // 如果没有对话列表，直接返回
+                if (!conversationsData || conversationsData.length === 0) {
+                    setNotification(null);
+                    return;
+                }
+                
+                // 检查存储的对话ID是否存在于对话列表中
+                const storedConversationExists = storedConversationId && 
+                    conversationsData.some(conv => conv.id === storedConversationId);
+                
+                if (storedConversationExists) {
+                    // 如果存储的对话ID存在，加载它
+                    console.log('Loading stored conversation:', storedConversationId);
+                    await loadConversation(storedConversationId, false);
+                } else {
+                    // 如果存储的对话ID不存在，加载第一个对话
+                    console.log('Loading first conversation:', conversationsData[0].id);
+                    await loadConversation(conversationsData[0].id, false);
+                }
+                
                 setNotification(null); // Clear notification
             } catch (e) {
                 console.error('Error loading conversation:', e);
+                setNotification('Failed to load conversations');
+                setTimeout(() => setNotification(null), 2000);
             }
         };
 
@@ -427,23 +454,16 @@ function Chat() {
         };
     }, []);
 
-    // Modify the useEffect for initializing the loading dialog.
+    // 修改初始化加载对话的逻辑
     useEffect(() => {
         const loadInitialConversation = async () => {
-            if (conversations.length > 0) {
-                const storedConversationId = localStorage.getItem(
-                    'selectedConversation');
-                const conversationToLoad = conversations.find(
-                    conv => conv.id === storedConversationId) || conversations[0];
-                await loadConversation(conversationToLoad.id, false); // 初始加载不显示动画
-            } else {
-                setSelectedConversation(null);
-                setMessages([]);
+            if (conversations.length > 0 && isInitialLoad) {
+                setIsInitialLoad(false);
             }
         };
 
         loadInitialConversation();
-    }, [conversations]);
+    }, [conversations, isInitialLoad]);
 
     // 在现有的状态中添加新的加载状态
     const [isLoadingConversations, setIsLoadingConversations] = useState(false);
@@ -496,7 +516,11 @@ function Chat() {
 
             setMessages(loadedMessages);
             setSelectedConversation(conversationId);
-            localStorage.setItem('selectedConversation', conversationId);
+            
+            // 只在非删除操作时更新 localStorage
+            if (!localStorage.getItem('isDeleting')) {
+                localStorage.setItem('selectedConversation', conversationId);
+            }
         } catch (error) {
             console.error('Error loading conversation:', error);
             setMessages([{
@@ -1355,7 +1379,7 @@ class ErrorBoundary extends React.Component {
 
     render() {
         if (this.state.hasError) {
-            // 可以自定义错误提示页面
+            // 可��自定义错误提示页面
             return <h1>Something went wrong.</h1>;
         }
         return this.props.children;
