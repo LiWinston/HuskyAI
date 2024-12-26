@@ -1,0 +1,66 @@
+.confirm-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #fff;
+}
+
+.confirm-card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  position: relative;
+}
+
+.confirm-card.pending {
+  border-left: 4px solid #2196f3;
+}
+
+.confirm-card.success {
+  border-left: 4px solid #4caf50;
+}
+
+.confirm-card.error {
+  border-left: 4px solid #f44336;
+}
+
+.confirm-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0 0 1rem;
+  color: #333;
+}
+
+.confirm-content {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.confirm-message {
+  color: #666;
+  margin: 0;
+}
+
+.confirm-username {
+  margin: 0.5rem 0 0;
+  color: #4caf50;
+  font-weight: 500;
+}
+
+/* 状态样式 */
+.pending .confirm-message {
+  color: #2196f3;
+}
+
+.error .confirm-message {
+  color: #f44336;
+}
+
+.success .confirm-message {
+  color: #4caf50;
+} 
