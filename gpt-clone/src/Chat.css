@@ -225,6 +225,7 @@
     padding: 20px;
     overflow-y: auto;
     background-color: var(--chat-window-bg);
+    position: relative;
 }
 
 .message {
@@ -1397,7 +1398,7 @@ code {
     background-color: var(--bg-secondary);
 }
 
-/* 全局滚动条基础���式 */
+/* 全局滚动条基础样式 */
 :root {
     /* 添加滚动条相关变量 */
     --scrollbar-width: 8px;
@@ -1764,15 +1765,16 @@ pre:hover::-webkit-scrollbar-thumb {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(3px);
 }
 
 [data-theme='dark'] .loading-overlay {
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.5);
 }
 
 .loading-container {
@@ -1780,13 +1782,23 @@ pre:hover::-webkit-scrollbar-thumb {
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    background: transparent;
+    padding: 20px;
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .loading-container {
+    background: rgba(0, 0, 0, 0.2);
 }
 
 .loading-text {
     font-size: 14px;
-    color: var(--text-color);
+    color: var(--text-primary);
     text-align: center;
     margin-top: 10px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .conversation-list, .chat-container {
