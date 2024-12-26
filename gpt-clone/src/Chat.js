@@ -847,10 +847,15 @@ function Chat() {
     };
 
     const animateTitleUpdate = (conversationId, newTitle) => {
+        // 先找到对应的对话
+        const conversation = conversations.find(conv => conv.id === conversationId);
+        if (!conversation) return;
+
+        // 设置动画状态
         setAnimatingTitle({
             id: conversationId,
             targetTitle: newTitle,
-            currentTitle: '',
+            currentTitle: conversation.title,
             index: 0,
         });
     };
@@ -860,29 +865,39 @@ function Chat() {
             const totalLength = animatingTitle.targetTitle.length;
             const remainingChars = totalLength - animatingTitle.index;
 
-            // Basic latency time.
-            const baseDelay = 3;
-            const maxDelay = 55;
+            // 基础延迟时间
+            const baseDelay = 50;  // 增加基础延迟使动画更明显
+            const maxDelay = 100;  // 最大延迟时间
 
-            // Adjust the delay according to the number of remaining characters.
-            // The fewer characters, the longer the delay, but not more than 200ms.
-            const adjustedDelay = Math.min(baseDelay + (1 / remainingChars) * 1000,
-                maxDelay);
+            // 根据剩余字符数调整延迟时间
+            // 字符越少，延迟越长，但不超过最大延迟
+            const adjustedDelay = Math.min(baseDelay + (1 / remainingChars) * 1000, maxDelay);
 
             const timer = setTimeout(() => {
                 if (animatingTitle.index < totalLength) {
+                    // 更新当前标题
                     setAnimatingTitle(prev => ({
                         ...prev,
-                        currentTitle: prev.currentTitle + prev.targetTitle[prev.index],
+                        currentTitle: animatingTitle.targetTitle.substring(0, prev.index + 1),
                         index: prev.index + 1,
                     }));
+
+                    // 同时更新对话列表中的标题
+                    setConversations(prevConversations =>
+                        prevConversations.map(conv =>
+                            conv.id === animatingTitle.id
+                                ? {...conv, title: animatingTitle.targetTitle.substring(0, animatingTitle.index + 1)}
+                                : conv
+                        )
+                    );
                 } else {
+                    // 动画完成，更新最终标题
                     setConversations(prevConversations =>
                         prevConversations.map(conv =>
                             conv.id === animatingTitle.id
                                 ? {...conv, title: animatingTitle.targetTitle}
-                                : conv,
-                        ),
+                                : conv
+                        )
                     );
                     setAnimatingTitle(null);
                 }
