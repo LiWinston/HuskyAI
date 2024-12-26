@@ -686,6 +686,7 @@ function Chat() {
     const sendMessage = async () => {
         if (input.trim() === '') return;
 
+        setUserScrolled(false);  // 重置用户滚动状态
         const timestamp = new Date();
         const newMessage = {sender: 'user', text: input, timestamp};
 
