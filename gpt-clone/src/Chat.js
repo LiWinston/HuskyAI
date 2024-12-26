@@ -257,10 +257,9 @@ function Chat() {
     const [useStream, setUseStream] = useState(false);
     // Automatically update to localStorage when selectedConversation changes.
     useEffect(() => {
-        if (selectedConversation !== null) {
+        if (selectedConversation !== null && !localStorage.getItem('isDeleting')) {
+            console.log('Updating selectedConversation in localStorage:', selectedConversation);
             localStorage.setItem('selectedConversation', selectedConversation);
-        } else {
-            localStorage.removeItem('selectedConversation');
         }
     }, [selectedConversation]);
     const [notification, setNotification] = useState(null);
@@ -280,7 +279,7 @@ function Chat() {
     const [codeBorderStyle, setCodeBorderStyle] = useState('default');
     const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-    // 添加���言检测
+    // 添加语言检测
     const userLang = navigator.language || navigator.userLanguage;
     const isZH = userLang.startsWith('zh');
 
@@ -410,15 +409,29 @@ function Chat() {
                 const storedConversationExists = storedConversationId && 
                     conversationsData.some(conv => conv.id === storedConversationId);
                 
-                if (storedConversationExists) {
-                    // 如果存储的对话ID存在，加载它
-                    console.log('Loading stored conversation:', storedConversationId);
-                    await loadConversation(storedConversationId, false);
-                } else {
-                    // 如果存储的对话ID不存在，加载第一个对话
-                    console.log('Loading first conversation:', conversationsData[0].id);
-                    await loadConversation(conversationsData[0].id, false);
-                }
+                // 设置要加载的对话ID
+                const conversationToLoad = storedConversationExists ? storedConversationId : conversationsData[0].id;
+                
+                // 先设置选中的对话ID
+                setSelectedConversation(conversationToLoad);
+                
+                // 然后加载对话内容
+                const uuid = localStorage.getItem('userUUID');
+                const response = await axios.get(`/api/chat/${uuid}/${conversationToLoad}`);
+
+                const loadedMessages = response.data.data.length
+                    ? response.data.data.map(msg => ({
+                        sender: msg.role,
+                        text: msg.content,
+                        timestamp: msg.timestamp,
+                    }))
+                    : [{
+                        sender: 'system',
+                        text: 'No messages yet in this conversation. Start the conversation now!',
+                        timestamp: new Date(),
+                    }];
+
+                setMessages(loadedMessages);
                 
                 setNotification(null); // Clear notification
             } catch (e) {
@@ -1379,7 +1392,7 @@ class ErrorBoundary extends React.Component {
 
     render() {
         if (this.state.hasError) {
-            // 可��自定义错误提示页面
+            // 可自定义错误提示页面
             return <h1>Something went wrong.</h1>;
         }
         return this.props.children;
