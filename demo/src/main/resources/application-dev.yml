@@ -10,6 +10,9 @@ remote-services:
 #
 #    - url: https://ai3.bitsleep.cn
 #      name: MBP15LMStudio
+
+    - url: http://127.0.0.1:59949
+      name: LMStudio_Local
 #
 #
 #    #    - url: https://spark-api-open.xf-yun.com

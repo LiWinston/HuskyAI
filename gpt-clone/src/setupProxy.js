@@ -1,4 +1,5 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const fetch = require('node-fetch');
 
 console.log('Loading proxy configuration...');
 
@@ -30,8 +31,17 @@ module.exports = function(app) {
     // 定期检查本地服务
     const checkLocalService = async () => {
         try {
-            const response = await fetch('http://localhost:8090/health');
+            // 修改：增加超时设置和错误处理
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3秒超时
+            
+            const response = await fetch('http://localhost:8090/health', {
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            
             const text = await response.text();
+            console.log('本地服务响应:', text); // 添加调试日志
             
             // 验证是否是目标服务
             if (text.includes('HuskyAI_Backend')) {
@@ -44,6 +54,7 @@ module.exports = function(app) {
                 isLocalServerAvailable = false;
             }
         } catch (error) {
+            console.log('检查本地服务出错:', error.message); // 添加错误日志
             if (isLocalServerAvailable) {
                 console.log('本地服务不可用，切换到远程服务');
                 isLocalServerAvailable = false;
@@ -54,8 +65,8 @@ module.exports = function(app) {
     // 立即检查一次
     checkLocalService();
     
-    // 每30秒检查一次本地服务状态
-    setInterval(checkLocalService, 30000);
+    // 每5秒检查一次本地服务状态
+    setInterval(checkLocalService, 5000);
 
     // 代理请求处理
     app.use('/api', (req, res, next) => {
