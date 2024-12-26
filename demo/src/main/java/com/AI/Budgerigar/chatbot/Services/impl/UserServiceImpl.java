@@ -107,9 +107,9 @@ public class UserServiceImpl implements userService {
                     adminWaitingListRedisDAO.addAdminToWaitingList(inviteToken, uuid);
                     log.info("Invite tk for" + username + ": " + inviteToken);
 
-                    String serverPort = env.getProperty("server.port", "3000");
+//                    String serverPort = env.getProperty("server.port", "3000");
                     String confirmationLink = request.getScheme() + "://" + request.getServerName() 
-                            + (request.getServerName().equals("localhost") ? ":" + serverPort : "")
+                            + (request.getServerName().equals("localhost") ? ":" + 3000 : "")
                             + "/user/register/confirm/" + inviteToken;
                     String emailContent = "<p>Please confirm your admin registration by clicking the following link:</p>"
                             + "<p><a href='" + confirmationLink + "'>" + confirmationLink + "</a></p>";
@@ -123,7 +123,7 @@ public class UserServiceImpl implements userService {
 
                 userMapper.registerUser(uuid, username, encodedPassword, "USER");
                 userMapper.registerAdmin(uuid, username, encodedPassword, adminEmail, false);
-                return Result.success(null, "Please confirm your registration via email.");
+                return Result.success(null, "请查看您的邮箱以确认管理员注册，但您可以随时登录以聊天。");
             }
         }
         catch (Exception e) {

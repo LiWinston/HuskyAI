@@ -196,17 +196,17 @@ function Login() {
 
             if (result.code === 1) {
                 showSweetAlert(result.msg, {
-                    title: 'Registration Success',
+                    title: text.registerSuccess.title,
                     icon: 'success',
-                    confirmButtonText: 'Go to Login',
+                    confirmButtonText: text.registerSuccess.button,
                 });
                 setIsLogin(true);
             } else {
-                showSweetError(result.msg || 'Unknown err, Registration failed. Please try again.');
+                showSweetError(result.msg || text.errors.registration);
                 setErrorMessage('Please try again.');
             }
         } catch (error) {
-            showSweetError('Registration failed due to network error. Please try again.');
+            showSweetError(text.errors.network);
             setErrorMessage(error);
         } finally {
             setIsLoading(false);

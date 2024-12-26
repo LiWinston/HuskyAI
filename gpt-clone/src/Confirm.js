@@ -16,7 +16,9 @@ const translations = {
         welcome: '欢迎您，',
         confirmFailed: '确认失败',
         linkExpired: '链接已过期',
-        errorCode: '错误代码：'
+        errorCode: '错误代码：',
+        emailConfirm: '请通过邮件确认注册',
+        redirecting: '3秒后跳转到登录页面...'
     },
     en: {
         title: 'Account Confirmation',
@@ -26,7 +28,9 @@ const translations = {
         welcome: 'Welcome, ',
         confirmFailed: 'Confirmation failed',
         linkExpired: 'Link expired',
-        errorCode: 'Error code: '
+        errorCode: 'Error code: ',
+        emailConfirm: 'Please confirm your registration via email',
+        redirecting: 'Redirecting to login page in 3 seconds...'
     }
 };
 
@@ -88,6 +92,10 @@ export default function Confirm() {
                     setTimeout(() => {
                         navigate('/login', {state: {username: data.data}});
                     }, 3000);
+                } else if (data.code === -2) {
+                    // 邮件确认状态
+                    setMessage(translations[lang].emailConfirm);
+                    setStatus('pending');
                 } else {
                     setMessage(translations[lang].linkExpired);
                     setStatus('error');
@@ -108,9 +116,14 @@ export default function Confirm() {
                 <div className="confirm-content">
                     <p className="confirm-message">{message}</p>
                     {status === 'success' && username && (
-                        <p className="confirm-username">
-                            {translations[lang].welcome}{username}
-                        </p>
+                        <>
+                            <p className="confirm-username">
+                                {translations[lang].welcome}{username}
+                            </p>
+                            <p className="confirm-redirect">
+                                {translations[lang].redirecting}
+                            </p>
+                        </>
                     )}
                 </div>
             </div>

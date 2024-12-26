@@ -52,6 +52,13 @@
   font-weight: 500;
 }
 
+.confirm-redirect {
+  margin: 0.5rem 0 0;
+  color: #666;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
 /* 状态样式 */
 .pending .confirm-message {
   color: #2196f3;
