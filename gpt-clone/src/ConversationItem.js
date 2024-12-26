@@ -210,7 +210,7 @@ const ConversationItem = ({
             : ''}`}
         onClick={() => {
             setSelectedConversation(conversation.id);
-            loadConversation(conversation.id);
+            loadConversation(conversation.id, true);
         }}
     >
         <div

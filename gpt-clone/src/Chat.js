@@ -435,7 +435,7 @@ function Chat() {
                     'selectedConversation');
                 const conversationToLoad = conversations.find(
                     conv => conv.id === storedConversationId) || conversations[0];
-                await loadConversation(conversationToLoad.id);
+                await loadConversation(conversationToLoad.id, false); // 初始加载不显示动画
             } else {
                 setSelectedConversation(null);
                 setMessages([]);
@@ -476,8 +476,10 @@ function Chat() {
     };
 
     // 修改 loadConversation 函数
-    const loadConversation = async (conversationId) => {
-        setIsLoadingConversation(true);
+    const loadConversation = async (conversationId, showLoading = false) => {
+        if (showLoading) {
+            setIsLoadingConversation(true);
+        }
         try {
             const uuid = localStorage.getItem('userUUID');
             const response = await axios.get(`/api/chat/${uuid}/${conversationId}`);
@@ -505,9 +507,11 @@ function Chat() {
                 timestamp: new Date(),
             }]);
         } finally {
-            setTimeout(() => {
-                setIsLoadingConversation(false);
-            }, 500); // 添加一个小延迟，使动画更流畅
+            if (showLoading) {
+                setTimeout(() => {
+                    setIsLoadingConversation(false);
+                }, 500); // 添加一个小延迟，使动画更流畅
+            }
         }
     };
 
@@ -524,7 +528,7 @@ function Chat() {
             };
             setConversations(
                 prevConversations => [newConversation, ...prevConversations]);
-            await loadConversation(newConversationId);
+            await loadConversation(newConversationId, false); // 新建对话不显示动画
         } catch (error) {
             console.error('Failed to create new conversation', error);
         }
@@ -665,7 +669,7 @@ function Chat() {
             if (!cid) {
                 cid = new Date().getTime().toString();
                 setSelectedConversation(cid);
-                await axios.get(`/api/chat/${localStorage.getItem('userUUID')}/${cid}`);
+                await loadConversation(cid, false); // 发送消息时创建新对话不显示动画
             }
 
             const conversationIndex = conversations.findIndex(conv => conv.id === selectedConversation);
