@@ -469,9 +469,7 @@ function Chat() {
             console.error('Error fetching conversations:', error);
             throw error;
         } finally {
-            setTimeout(() => {
-                setIsLoadingConversations(false);
-            }, 500); // 添加一个小延迟，使动画更流畅
+            setIsLoadingConversations(false);
         }
     };
 
@@ -508,9 +506,7 @@ function Chat() {
             }]);
         } finally {
             if (showLoading) {
-                setTimeout(() => {
-                    setIsLoadingConversation(false);
-                }, 500); // 添加一个小延迟，使动画更流畅
+                setIsLoadingConversation(false);
             }
         }
     };
