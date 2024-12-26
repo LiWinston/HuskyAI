@@ -901,7 +901,7 @@ func main() {
         WriteTimeout: 10 * time.Second,
     }
 
-    // 优雅���闭
+    // 优雅关闭
     go func() {
         sigChan := make(chan os.Signal, 1)
         signal.Notify(sigChan, os.Interrupt)
@@ -2176,4 +2176,4 @@ class PostController extends Controller
 </html>`
     }
     // ... 继续添加其他语言的示例 ...
-}; 
+};
