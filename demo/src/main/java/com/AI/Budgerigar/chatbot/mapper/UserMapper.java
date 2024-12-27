@@ -98,4 +98,25 @@ public interface UserMapper extends BaseMapper<UserPw> {
     @Select("SELECT * FROM AdminInfo WHERE uuid = #{uuid}")
     AdminInfo getAdminInfoByUuid(String token);
 
+    @Select("SELECT * FROM users WHERE sso_id = #{ssoId}")
+    UserPw getUserBySSOId(String ssoId);
+
+    @Insert("INSERT INTO users (uuid, username, password, role, sso_id) VALUES (#{uuid}, #{username}, #{password}, #{role}, NULL)")
+    void registerUser(String uuid, String username, String password, String role);
+
+    @Insert("INSERT INTO admin_info (uuid, username, password, email, verified) VALUES (#{uuid}, #{username}, #{password}, #{email}, #{verified})")
+    void registerAdmin(String uuid, String username, String password, String email, boolean verified);
+
+    @Update("UPDATE admin_info SET verified = true WHERE uuid = #{uuid}")
+    void confirmAdmin(String uuid);
+
+    @Update("UPDATE users SET role = 'ADMIN' WHERE uuid = #{uuid}")
+    void promoteToAdminByUuid(String uuid);
+
+    @Update("UPDATE users SET role = 'USER' WHERE uuid = #{uuid}")
+    void downgradeAdminByUuid(String uuid);
+
+    @Update("UPDATE users SET sso_id = #{ssoId} WHERE uuid = #{uuid}")
+    void updateSSOId(String uuid, String ssoId);
+
 }

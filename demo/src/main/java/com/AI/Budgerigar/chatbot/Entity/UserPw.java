@@ -15,4 +15,10 @@ public class UserPw implements Serializable {
 
     private String role;
 
+    private String email;
+
+    private boolean enabled;
+
+    private String ssoId;
+
 }

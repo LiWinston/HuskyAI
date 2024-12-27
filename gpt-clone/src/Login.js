@@ -27,12 +27,27 @@ function Login() {
     const [isUsernameValid, setIsUsernameValid] = useState(false);
 
     const location = useLocation();
+    const [isSSORegistering, setIsSSORegistering] = useState(false);
+
     useEffect(() => {
         // If the username is passed from the Confirm page, set it in the input box.
         if (location.state && location.state.username) {
             setUsername(location.state.username);
         }
     }, [location]);
+
+    useEffect(() => {
+        // 检查URL中是否有SSO相关参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const ssoToken = urlParams.get('sso_token');
+        const error = urlParams.get('error');
+        
+        if (error) {
+            showSweetError(decodeURIComponent(error));
+        } else if (ssoToken) {
+            handleSSOCallback(ssoToken);
+        }
+    }, []);
 
     const handleUsernameBlur = async () => {
         function isBlank(username) {
@@ -258,9 +273,49 @@ function Login() {
         }
     };
 
+    const handleSSOLogin = () => {
+        window.location.href = 'https://bitsleep.cn/sso/login';
+    };
+
+    const handleSSOCallback = async (token) => {
+        try {
+            const response = await axios.post('/api/sso/callback', { token });
+            const result = response.data;
+            
+            if (result.code === 1) {
+                // 登录成功
+                localStorage.setItem('token', result.token);
+                localStorage.setItem('userUUID', result.uuid);
+                navigate('/chat');
+            } else if (result.code === 2) {
+                // 需要注册
+                setIsSSORegistering(true);
+                // 保存SSO信息以供注册使用
+                localStorage.setItem('sso_token', token);
+            } else {
+                showSweetError(result.msg || 'SSO login failed');
+            }
+        } catch (error) {
+            showSweetError(error.response?.data?.msg || 'An error occurred during SSO login');
+        }
+    };
+
     return (
         <div className="auth-container">
             <h2>{isLogin ? text.login : text.register}</h2>
+            
+            {/* SSO登录按钮 */}
+            {isLogin && !isSSORegistering && (
+                <div className="sso-login">
+                    <button onClick={handleSSOLogin} className="btn-sso">
+                        {isZH ? "使用 BitSleep 账号一键登录" : "Login with BitSleep"}
+                    </button>
+                    <div className="divider">
+                        {isZH ? "或" : "OR"}
+                    </div>
+                </div>
+            )}
+            
             <form onSubmit={handleSubmit}>
                 <div className="username-container">
                     <input
