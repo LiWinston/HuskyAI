@@ -107,8 +107,8 @@ public class UserServiceImpl implements userService {
                     adminWaitingListRedisDAO.addAdminToWaitingList(inviteToken, uuid);
                     log.info("Invite tk for" + username + ": " + inviteToken);
 
-//                    String serverPort = env.getProperty("server.port", "3000");
-                    String confirmationLink = request.getScheme() + "://" + request.getServerName() 
+                    // String serverPort = env.getProperty("server.port", "3000");
+                    String confirmationLink = request.getScheme() + "://" + request.getServerName()
                             + (request.getServerName().equals("localhost") ? ":" + 3000 : "")
                             + "/user/register/confirm/" + inviteToken;
                     String emailContent = "<p>Please confirm your admin registration by clicking the following link:</p>"
