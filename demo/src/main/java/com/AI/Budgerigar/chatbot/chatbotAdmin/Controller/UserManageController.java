@@ -44,7 +44,7 @@ public class UserManageController {
     private UserPw validateBasicAdminAccess(String operatorUUID) {
         if (operatorUUID == null) {
             log.error("Authentication required: operatorUUID is null");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "需要用户认证");
         }
 
         log.info("Validating admin access for UUID: {}", operatorUUID);
@@ -52,20 +52,20 @@ public class UserManageController {
         
         if (operator == null) {
             log.error("User not found for UUID: {}", operatorUUID);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "未找到用户");
         }
         
         log.info("User found: {} with role: {}", operator.getUsername(), operator.getRole());
         if (operator.getRole() == null || !operator.getRole().equalsIgnoreCase("ADMIN")) {
             log.error("Insufficient permissions for user: {} with role: {}", operator.getUsername(), operator.getRole());
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Insufficient permissions");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "权限不足");
         }
         
         // 检查管理员信息是否存在
         AdminInfo adminInfo = userMapper.getAdminInfoByUuid(operatorUUID);
         if (adminInfo == null) {
             log.error("Admin info not found for admin user: {}", operator.getUsername());
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin info not found");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "未找到管理员信息");
         }
         
         log.info("Admin validation successful for user: {} with level: {}", operator.getUsername(), adminInfo.getAdminLevel());
@@ -88,10 +88,15 @@ public class UserManageController {
                     int operatorLevel = operatorAdminInfo != null ? operatorAdminInfo.getAdminLevel() : 0;
                     int targetLevel = targetAdminInfo.getAdminLevel();
                     
+                    log.info("Comparing admin levels - Operator: {}, Target: {}", operatorLevel, targetLevel);
+                    
+                    // 修改比较逻辑：操作者级别必须大于目标级别
                     if (operatorLevel <= targetLevel) {
+                        log.error("Admin level check failed - Operator level {} is not higher than target level {}", 
+                            operatorLevel, targetLevel);
                         throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST, 
-                            "Insufficient admin level: cannot modify admin with equal or higher level"
+                            "管理员级别不足：无法操作同级或更高级别的管理员"
                         );
                     }
                 }
@@ -113,7 +118,7 @@ public class UserManageController {
             return Result.error(e.getReason());
         } catch (Exception e) {
             log.error("Error fetching all users", e);
-            return Result.error("Error fetching all users: " + e.getMessage());
+            return Result.error("获取用户列表失败: " + e.getMessage());
         }
     }
 
@@ -133,7 +138,7 @@ public class UserManageController {
             return Result.error(e.getReason());
         } catch (Exception e) {
             log.error("Error fetching all users model access", e);
-            return Result.error("Error fetching all users model access: " + e.getMessage());
+            return Result.error("获取用户模型权限失败: " + e.getMessage());
         }
     }
 
@@ -166,7 +171,7 @@ public class UserManageController {
             return Result.error(e.getReason());
         } catch (Exception e) {
             log.error("Error updating user model access", e);
-            return Result.error("Error updating user model access: " + e.getMessage());
+            return Result.error("更新用户模型权限失败: " + e.getMessage());
         }
     }
 
@@ -181,12 +186,12 @@ public class UserManageController {
             
             UserPw user = userMapper.getUserByUuid(userId);
             if (user == null) {
-                return Result.error("User not found");
+                return Result.error("未找到用户");
             }
 
             String newRole = updateData.get("role");
             if (newRole == null) {
-                return Result.error("Role must be specified");
+                return Result.error("必须指定用户角色");
             }
 
             boolean isRoleChange = !newRole.equals(user.getRole());
@@ -196,24 +201,30 @@ public class UserManageController {
             if (isBecomingAdmin || "ADMIN".equals(user.getRole())) {
                 String email = updateData.get("email");
                 if (email == null || email.isBlank()) {
-                    return Result.error("Email must be specified for admin");
+                    return Result.error("管理员必须设置邮箱");
                 }
 
                 int adminLevel;
                 try {
                     adminLevel = Integer.parseInt(updateData.get("adminLevel"));
                     if (adminLevel < 0 || adminLevel > 3) {
-                        return Result.error("Admin level must be between 0 and 3");
+                        return Result.error("管理员级别必须在0到3之间");
                     }
                     
                     // 检查操作者不能设置比自己更高级别的管理员
                     AdminInfo operatorAdminInfo = userMapper.getAdminInfoByUuid(operatorUUID);
                     int operatorLevel = operatorAdminInfo != null ? operatorAdminInfo.getAdminLevel() : 0;
+                    
+                    log.info("Checking admin level setting - Operator: {}, Target: {}", operatorLevel, adminLevel);
+                    
+                    // 修改比较逻辑：目标级别必须小于操作者级别
                     if (adminLevel >= operatorLevel) {
-                        return Result.error("Cannot set admin level equal to or higher than your own level");
+                        log.error("Admin level setting check failed - Target level {} is not lower than operator level {}", 
+                            adminLevel, operatorLevel);
+                        return Result.error("不能设置比自己更高或同级的管理员级别");
                     }
                 } catch (NumberFormatException e) {
-                    return Result.error("Invalid admin level format");
+                    return Result.error("管理员级别格式无效");
                 }
 
                 if (isBecomingAdmin) {
@@ -224,12 +235,12 @@ public class UserManageController {
                 // 更新管理员信息
                 userMapper.registerAdmin(userId, user.getUsername(), user.getPassword(), email, true);
                 
-                return Result.success(true, isBecomingAdmin ? "User promoted to admin successfully" : "Admin info updated successfully");
+                return Result.success(true, isBecomingAdmin ? "用户已成功升级为管理员" : "管理员信息更新成功");
             } else if (isBecomingUser) {
                 userMapper.downgradeAdminByUuid(userId);
-                return Result.success(true, "Admin demoted to user successfully");
+                return Result.success(true, "管理员已成功降级为普通用户");
             } else {
-                return Result.success(true, "No changes required");
+                return Result.success(true, "无需更改");
             }
         } catch (ResponseStatusException e) {
             return Result.error(e.getReason());

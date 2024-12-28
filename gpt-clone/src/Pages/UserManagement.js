@@ -184,6 +184,135 @@ function UserManagement() {
         return date.toISOString().slice(0, 16); // keep only until minutes
     };
 
+    // 统一的错误处理函数
+    const handleApiError = async (error, defaultMessage) => {
+        console.error(defaultMessage, error);
+        let errorMessage = defaultMessage + ': ';
+        
+        if (error.response) {
+            switch (error.response.status) {
+                case 403:
+                    errorMessage += '您没有足够的权限执行此操作';
+                    break;
+                case 400:
+                    if (error.response.data && error.response.data.msg) {
+                        if (error.response.data.msg.includes('insufficient admin level')) {
+                            errorMessage += '无法操作更高级别的管理员';
+                        } else {
+                            errorMessage += error.response.data.msg;
+                        }
+                    }
+                    break;
+                default:
+                    errorMessage += error.response.data?.msg || '未知错误';
+            }
+        } else {
+            errorMessage += error.message || '未知错误';
+        }
+        
+        await showSweetAlertWithRetVal(errorMessage, {icon: 'error', title: '错误'});
+        return false; // 返回 false 表示操作失败
+    };
+
+    const handlePromoteSubmit = async () => {
+        try {
+            const currentUserUUID = localStorage.getItem('userUUID');
+            if (!currentUserUUID) {
+                throw new Error('User authentication required');
+            }
+
+            const response = await axios.post(`/api/admin/user/${promotingUser.uuid}`, {
+                role: 'ADMIN',
+                email: adminInfo.email,
+                adminLevel: adminInfo.adminLevel,
+                verified: true
+            }, {
+                headers: {
+                    'X-User-UUID': currentUserUUID
+                }
+            });
+
+            // 检查响应状态
+            if (response.data.code === 0) {
+                throw new Error(response.data.msg);
+            }
+            
+            setPromotingUser(null);
+            setAdminInfo({email: '', adminLevel: 0});
+            await fetchUsers();
+            await showSweetAlertWithRetVal('用户已成功升级为管理员', {icon: 'success', title: '成功'});
+        } catch (error) {
+            await handleApiError(error, '提升用户权限失败');
+            // 保持对话框打开，让用户可以修改输入
+            return false;
+        }
+    };
+
+    const handleDemoteClick = async (userId) => {
+        try {
+            const currentUserUUID = localStorage.getItem('userUUID');
+            if (!currentUserUUID) {
+                throw new Error('User authentication required');
+            }
+
+            const response = await axios.post(`/api/admin/user/${userId}`, {
+                role: 'USER'
+            }, {
+                headers: {
+                    'X-User-UUID': currentUserUUID
+                }
+            });
+
+            // 检查响应状态
+            if (response.data.code === 0) {
+                throw new Error(response.data.msg);
+            }
+
+            await fetchUsers();
+            await showSweetAlertWithRetVal('用户已成功降级为普通用户', {icon: 'success', title: '成功'});
+        } catch (error) {
+            await handleApiError(error, '降级用户失败');
+        }
+    };
+
+    const handleAdminInfoSubmit = async () => {
+        try {
+            const currentUserUUID = localStorage.getItem('userUUID');
+            if (!currentUserUUID) {
+                throw new Error('User authentication required');
+            }
+
+            const isPromoting = editingUser.role === 'USER' && adminInfo.role === 'ADMIN';
+            const isDemoting = editingUser.role === 'ADMIN' && adminInfo.role === 'USER';
+            
+            const response = await axios.post(`/api/admin/user/${editingUser.uuid}`, {
+                role: adminInfo.role,
+                email: adminInfo.email,
+                adminLevel: adminInfo.adminLevel
+            }, {
+                headers: {
+                    'X-User-UUID': currentUserUUID
+                }
+            });
+
+            // 检查响应状态
+            if (response.data.code === 0) {
+                throw new Error(response.data.msg);
+            }
+            
+            setEditingUser(null);
+            setAdminInfo({email: '', adminLevel: 0, role: 'USER'});
+            await fetchUsers();
+            
+            let message = isPromoting ? '用户已成功升级为管理员' :
+                         isDemoting ? '管理员已成功降级为普通用户' :
+                         '管理员信息更新成功';
+            
+            await showSweetAlertWithRetVal(message, {icon: 'success', title: '成功'});
+        } catch (error) {
+            await handleApiError(error, '更新管理员信息失败');
+        }
+    };
 
     const saveModelAccess = async (userId) => {
         try {
@@ -193,21 +322,20 @@ function UserManagement() {
             }
 
             const modelAccess = userModelAccess[userId] || [];
-            await axios.put(`/api/admin/user/modelAccess/${userId}`, modelAccess, {
+            const response = await axios.put(`/api/admin/user/modelAccess/${userId}`, modelAccess, {
                 headers: {
                     'X-User-UUID': currentUserUUID
                 }
             });
-            await showSweetAlertWithRetVal('Model access updated successfully', {icon: 'success', title: 'Success'});
-        } catch (error) {
-            console.error('Error saving model access:', error);
-            let errorMessage = '保存模型权限失败: ';
-            if (error.response?.status === 403) {
-                errorMessage += '没有访问权限';
-            } else {
-                errorMessage += error.response?.data?.message || error.message || '未知错误';
+
+            // 检查响应状态
+            if (response.data.code === 0) {
+                throw new Error(response.data.msg);
             }
-            await showSweetAlertWithRetVal(errorMessage, {icon: 'error', title: '错误'});
+
+            await showSweetAlertWithRetVal('模型权限更新成功', {icon: 'success', title: '成功'});
+        } catch (error) {
+            await handleApiError(error, '保存模型权限失败');
         }
     };
 
@@ -288,51 +416,8 @@ function UserManagement() {
         setAdminInfo({
             email: '',
             adminLevel: 0,
+            role: 'ADMIN'
         });
-    };
-
-    const handlePromoteSubmit = async () => {
-        try {
-            await axios.post(`/api/admin/user/${promotingUser.uuid}`, {
-                role: 'ADMIN',
-                email: adminInfo.email,
-                adminLevel: adminInfo.adminLevel,
-                verified: true
-            });
-            setPromotingUser(null);
-            setAdminInfo({email: '', adminLevel: 0});
-            await fetchUsers();
-            await showSweetAlertWithRetVal('User promoted to admin successfully', {icon: 'success', title: 'Success'});
-        } catch (error) {
-            console.error('Error promoting user:', error);
-            await showSweetAlertWithRetVal('Error promoting user: ' + error.message, {icon: 'error', title: 'Error'});
-        }
-    };
-
-    const handleDemoteClick = async (userId) => {
-        try {
-            const currentUserUUID = localStorage.getItem('userUUID');
-            if (!currentUserUUID) {
-                throw new Error('User authentication required');
-            }
-
-            await axios.post(`/api/admin/user/${userId}`, {role: 'USER'}, {
-                headers: {
-                    'X-User-UUID': currentUserUUID
-                }
-            });
-            await fetchUsers();
-            await showSweetAlertWithRetVal('User demoted successfully', {icon: 'success', title: 'Success'});
-        } catch (error) {
-            console.error('Error demoting user:', error);
-            let errorMessage = '降级用户失败: ';
-            if (error.response?.status === 403) {
-                errorMessage += '没有访问权限';
-            } else {
-                errorMessage += error.response?.data?.message || error.message || '未知错误';
-            }
-            await showSweetAlertWithRetVal(errorMessage, {icon: 'error', title: '错误'});
-        }
     };
 
     const handleEditAdminInfo = (user) => {
@@ -351,64 +436,6 @@ function UserManagement() {
                 adminLevel: 0,
                 role: 'USER'
             });
-        }
-    };
-
-    const handleAdminInfoSubmit = async () => {
-        try {
-            const currentUserUUID = localStorage.getItem('userUUID');
-            if (!currentUserUUID) {
-                throw new Error('User authentication required');
-            }
-
-            const isPromoting = editingUser.role === 'USER' && adminInfo.role === 'ADMIN';
-            const isDemoting = editingUser.role === 'ADMIN' && adminInfo.role === 'USER';
-            
-            await axios.post(`/api/admin/user/${editingUser.uuid}`, {
-                role: adminInfo.role,
-                email: adminInfo.email,
-                adminLevel: adminInfo.adminLevel
-            }, {
-                headers: {
-                    'X-User-UUID': currentUserUUID
-                }
-            });
-            
-            setEditingUser(null);
-            setAdminInfo({email: '', adminLevel: 0, role: 'USER'});
-            await fetchUsers();
-            
-            let message = isPromoting ? 'User promoted to admin successfully' :
-                         isDemoting ? 'Admin demoted to user successfully' :
-                         'Admin information updated successfully';
-            
-            await showSweetAlertWithRetVal(message, {icon: 'success', title: 'Success'});
-        } catch (error) {
-            console.error('Error updating admin info:', error);
-            let errorMessage = '操作失败: ';
-            
-            if (error.response) {
-                switch (error.response.status) {
-                    case 403:
-                        errorMessage += '您没有足够的权限执行此操作';
-                        break;
-                    case 400:
-                        if (error.response.data && error.response.data.message) {
-                            if (error.response.data.message.includes('insufficient admin level')) {
-                                errorMessage += '无法操作更高级别的管理员';
-                            } else {
-                                errorMessage += error.response.data.message;
-                            }
-                        }
-                        break;
-                    default:
-                        errorMessage += error.response.data?.message || '未知错误';
-                }
-            } else {
-                errorMessage += error.message || '未知错误';
-            }
-            
-            await showSweetAlertWithRetVal(errorMessage, {icon: 'error', title: '错误'});
         }
     };
 
@@ -642,7 +669,7 @@ function UserManagement() {
     );
 }
 
-// 添加样式
+// ���加样式
 const modalStyles = `
 .modal {
     position: fixed;
