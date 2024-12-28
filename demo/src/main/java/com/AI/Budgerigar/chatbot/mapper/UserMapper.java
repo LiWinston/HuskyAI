@@ -120,4 +120,13 @@ public interface UserMapper extends BaseMapper<UserPw> {
     int createAdminFromDashboard(@Param("uuid") String uuid, @Param("email") String email, 
             @Param("adminLevel") int adminLevel, @Param("verified") boolean verified);
 
+    /**
+     * Update only admin level
+     * @param uuid user's only identifier UUID
+     * @param adminLevel admin's level
+     * @return int Number of rows updated
+     */
+    @Update("UPDATE AdminInfo SET admin_level = #{adminLevel} WHERE uuid = #{uuid}")
+    int updateAdminLevel(@Param("uuid") String uuid, @Param("adminLevel") int adminLevel);
+
 }

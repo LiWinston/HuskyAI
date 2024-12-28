@@ -109,7 +109,7 @@ public class UserManageController {
     public Result<List<UserPw>> getAllUsers(@RequestHeader(value = "X-User-UUID", required = false) String operatorUUID) {
         try {
             log.info("Received getAllUsers request with UUID: {}", operatorUUID);
-            // 只验证基本管理员权限
+            // 只验证基本管理��权限
             validateBasicAdminAccess(operatorUUID);
             List<UserPw> users = userMapper.selectAll();
             return Result.success(users);
@@ -204,8 +204,15 @@ public class UserManageController {
 
             if (isBecomingAdmin || "ADMIN".equals(currentRole)) {
                 String email = updateData.get("email");
-                if (email == null || email.isBlank()) {
-                    return Result.error("管理员必须设置邮箱");
+                
+                // 检查是否已经是管理员
+                AdminInfo existingAdminInfo = userMapper.getAdminInfoByUuid(userId);
+                
+                // 如果是新增管理员，邮箱必填
+                if (isBecomingAdmin && existingAdminInfo == null) {
+                    if (email == null || email.isBlank()) {
+                        return Result.error("新增管理员必须设置邮箱");
+                    }
                 }
 
                 int adminLevel;
@@ -225,9 +232,6 @@ public class UserManageController {
                     return Result.error("管理员级别格式无效");
                 }
 
-                // 检查是否已经是管理员
-                AdminInfo existingAdminInfo = userMapper.getAdminInfoByUuid(userId);
-                
                 if (isBecomingAdmin) {
                     // 只有当用户不是管理员时才创建新的管理员信息
                     if (existingAdminInfo == null) {
@@ -235,12 +239,22 @@ public class UserManageController {
                         userMapper.createAdminFromDashboard(userId, email, adminLevel, true);
                         userModelAccessService.grantAllAvailiableModels(userId);
                     } else {
-                        // 如果已经是管理员，只更新信息
-                        userMapper.updateAdminInfo(userId, email, adminLevel);
+                        // 如果已经是管理员，只更新需要更新的信息
+                        if (email != null && !email.isBlank()) {
+                            userMapper.updateAdminInfo(userId, email, adminLevel);
+                        } else {
+                            // 如果没有提供邮箱，只更新级别
+                            userMapper.updateAdminLevel(userId, adminLevel);
+                        }
                     }
                 } else {
-                    // 更新现有管理员信息
-                    userMapper.updateAdminInfo(userId, email, adminLevel);
+                    // 更新现有管理员信息，只更新提供的字段
+                    if (email != null && !email.isBlank()) {
+                        userMapper.updateAdminInfo(userId, email, adminLevel);
+                    } else {
+                        // 如果没有提供邮箱，只更新级别
+                        userMapper.updateAdminLevel(userId, adminLevel);
+                    }
                 }
                 
                 return Result.success(true, isBecomingAdmin ? "用户已成功升级为管理员" : "管理员信息更新成功");
