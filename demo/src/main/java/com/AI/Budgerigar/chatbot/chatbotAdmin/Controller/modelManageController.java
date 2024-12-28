@@ -183,50 +183,88 @@ public class modelManageController {
     public Result<Boolean> manageModels(@RequestBody ManageModelDTO dto) {
         try {
             String name = dto.getName();
-            List<String> models = dto.getModels();
             String operation = dto.getOperation();
+            List<String> models = dto.getModels();
+            
+            // 参数验证
+            if (name == null || name.isBlank()) {
+                return Result.error("Service name cannot be empty");
+            }
+            
+            if (models == null || models.isEmpty()) {
+                return Result.error("Model list cannot be empty");
+            }
 
             var chatServices = chatServicesManageService.getChatServices();
-            // Check if the service exists in the chatServices map.
-            ConcurrentHashMap<String, ChatService> serviceMap = chatServices.getOrDefault(name,
-                    new ConcurrentHashMap<>());
+            // 检查服务是否存在
+            ConcurrentHashMap<String, ChatService> serviceMap = chatServices.get(name);
+            if (serviceMap == null) {
+                serviceMap = new ConcurrentHashMap<>();
+            }
 
-            for (String model : models) {
-                if (!serviceMap.containsKey(model) && operation.equals("disable")) {
-                    return Result.error("Model does not exist.");
+            // 检查模型是否存在(仅对DISABLE操作)
+            if (operation.equals("DISABLE")) {
+                for (String model : models) {
+                    if (!serviceMap.containsKey(model)) {
+                        return Result.error("Model " + model + " does not exist in service " + name);
+                    }
                 }
             }
 
-            // Perform operation on each model
+            // 执行操作
             for (String model : models) {
-                if (operation.equals("enable")) {
-                    // Register the model if it does not exist
+                if (operation.equals("ENABLE")) {
+                    // 如果模型不存在则注册
                     if (!serviceMap.containsKey(model)) {
                         RemoteServiceConfig.ServiceConfig serviceConfig = remoteServiceConfig.getServiceConfigs()
                             .stream()
-                            .filter(config -> config.getName().equals(name))
+                            .filter(config -> name.equals(config.getName()) || name.equals(config.getUrl()))
                             .findFirst()
-                            .orElseThrow(
-                                    () -> new IllegalArgumentException("Service config not found for name: " + name));
-                        chatServicesManageService.registerNewChatService(model, serviceConfig.getUrl(), name,
-                                serviceConfig.getApiKey());
+                            .orElseThrow(() -> new IllegalArgumentException("Service config not found for: " + name));
+                            
+                        String url = serviceConfig.getUrl();
+                        if (url == null || url.isBlank()) {
+                            return Result.error("Service URL is not configured for: " + name);
+                        }
+                        
+                        chatServicesManageService.registerNewChatService(model, url, name,
+                                serviceConfig.getApiKey() != null ? serviceConfig.getApiKey() : "");
                     }
                 }
-                else if (operation.equals("disable")) {
-                    // Remove the model if it exists
+                else if (operation.equals("DISABLE")) {
+                    // 移除已存在的模型
                     serviceMap.remove(model);
+                }
+                else if (operation.equals("ALLOW") || operation.equals("NOTALLOW")) {
+                    // 更新服务配置中的允许列表
+                    RemoteServiceConfig.ServiceConfig serviceConfig = remoteServiceConfig.getServiceConfigs()
+                        .stream()
+                        .filter(config -> name.equals(config.getName()) || name.equals(config.getUrl()))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("Service config not found for: " + name));
+                    
+                    List<String> allowedModels = serviceConfig.getAllowedModels();
+                    if (allowedModels == null) {
+                        allowedModels = new ArrayList<>();
+                        serviceConfig.setAllowedModels(allowedModels);
+                    }
+                    
+                    if (operation.equals("ALLOW") && !allowedModels.contains(model)) {
+                        allowedModels.add(model);
+                    }
+                    else if (operation.equals("NOTALLOW")) {
+                        allowedModels.remove(model);
+                    }
                 }
             }
 
-            // Update the chatServices map
+            // 更新服务映射
             chatServices.put(name, serviceMap);
+            return Result.success(true);
 
-            return Result.success(true); // Success
-
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error managing models: {}", e.getMessage());
-            return Result.error(e.getMessage()); // Failure
+            return Result.error(e.getMessage());
         }
     }
 

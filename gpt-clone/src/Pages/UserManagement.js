@@ -12,25 +12,90 @@ function UserManagement() {
     const [userModelAccess, setUserModelAccess] = useState({}); // store user model access permissions
     const [expandedUsers, setExpandedUsers] = useState({});
     // Get user status.
+    const [promotingUser, setPromotingUser] = useState(null);
+    const [editingUser, setEditingUser] = useState(null);
+    const [adminInfo, setAdminInfo] = useState({
+        email: '',
+        adminLevel: 0,
+        role: 'USER'
+    });
+
     const fetchUsers = async () => {
         try {
-            const response = await axios.get('/api/admin/user');
-            setUsers(response.data.data);
+            const currentUserUUID = localStorage.getItem('userUUID');
+            if (!currentUserUUID) {
+                throw new Error('User authentication required');
+            }
+
+            console.log('Sending request with UUID:', currentUserUUID); // 调试日志
+            const response = await axios.get('/api/admin/user', {
+                headers: {
+                    'X-User-UUID': currentUserUUID
+                }
+            });
+            
+            console.log('Response:', response.data); // 调试日志
+            if (response.data.code === 0) {
+                throw new Error(response.data.msg);
+            }
+            
+            setUsers(response.data.data || []);
         } catch (error) {
             console.error('Error fetching users:', error);
+            console.error('Error details:', {
+                status: error.response?.status,
+                data: error.response?.data,
+                headers: error.response?.headers
+            }); // 详细错误日志
+            
+            let errorMessage = '获取用户列表失败: ';
+            if (error.response?.status === 403) {
+                errorMessage += '没有访问权限';
+            } else {
+                errorMessage += error.response?.data?.msg || error.message || '未知错误';
+            }
+            await showSweetAlertWithRetVal(errorMessage, {icon: 'error', title: '错误'});
+            setUsers([]); // 设置空数组避免渲染错误
         }
     };
 
     const fetchUserModelAccess = async () => {
         try {
-            const response = await axios.get('/api/admin/user/modelAccess');
+            const currentUserUUID = localStorage.getItem('userUUID');
+            if (!currentUserUUID) {
+                throw new Error('User authentication required');
+            }
+
+            const response = await axios.get('/api/admin/user/modelAccess', {
+                headers: {
+                    'X-User-UUID': currentUserUUID
+                }
+            });
+            
+            // 添加空值检查
+            if (!response.data || !response.data.data) {
+                setUserModelAccess({});
+                return;
+            }
+            
             const modelAccessData = response.data.data.reduce((acc, config) => {
-                acc[config.userId] = config.allowedModels;
+                if (config && config.userId) {
+                    acc[config.userId] = config.allowedModels || [];
+                }
                 return acc;
             }, {});
             setUserModelAccess(modelAccessData);
         } catch (error) {
             console.error('Error fetching user model access:', error);
+            let errorMessage = '获取模型权限失败: ';
+            if (error.response?.status === 403) {
+                errorMessage += '没有访问权限';
+            } else {
+                errorMessage += error.response?.data?.message || error.message || '未知错误';
+            }
+            await showSweetAlertWithRetVal(errorMessage, {icon: 'error', title: '错误'});
+            // 设置空对象避免渲染错误
+            setUserModelAccess({});
         }
     };
 
@@ -41,10 +106,26 @@ function UserManagement() {
 
     const updateUser = async (userId, updatedData) => {
         try {
-            await axios.post(`/api/admin/users/${userId}`, updatedData);
-            fetchUsers();
+            const currentUserUUID = localStorage.getItem('userUUID');
+            if (!currentUserUUID) {
+                throw new Error('User authentication required');
+            }
+
+            await axios.post(`/api/admin/user/${userId}`, updatedData, {
+                headers: {
+                    'X-User-UUID': currentUserUUID
+                }
+            });
+            await fetchUsers();
         } catch (error) {
             console.error('Error updating user:', error);
+            let errorMessage = '更新用户信息失败: ';
+            if (error.response?.status === 403) {
+                errorMessage += '没有访问权限';
+            } else {
+                errorMessage += error.response?.data?.message || error.message || '未知错误';
+            }
+            await showSweetAlertWithRetVal(errorMessage, {icon: 'error', title: '错误'});
         }
     };
 
@@ -60,7 +141,11 @@ function UserManagement() {
 // Handle model access changes and only update local state
     const handleModelAccessChange = (userId, index, key, value) => {
         setUserModelAccess(prevAccess => {
-            const updatedAccess = [...(prevAccess[userId] || [])];
+            const userAccess = prevAccess[userId] || [];
+            const updatedAccess = [...userAccess];
+            if (!updatedAccess[index]) {
+                updatedAccess[index] = {};
+            }
             updatedAccess[index] = {
                 ...updatedAccess[index],
                 [key]: value
@@ -75,12 +160,16 @@ function UserManagement() {
 // Handling changes to AccessRestriction.
     const handleAccessRestrictionChange = (userId, index, restrictionKey, value) => {
         setUserModelAccess(prevAccess => {
-            const updatedAccess = [...(prevAccess[userId] || [])];
+            const userAccess = prevAccess[userId] || [];
+            const updatedAccess = [...userAccess];
+            if (!updatedAccess[index]) {
+                updatedAccess[index] = {};
+            }
             const accessRestriction = updatedAccess[index].accessRestriction || {};
-            accessRestriction[restrictionKey] = value;  // Update specified fields.
+            accessRestriction[restrictionKey] = value;
             updatedAccess[index] = {
                 ...updatedAccess[index],
-                accessRestriction  // Put the updated accessRestriction back.
+                accessRestriction
             };
             return {
                 ...prevAccess,
@@ -98,64 +187,27 @@ function UserManagement() {
 
     const saveModelAccess = async (userId) => {
         try {
-            const updatedModelAccess = userModelAccess[userId].map(modelAccess => ({
-                url: modelAccess.url,
-                model: modelAccess.model,
-                accessLevel: modelAccess.accessLevel,
-                accessRestriction: modelAccess.accessRestriction || {
-                    startTime: null,
-                    endTime: null,
-                    timeRestricted: false,
-                    maxDailyAccess: 0
-                },
-                priority: modelAccess.priority,
-                additionalAttributes: modelAccess.additionalAttributes || {}
-            }));
+            const currentUserUUID = localStorage.getItem('userUUID');
+            if (!currentUserUUID) {
+                throw new Error('User authentication required');
+            }
 
-            await axios.put(`/api/admin/user/modelAccess/${userId}`, updatedModelAccess)
-                .then(res => {
-                    if (res.data.code) {
-                        // Success: allow user to choose whether to refresh
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: res.data.msg,
-                            showCancelButton: true,
-                            confirmButtonText: 'Yes, refresh!',
-                            cancelButtonText: 'No, stay here',
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                fetchUserModelAccess(); // Refresh on user's confirmation
-                            }
-                        });
-                    } else {
-                        // Failure: force refresh, no option to skip
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: res.data.msg,
-                            confirmButtonText: 'Refresh Now',
-                            allowOutsideClick: false, // Prevent closing by clicking outside
-                            allowEscapeKey: false // Prevent closing with Esc key
-                        }).then(() => {
-                            fetchUserModelAccess(); // Always refresh after error
-                        });
-                    }
-                });
-
+            const modelAccess = userModelAccess[userId] || [];
+            await axios.put(`/api/admin/user/modelAccess/${userId}`, modelAccess, {
+                headers: {
+                    'X-User-UUID': currentUserUUID
+                }
+            });
+            await showSweetAlertWithRetVal('Model access updated successfully', {icon: 'success', title: 'Success'});
         } catch (error) {
             console.error('Error saving model access:', error);
-            // In case of a request failure or any error, ensure user knows something went wrong
-            Swal.fire({
-                icon: 'error',
-                title: 'Request Failed',
-                text: 'An unexpected error occurred. Please try again later.',
-                confirmButtonText: 'Refresh Now',
-                allowOutsideClick: false,
-                allowEscapeKey: false
-            }).then(() => {
-                fetchUserModelAccess(); // Ensure refresh after error
-            });
+            let errorMessage = '保存模型权限失败: ';
+            if (error.response?.status === 403) {
+                errorMessage += '没有访问权限';
+            } else {
+                errorMessage += error.response?.data?.message || error.message || '未知错误';
+            }
+            await showSweetAlertWithRetVal(errorMessage, {icon: 'error', title: '错误'});
         }
     };
 
@@ -231,6 +283,134 @@ function UserManagement() {
         setExpandedUsers(prev => ({...prev, [userId]: !prev[userId]}));
     };
 
+    const handlePromoteClick = (user) => {
+        setPromotingUser(user);
+        setAdminInfo({
+            email: '',
+            adminLevel: 0,
+        });
+    };
+
+    const handlePromoteSubmit = async () => {
+        try {
+            await axios.post(`/api/admin/user/${promotingUser.uuid}`, {
+                role: 'ADMIN',
+                email: adminInfo.email,
+                adminLevel: adminInfo.adminLevel,
+                verified: true
+            });
+            setPromotingUser(null);
+            setAdminInfo({email: '', adminLevel: 0});
+            await fetchUsers();
+            await showSweetAlertWithRetVal('User promoted to admin successfully', {icon: 'success', title: 'Success'});
+        } catch (error) {
+            console.error('Error promoting user:', error);
+            await showSweetAlertWithRetVal('Error promoting user: ' + error.message, {icon: 'error', title: 'Error'});
+        }
+    };
+
+    const handleDemoteClick = async (userId) => {
+        try {
+            const currentUserUUID = localStorage.getItem('userUUID');
+            if (!currentUserUUID) {
+                throw new Error('User authentication required');
+            }
+
+            await axios.post(`/api/admin/user/${userId}`, {role: 'USER'}, {
+                headers: {
+                    'X-User-UUID': currentUserUUID
+                }
+            });
+            await fetchUsers();
+            await showSweetAlertWithRetVal('User demoted successfully', {icon: 'success', title: 'Success'});
+        } catch (error) {
+            console.error('Error demoting user:', error);
+            let errorMessage = '降级用户失败: ';
+            if (error.response?.status === 403) {
+                errorMessage += '没有访问权限';
+            } else {
+                errorMessage += error.response?.data?.message || error.message || '未知错误';
+            }
+            await showSweetAlertWithRetVal(errorMessage, {icon: 'error', title: '错误'});
+        }
+    };
+
+    const handleEditAdminInfo = (user) => {
+        setEditingUser(user);
+        // 如果是管理员,使用现有信息
+        if (user.role === 'ADMIN') {
+            setAdminInfo({
+                email: user.email || '',
+                adminLevel: user.adminLevel || 0,
+                role: 'ADMIN'
+            });
+        } else {
+            // 如果是普通用户,设置默认值
+            setAdminInfo({
+                email: '',
+                adminLevel: 0,
+                role: 'USER'
+            });
+        }
+    };
+
+    const handleAdminInfoSubmit = async () => {
+        try {
+            const currentUserUUID = localStorage.getItem('userUUID');
+            if (!currentUserUUID) {
+                throw new Error('User authentication required');
+            }
+
+            const isPromoting = editingUser.role === 'USER' && adminInfo.role === 'ADMIN';
+            const isDemoting = editingUser.role === 'ADMIN' && adminInfo.role === 'USER';
+            
+            await axios.post(`/api/admin/user/${editingUser.uuid}`, {
+                role: adminInfo.role,
+                email: adminInfo.email,
+                adminLevel: adminInfo.adminLevel
+            }, {
+                headers: {
+                    'X-User-UUID': currentUserUUID
+                }
+            });
+            
+            setEditingUser(null);
+            setAdminInfo({email: '', adminLevel: 0, role: 'USER'});
+            await fetchUsers();
+            
+            let message = isPromoting ? 'User promoted to admin successfully' :
+                         isDemoting ? 'Admin demoted to user successfully' :
+                         'Admin information updated successfully';
+            
+            await showSweetAlertWithRetVal(message, {icon: 'success', title: 'Success'});
+        } catch (error) {
+            console.error('Error updating admin info:', error);
+            let errorMessage = '操作失败: ';
+            
+            if (error.response) {
+                switch (error.response.status) {
+                    case 403:
+                        errorMessage += '您没有足够的权限执行此操作';
+                        break;
+                    case 400:
+                        if (error.response.data && error.response.data.message) {
+                            if (error.response.data.message.includes('insufficient admin level')) {
+                                errorMessage += '无法操作更高级别的管理员';
+                            } else {
+                                errorMessage += error.response.data.message;
+                            }
+                        }
+                        break;
+                    default:
+                        errorMessage += error.response.data?.message || '未知错误';
+                }
+            } else {
+                errorMessage += error.message || '未知错误';
+            }
+            
+            await showSweetAlertWithRetVal(errorMessage, {icon: 'error', title: '错误'});
+        }
+    };
 
     return (
         <div className="user-management">
@@ -239,15 +419,26 @@ function UserManagement() {
                 {users.map(user => (
                     <li key={user.uuid} className="user-item">
                         <div className="user-summary" onClick={() => toggleUserExpansion(user.uuid)}>
-                            <span>{user.username} ({user.role})</span>
+                            <span>
+                                {user.username} ({user.role === 'ADMIN' ? `Admin Level ${user.adminLevel}` : 'User'})
+                            </span>
                             <span className="user-uuid">UUID: {user.uuid}</span>
                             {expandedUsers[user.uuid] ? <ChevronUp /> : <ChevronDown />}
                         </div>
                         {expandedUsers[user.uuid] && (
                             <div className="user-details">
-                                <button onClick={() => updateUser(user.uuid, {role: 'ADMIN'})}>
-                                    Promote to Admin
+                                <button onClick={() => handleEditAdminInfo(user)}>
+                                    Update Admin Info
                                 </button>
+                                {user.role === 'USER' ? (
+                                    <button onClick={() => handlePromoteClick(user)}>
+                                        Promote to Admin
+                                    </button>
+                                ) : (
+                                    <button onClick={() => handleDemoteClick(user.uuid)}>
+                                        Demote to User
+                                    </button>
+                                )}
                                 <div className="model-access-info">
                                     <h4>Allowed Models:</h4>
                                     <table>
@@ -365,8 +556,159 @@ function UserManagement() {
                     </li>
                 ))}
             </ul>
+
+            {/* 管理员信息编辑对话框 */}
+            {editingUser && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <h4>Update Admin Info - {editingUser.username}</h4>
+                        <div className="form-group">
+                            <label>Role:</label>
+                            <select
+                                value={adminInfo.role}
+                                onChange={(e) => setAdminInfo({...adminInfo, role: e.target.value})}
+                            >
+                                <option value="USER">User</option>
+                                <option value="ADMIN">Admin</option>
+                            </select>
+                        </div>
+                        {(adminInfo.role === 'ADMIN') && (
+                            <>
+                                <div className="form-group">
+                                    <label>Email:</label>
+                                    <input
+                                        type="email"
+                                        value={adminInfo.email}
+                                        onChange={(e) => setAdminInfo({...adminInfo, email: e.target.value})}
+                                        required
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Admin Level:</label>
+                                    <select
+                                        value={adminInfo.adminLevel}
+                                        onChange={(e) => setAdminInfo({...adminInfo, adminLevel: parseInt(e.target.value)})}
+                                    >
+                                        <option value={0}>Level 0 (Basic)</option>
+                                        <option value={1}>Level 1</option>
+                                        <option value={2}>Level 2</option>
+                                        <option value={3}>Level 3</option>
+                                    </select>
+                                </div>
+                            </>
+                        )}
+                        <div className="modal-buttons">
+                            <button onClick={handleAdminInfoSubmit}>Save</button>
+                            <button onClick={() => setEditingUser(null)}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 管理员提升对话框 */}
+            {promotingUser && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <h4>Promote {promotingUser.username} to Admin</h4>
+                        <div className="form-group">
+                            <label>Email:</label>
+                            <input
+                                type="email"
+                                value={adminInfo.email}
+                                onChange={(e) => setAdminInfo({...adminInfo, email: e.target.value})}
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>Admin Level:</label>
+                            <select
+                                value={adminInfo.adminLevel}
+                                onChange={(e) => setAdminInfo({...adminInfo, adminLevel: parseInt(e.target.value)})}
+                            >
+                                <option value={0}>Level 0 (Basic)</option>
+                                <option value={1}>Level 1</option>
+                                <option value={2}>Level 2</option>
+                                <option value={3}>Level 3</option>
+                            </select>
+                        </div>
+                        <div className="modal-buttons">
+                            <button onClick={handlePromoteSubmit}>Confirm</button>
+                            <button onClick={() => setPromotingUser(null)}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+
+// 添加样式
+const modalStyles = `
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-buttons button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-buttons button:first-child {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.modal-buttons button:last-child {
+    background-color: #f44336;
+    color: white;
+}
+`;
+
+// 将样式添加到文档中
+const styleSheet = document.createElement("style");
+styleSheet.innerText = modalStyles;
+document.head.appendChild(styleSheet);
 
 export default UserManagement;
