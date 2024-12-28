@@ -109,7 +109,7 @@ public class UserManageController {
     public Result<List<UserPw>> getAllUsers(@RequestHeader(value = "X-User-UUID", required = false) String operatorUUID) {
         try {
             log.info("Received getAllUsers request with UUID: {}", operatorUUID);
-            // 只验证基本管理员权限
+            // 只验证基本管理��权限
             validateBasicAdminAccess(operatorUUID);
             List<UserPw> users = userMapper.selectAll();
             return Result.success(users);
@@ -229,11 +229,13 @@ public class UserManageController {
 
                 if (isBecomingAdmin) {
                     userMapper.promoteToAdminByUuid(userId);
+                    // 通过管理后台创建新管理员
+                    userMapper.createAdminFromDashboard(userId, email, adminLevel, true);
                     userModelAccessService.grantAllAvailiableModels(userId);
+                } else {
+                    // 更新现有管理员信息
+                    userMapper.updateAdminInfo(userId, email, adminLevel);
                 }
-
-                // 更新管理员信息
-                userMapper.registerAdmin(userId, user.getUsername(), user.getPassword(), email, true);
                 
                 return Result.success(true, isBecomingAdmin ? "用户已成功升级为管理员" : "管理员信息更新成功");
             } else if (isBecomingUser) {

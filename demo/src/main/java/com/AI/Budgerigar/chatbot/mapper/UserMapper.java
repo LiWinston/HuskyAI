@@ -92,10 +92,32 @@ public interface UserMapper extends BaseMapper<UserPw> {
 
     /**
      * Retrieve admin information by UUID
-     * @param token The administrator's unique identifier (token).
+     * @param uuid The administrator's unique identifier
      * @return AdminInfo admin information
      */
-    @Select("SELECT * FROM AdminInfo WHERE uuid = #{uuid}")
-    AdminInfo getAdminInfoByUuid(String token);
+    @Select("SELECT uuid, admin_level as adminLevel, email, verified FROM AdminInfo WHERE uuid = #{uuid}")
+    AdminInfo getAdminInfoByUuid(String uuid);
+
+    /**
+     * Update existing admin information
+     * @param uuid user's only identifier UUID
+     * @param email admin's email
+     * @param adminLevel admin's level
+     * @return int Number of rows updated
+     */
+    @Update("UPDATE AdminInfo SET email = #{email}, admin_level = #{adminLevel} WHERE uuid = #{uuid}")
+    int updateAdminInfo(@Param("uuid") String uuid, @Param("email") String email, @Param("adminLevel") int adminLevel);
+
+    /**
+     * Create a new admin from admin dashboard
+     * @param uuid user's only identifier UUID
+     * @param email admin's email
+     * @param adminLevel admin's level
+     * @param verified Flag indicating whether the administrator is verified
+     * @return int Number of rows successfully inserted
+     */
+    @Insert("INSERT INTO AdminInfo (uuid, admin_level, email, verified) VALUES (#{uuid}, #{adminLevel}, #{email}, #{verified})")
+    int createAdminFromDashboard(@Param("uuid") String uuid, @Param("email") String email, 
+            @Param("adminLevel") int adminLevel, @Param("verified") boolean verified);
 
 }
