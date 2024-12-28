@@ -9,7 +9,7 @@ module.exports = function(app) {
 
     // 创建远程代理中间件
     const remoteProxy = createProxyMiddleware({
-        target: 'https://lmsgpt.bitsleep.cn',
+        target: 'https://huskyAI.bitsleep.cn',
         changeOrigin: true,
         logLevel: 'debug',
         onProxyReq: (proxyReq, req, res) => {
