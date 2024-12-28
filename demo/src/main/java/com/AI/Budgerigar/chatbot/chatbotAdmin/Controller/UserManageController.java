@@ -109,7 +109,7 @@ public class UserManageController {
     public Result<List<UserPw>> getAllUsers(@RequestHeader(value = "X-User-UUID", required = false) String operatorUUID) {
         try {
             log.info("Received getAllUsers request with UUID: {}", operatorUUID);
-            // 只验证基本管理员权限
+            // 只验证基本管理��权限
             validateBasicAdminAccess(operatorUUID);
             List<UserPw> users = userMapper.selectAll();
             return Result.success(users);
@@ -202,6 +202,13 @@ public class UserManageController {
             boolean isBecomingAdmin = isRoleChange && "ADMIN".equals(newRole);
             boolean isBecomingUser = isRoleChange && "USER".equals(newRole);
 
+            // 如果是降级为普通用户，直接处理
+            if (isBecomingUser) {
+                userMapper.downgradeAdminByUuid(userId);
+                return Result.success(true, "管理员已成功降级为普通用户");
+            }
+
+            // 处理升级为管理员或更新管理员信息的情况
             if (isBecomingAdmin || "ADMIN".equals(currentRole)) {
                 String email = updateData.get("email");
                 
@@ -258,10 +265,6 @@ public class UserManageController {
                 }
                 
                 return Result.success(true, isBecomingAdmin ? "用户已成功升级为管理员" : "管理员信息更新成功");
-            } else if (isBecomingUser) {
-                // 降级为普通用户时不需要检查管理员级别
-                userMapper.downgradeAdminByUuid(userId);
-                return Result.success(true, "管理员已成功降级为普通用户");
             } else {
                 return Result.success(true, "无需更改");
             }
