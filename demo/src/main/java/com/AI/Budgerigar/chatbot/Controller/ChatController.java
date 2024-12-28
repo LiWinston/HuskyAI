@@ -5,6 +5,7 @@ import com.AI.Budgerigar.chatbot.Services.*;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -295,6 +296,44 @@ public class ChatController {
         catch (Exception e) {
             // Capture any exceptions and return an error response.
             return Result.error(e.getMessage());
+        }
+    }
+
+    // 分页获取对话列表
+    @GetMapping("/page")
+    public Result<?> getConversationListWithPage(
+            @RequestParam String uuid,
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam(defaultValue = "20") Integer size) {
+        try {
+            log.info("分页获取对话列表: uuid={}, current={}, size={}", uuid, current, size);
+            
+            // 检查用户是否存在
+            var userExists = userService.checkUserExistsByUuid(uuid);
+            if (userExists.getCode() == 0) {
+                log.error("用户不存在: {}", userExists.getMsg());
+                return Result.error(userExists.getMsg());
+            }
+
+            // 创建分页对象
+            Page<Conversation> page = new Page<>(current, size);
+            // 获取分页后的对话列表
+            Page<Conversation> conversationPage = userService.getConversationsWithPage(uuid, page);
+            
+            if(conversationPage == null || conversationPage.getRecords() == null) {
+                log.error("获取分页对话列表失败: 结果为空");
+                return Result.error("获取对话列表失败");
+            }
+            
+            log.info("成功获取分页对话列表: total={}, current={}, size={}", 
+                    conversationPage.getTotal(), 
+                    conversationPage.getCurrent(), 
+                    conversationPage.getSize());
+            
+            return Result.success(conversationPage);
+        } catch (Exception e) {
+            log.error("获取分页对话列表异常", e);
+            return Result.error("获取对话列表失败: " + e.getMessage());
         }
     }
 

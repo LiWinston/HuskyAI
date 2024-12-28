@@ -14,6 +14,7 @@
     border-right: 1px solid var(--border-color);
     padding: 20px;
     overflow-y: auto;
+    position: relative;
 }
 
 .conversation-list h3 {
@@ -658,17 +659,13 @@ code {
 .chat-interface .floating-model-btn {
     background-color: #007bff;
     color: white;
-    padding: 8px 16px;
+    padding: 10px 20px;
     border: none;
     border-radius: 20px;
     cursor: pointer;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
     z-index: 1000;
     transition: background-color 0.8s ease;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    font-size: 14px;
 }
 
 .chat-interface .floating-model-btn:hover {
@@ -705,7 +702,7 @@ code {
 .chat-interface .model-options button {
     background: none;
     border: none;
-    padding: 6px 12px;
+    padding: 8px 12px;
     width: 100%;
     text-align: left;
     cursor: pointer;
@@ -716,10 +713,6 @@ code {
     display: block;
     margin: 0;
     box-sizing: border-box;
-    height: 32px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
 }
 
 .chat-interface .model-options button:hover {
@@ -2116,4 +2109,25 @@ pre:hover::-webkit-scrollbar-thumb {
         padding: 10px 16px;
         font-size: 13px;
     }
+}
+
+/* 添加加载更多相关样式 */
+.loading-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    color: var(--text-secondary);
+    gap: 8px;
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+.no-more-conversations {
+    text-align: center;
+    padding: 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    opacity: 0.8;
+    margin-top: 8px;
 }
