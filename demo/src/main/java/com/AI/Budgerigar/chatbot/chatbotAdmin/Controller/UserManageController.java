@@ -109,7 +109,7 @@ public class UserManageController {
     public Result<List<UserPw>> getAllUsers(@RequestHeader(value = "X-User-UUID", required = false) String operatorUUID) {
         try {
             log.info("Received getAllUsers request with UUID: {}", operatorUUID);
-            // 只验证基本管理��权限
+            // 只验证基本管理员权限
             validateBasicAdminAccess(operatorUUID);
             List<UserPw> users = userMapper.selectAll();
             return Result.success(users);
@@ -194,11 +194,15 @@ public class UserManageController {
                 return Result.error("必须指定用户角色");
             }
 
-            boolean isRoleChange = !newRole.equals(user.getRole());
+            // 统一转换为大写进行比较
+            newRole = newRole.toUpperCase();
+            String currentRole = user.getRole() != null ? user.getRole().toUpperCase() : "";
+            
+            boolean isRoleChange = !newRole.equals(currentRole);
             boolean isBecomingAdmin = isRoleChange && "ADMIN".equals(newRole);
             boolean isBecomingUser = isRoleChange && "USER".equals(newRole);
 
-            if (isBecomingAdmin || "ADMIN".equals(user.getRole())) {
+            if (isBecomingAdmin || "ADMIN".equals(currentRole)) {
                 String email = updateData.get("email");
                 if (email == null || email.isBlank()) {
                     return Result.error("管理员必须设置邮箱");
@@ -214,24 +218,26 @@ public class UserManageController {
                     // 检查操作者不能设置比自己更高级别的管理员
                     AdminInfo operatorAdminInfo = userMapper.getAdminInfoByUuid(operatorUUID);
                     int operatorLevel = operatorAdminInfo != null ? operatorAdminInfo.getAdminLevel() : 0;
-                    
-                    log.info("Checking admin level setting - Operator: {}, Target: {}", operatorLevel, adminLevel);
-                    
-                    // 修改比较逻辑：目标级别必须小于操作者级别
                     if (adminLevel >= operatorLevel) {
-                        log.error("Admin level setting check failed - Target level {} is not lower than operator level {}", 
-                            adminLevel, operatorLevel);
                         return Result.error("不能设置比自己更高或同级的管理员级别");
                     }
                 } catch (NumberFormatException e) {
                     return Result.error("管理员级别格式无效");
                 }
 
+                // 检查是否已经是管理员
+                AdminInfo existingAdminInfo = userMapper.getAdminInfoByUuid(userId);
+                
                 if (isBecomingAdmin) {
-                    userMapper.promoteToAdminByUuid(userId);
-                    // 通过管理后台创建新管理员
-                    userMapper.createAdminFromDashboard(userId, email, adminLevel, true);
-                    userModelAccessService.grantAllAvailiableModels(userId);
+                    // 只有当用户不是管理员时才创建新的管理员信息
+                    if (existingAdminInfo == null) {
+                        userMapper.promoteToAdminByUuid(userId);
+                        userMapper.createAdminFromDashboard(userId, email, adminLevel, true);
+                        userModelAccessService.grantAllAvailiableModels(userId);
+                    } else {
+                        // 如果已经是管理员，只更新信息
+                        userMapper.updateAdminInfo(userId, email, adminLevel);
+                    }
                 } else {
                     // 更新现有管理员信息
                     userMapper.updateAdminInfo(userId, email, adminLevel);
