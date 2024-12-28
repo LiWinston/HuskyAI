@@ -8,62 +8,70 @@ IMAGE_NAME="lms-gpt"
 TAG="latest"  # 可以根据需要修改标签，例如使用版本号
 #RENDER_URL="https://api.render.com/deploy/srv-cronat2j1k6c739ksph0?key=s-dNsYQvuP4"
 
+# 添加暂停函数
+pause() {
+    echo
+    echo "按任意键继续..."
+    read -n 1 -s
+}
+
+# 错误处理函数
+handle_error() {
+    echo
+    echo "遇到错误: $1"
+    pause
+    exit 1
+}
+
 # 检查 Docker 是否安装
 if ! [ -x "$(command -v docker)" ]; then
-  echo 'Error: Docker is not installed. Please install Docker and try again.' >&2
-  exit 1
+    handle_error "Docker未安装，请先安装Docker后重试。"
 fi
 
 # 登录 Docker Hub
-echo "Logging in to Docker Hub..."
-docker login
-if [ $? -ne 0 ]; then
-  echo "Error: Docker login failed! Please check your credentials and try again." >&2
-  exit 1
+echo "正在登录 Docker Hub..."
+if ! docker login; then
+    handle_error "Docker Hub登录失败！请检查凭证后重试。"
 fi
 
 # 检查并删除本地旧镜像
 if docker images | grep -q "$DOCKER_USERNAME/$IMAGE_NAME:$TAG"; then
-  echo "Found existing local image: $DOCKER_USERNAME/$IMAGE_NAME:$TAG. Trying to remove it..."
-  docker image rm "$DOCKER_USERNAME/$IMAGE_NAME:$TAG"
-
-  if [ $? -ne 0 ]; then
-    echo "Warning: Failed to remove local image. Falling back to a new tag..."
-
-    # 生成一个新标签（例如带时间戳的版本号）
-    NEW_TAG=$(date +%Y%m%d%H%M%S)
-    echo "Using new tag: $NEW_TAG"
-    TAG=$NEW_TAG
-  else
-    echo "Old image removed successfully."
-  fi
+    echo "发现已存在的本地镜像: $DOCKER_USERNAME/$IMAGE_NAME:$TAG，正在尝试删除..."
+    if ! docker image rm "$DOCKER_USERNAME/$IMAGE_NAME:$TAG"; then
+        echo "警告：无法删除本地镜像，将使用新的标签..."
+        # 生成一个新标签（例如带时间戳的版本号）
+        NEW_TAG=$(date +%Y%m%d%H%M%S)
+        echo "使用新标签: $NEW_TAG"
+        TAG=$NEW_TAG
+    else
+        echo "已成功删除旧镜像。"
+    fi
 else
-  echo "No local image to remove. Continuing..."
+    echo "未发现需要删除的本地镜像，继续执行..."
 fi
 
 # 构建 Docker 镜像
-echo "Building Docker image: $DOCKER_USERNAME/$IMAGE_NAME:$TAG..."
-docker build -t "$DOCKER_USERNAME/$IMAGE_NAME:$TAG" .
-if [ $? -ne 0 ]; then
-  echo "Error: Docker image build failed! Please check your Dockerfile for issues." >&2
-  exit 1
+echo "正在构建Docker镜像: $DOCKER_USERNAME/$IMAGE_NAME:$TAG..."
+if ! docker build -t "$DOCKER_USERNAME/$IMAGE_NAME:$TAG" .; then
+    handle_error "Docker镜像构建失败！请检查Dockerfile是否存在问题。"
 fi
 
 # 推送 Docker 镜像到 Docker Hub
-echo "Pushing Docker image to Docker Hub..."
-docker push "$DOCKER_USERNAME/$IMAGE_NAME:$TAG"
-if [ $? -ne 0 ]; then
-  echo "Error: Docker image push failed! Please ensure you are logged into Docker Hub." >&2
-  exit 1
+echo "正在推送镜像到Docker Hub..."
+if ! docker push "$DOCKER_USERNAME/$IMAGE_NAME:$TAG"; then
+    handle_error "推送镜像到Docker Hub失败！请确保已登录Docker Hub。"
 fi
 
-## 触发 Render 部署
-#echo "Triggering Render deployment via URL: $RENDER_URL..."
-#curl -X GET "$RENDER_URL"
-#if [ $? -ne 0 ]; then
-#  echo "Error: Render deployment trigger failed! Please check the API key or deployment URL." >&2
-#  exit 1
-#fi
+# 触发 Render 部署
+if [ ! -z "$RENDER_URL" ]; then
+    echo "正在触发Render部署..."
+    if ! curl -X GET "$RENDER_URL"; then
+        handle_error "Render部署触发失败！请检查API密钥或部署URL。"
+    fi
+fi
 
 # 完成
-echo "Docker image pushed successfully to Docker Hub: $DOCKER_USERNAME/$IMAGE_NAME:$TAG"
+echo
+echo "操作完成！"
+echo "镜像已成功推送到Docker Hub: $DOCKER_USERNAME/$IMAGE_NAME:$TAG"
+pause
