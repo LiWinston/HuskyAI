@@ -3,6 +3,8 @@ import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {AnimatePresence, motion} from 'framer-motion';
+import { ToastContainer, toast, Slide } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './Chat.css';
 import {
     vscDarkPlus,
@@ -262,7 +264,6 @@ function Chat() {
             localStorage.setItem('selectedConversation', selectedConversation);
         }
     }, [selectedConversation]);
-    const [notification, setNotification] = useState(null);
     const chatWindowRef = useRef(null);
     const [textareaHeight, setTextareaHeight] = useState('auto');
     const textareaRef = useRef(null);
@@ -354,14 +355,46 @@ function Chat() {
         adjustTextareaHeight();
     }, [input]);
 
+    // Add toast configuration
+    const notify = (message, type = 'info', autoCloseTime = 3000) => {
+        const toastOptions = {
+            position: "bottom-center",
+            autoClose: autoCloseTime,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: false,  // 不暂停自动关闭
+            draggable: true,
+            progress: undefined,
+            theme: localStorage.getItem('theme') === 'dark' ? 'dark' : 'light',
+            className: 'custom-toast',
+            bodyClassName: 'custom-toast-body',
+            progressClassName: 'custom-toast-progress',
+            transition: Slide,
+            closeButton: true,  // 显示关闭按钮
+            icon: true,  // 显示图标
+        };
+
+        switch(type) {
+            case 'success':
+                toast.success(message, toastOptions);
+                break;
+            case 'error':
+                toast.error(message, toastOptions);
+                break;
+            case 'warning':
+                toast.warning(message, toastOptions);
+                break;
+            default:
+                toast.info(message, toastOptions);
+        }
+    };
+
     const fetchModels = async () => {
         document.body.style.cursor = 'wait'; // 设置鼠标为等待状态
         try {
-            const response = await axios.post('/api/chat/models'
-                , {
-                    uuid: localStorage.getItem('userUUID'),
-                },
-            );
+            const response = await axios.post('/api/chat/models', {
+                uuid: localStorage.getItem('userUUID'),
+            });
             if (response.data.code === 1) {
                 setModels(response.data.data); // Set models from response
                 if ((selectedModel === '' && response.data.data.length > 0)
@@ -376,8 +409,7 @@ function Chat() {
                 ) {
                     setSelectedModel(response.data.data[0]);
                 }
-                setNotification('Fail to update models, list remains the same');
-                setTimeout(() => setNotification(null), 1000);
+                notify('Fail to update models, list remains the same', 'warning');
             } else {
                 console.error('Error fetching models:', response.data.msg);
             }
@@ -394,28 +426,22 @@ function Chat() {
                 const userUUID = localStorage.getItem('userUUID');
                 const storedConversationId = localStorage.getItem('selectedConversation');
                 
-                setNotification('Fetching conversations...'); // Set notification
-                console.log('Fetching conversations for user:', userUUID); // Print user UUID
+                notify('Fetching conversations...', 'info');
+                console.log('Fetching conversations for user:', userUUID);
                 
-                const conversationsData = await fetchConversations(); // Wait for conversations to be fetched
+                const conversationsData = await fetchConversations();
                 
-                // 如果没有对话列表，直接返回
                 if (!conversationsData || conversationsData.length === 0) {
-                    setNotification(null);
                     return;
                 }
                 
-                // 检查存储的对话ID是否存在于对话列表中
                 const storedConversationExists = storedConversationId && 
                     conversationsData.some(conv => conv.id === storedConversationId);
                 
-                // 设置要加载的对话ID
                 const conversationToLoad = storedConversationExists ? storedConversationId : conversationsData[0].id;
                 
-                // 先设置选中的对话ID
                 setSelectedConversation(conversationToLoad);
                 
-                // 然后加载对话内容
                 const uuid = localStorage.getItem('userUUID');
                 const response = await axios.get(`/api/chat/${uuid}/${conversationToLoad}`);
 
@@ -433,11 +459,9 @@ function Chat() {
 
                 setMessages(loadedMessages);
                 
-                setNotification(null); // Clear notification
             } catch (e) {
                 console.error('Error loading conversation:', e);
-                setNotification('Failed to load conversations');
-                setTimeout(() => setNotification(null), 2000);
+                notify('Failed to load conversations', 'error');
             }
         };
 
@@ -604,14 +628,11 @@ function Chat() {
                     chatWindow.style.opacity = '1';
                 }, 50);
                 
-                setCenterNotice({
-                    visible: true,
-                    message: getText('shareInstructions')
-                });
+                notify(getText('shareInstructions'), 'info', 3500);
             }
         } catch (error) {
             console.error('Error fetching messages for share:', error);
-            setNotification(getText('loadFailed'));
+            notify(getText('loadFailed'), 'error', 3000);
         } finally {
             setIsLoadingMessages(false);
         }
@@ -622,11 +643,7 @@ function Chat() {
         setSelectedMessages([]);
         setShareMessages([]);
         setSharedCid(null);
-        setCenterNotice({
-            visible: true,
-            message: getText('shareExited'),
-            duration: 1500
-        });
+        notify(getText('shareExited'), 'info', 2000);
     };
 
     const handleMessageClick = (index) => {
@@ -663,16 +680,14 @@ function Chat() {
                 }).then((result) => {
                     if (result.isConfirmed) {
                         navigator.clipboard.writeText(shareLink);
-                        setNotification(getText('copySuccess'));
-                        setTimeout(() => setNotification(null), 2000);
+                        notify(getText('copySuccess'), 'success', 2000);
                     }
                 });
                 handleShareCancel();
             }
         } catch (error) {
             console.error('Error sharing messages:', error);
-            setNotification(getText('shareFailed'));
-            setTimeout(() => setNotification(null), 2000);
+            notify(getText('shareFailed'), 'error', 3000);
         }
     };
 
@@ -833,17 +848,14 @@ function Chat() {
 
     const parseMsgAndPotentialNotify = (msg, to1 = 3500, to2 = 2000) => {
         if (msg.includes(CONVERSATION_SUMMARY_GENERATED)) {
-            const [beforeSummary, newTitle] = msg.split(
-                CONVERSATION_SUMMARY_GENERATED);
+            const [beforeSummary, newTitle] = msg.split(CONVERSATION_SUMMARY_GENERATED);
             const notificationMsg = beforeSummary.trim()
                 ? beforeSummary + ', Conversation summary generated, ' + newTitle
                 : 'Conversation summary generated, ' + newTitle;
             animateTitleUpdate(selectedConversation, newTitle);
-            setNotification(notificationMsg);
-            setTimeout(() => setNotification(null), to1);
+            notify(notificationMsg, 'success', to1);
         } else {
-            setNotification(msg);
-            setTimeout(() => setNotification(null), to2);
+            notify(msg, 'info', to2);
         }
     };
 
@@ -1201,7 +1213,6 @@ function Chat() {
                                 selectedConversation={selectedConversation}
                                 setSelectedConversation={setSelectedConversation}
                                 setMessages={setMessages}
-                                setNotification={setNotification}
                                 handleShareStart={handleShareStart}
                             />
                         );
@@ -1326,17 +1337,6 @@ function Chat() {
                 </div>
 
             </div>
-            {/*  */}
-            <AnimatePresence>
-                {notification && (<motion.div
-                    className="notification-banner"
-                    initial={{opacity: 0, y: 50}}
-                    animate={{opacity: 1, y: 0}}
-                    exit={{opacity: 0, y: 50}}
-                    transition={{duration: 0.5}}
-                >{notification}
-                </motion.div>)}
-            </AnimatePresence>
 
             {isShareMode && (
                 <div className="share-controls">
@@ -1380,9 +1380,27 @@ function Chat() {
                 message={centerNotice.message}
                 isVisible={centerNotice.visible}
                 onClose={() => setCenterNotice({ visible: false, message: '' })}
-                duration={5000}  // 5秒
+                duration={5000}
             />
-        </div>);
+
+            <ToastContainer 
+                position="bottom-center"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss={false}  // 失去焦点时不暂停
+                pauseOnHover={false}      // 鼠标悬停时不暂停
+                draggable
+                theme={localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'}
+                limit={3}
+                transition={Slide}
+                closeButton
+                icon
+            />
+        </div>
+    );
 }
 
 // 预处理文本，将"\(...)"和"\[...]"转换为"$$...$$"的式

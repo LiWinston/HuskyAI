@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import axios from 'axios';
 import {FaEllipsisV} from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import './Chat.css';
 
 const ConversationItem = ({
@@ -12,7 +13,6 @@ const ConversationItem = ({
                               selectedConversation, // Currently selected conversation ID
                               setSelectedConversation,
                               setMessages,
-                              setNotification,
                               handleShareStart,
                           }) => {
     const [showOptions, setShowOptions] = useState(false);
@@ -196,8 +196,16 @@ const ConversationItem = ({
             // 清除删除标记
             localStorage.removeItem('isDeleting');
 
-            setNotification('Conversation deleted successfully');
-            setTimeout(() => setNotification(null), 2000);
+            toast.success('Conversation deleted successfully', {
+                position: "bottom-center",
+                autoClose: 2000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'
+            });
         } catch (error) {
             console.error('Failed to delete conversation', error);
             // 清除删除标记
@@ -206,6 +214,17 @@ const ConversationItem = ({
             const conversationElement = titleRef.current.closest('.conversation-item');
             conversationElement.classList.remove('deleting');
             conversationElement.style.removeProperty('--element-height');
+            
+            toast.error('Failed to delete conversation', {
+                position: "bottom-center",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'
+            });
         }
     };
 
