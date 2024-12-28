@@ -1,164 +1,134 @@
 /* Overall layout and typography */
 .admin-interface {
-    font-family: 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
-    color: #333;
+    width: 100%;
+}
+
+.model-registration {
+    background: #f8fafc;
     padding: 20px;
-    max-width: 100%;
-    margin: 0 auto;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    display: grid;
+    gap: 16px;
 }
 
-/* Headings */
-h3, h4 {
-    color: #1d1d1f;
-    font-weight: 600;
-    margin-bottom: 20px;
+.model-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
 }
 
-/* Model service list */
+.model-input:focus {
+    border-color: #3b82f6;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.ModelManagementButton {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.ModelManagementButton:hover {
+    background-color: #2563eb;
+}
+
 .model-list {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
 .model-item {
-    padding: 15px;
-    margin-bottom: 15px;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    border: 1px solid #e0e0e0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.3s ease;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
 }
 
-.model-item:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Model title and toggle button container */
 .model-header {
+    padding: 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
 }
 
 .model-title {
     margin: 0;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 500;
+    color: #1e293b;
 }
 
-/* Toggle all models button */
-.toggle-all-button {
-    max-width: 200px;
-    padding: 5px 10px;
-    font-size: 12px;
-    background-color: #007aff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.toggle-all-button:hover {
-    background-color: #0056b3;
-}
-
-/* Model details */
 .model-details {
-    margin-top: 10px;
     list-style: none;
-    padding-left: 0;
+    padding: 16px;
+    margin: 0;
 }
 
-.model-details li {
+.model-info {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
-    padding: 10px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    border: 1px solid #d9d9d9;
-    transition: background-color 0.2s ease;
-}
-
-.model-details li:hover {
-    background-color: #f0f0f0;
-}
-
-/* Model name and checkbox alignment */
-.model-info {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    align-items: center;
-    width: 100%;
+    gap: 16px;
+    padding: 8px 0;
 }
 
 .model-name {
+    flex: 1;
     font-weight: 500;
-    margin-right: 10px;
+    color: #475569;
 }
 
-/* Checkbox styling */
 .checkbox-label {
     display: flex;
     align-items: center;
-    margin-right: 15px;
+    gap: 8px;
+    color: #64748b;
     font-size: 14px;
 }
 
-input[type="checkbox"] {
-    margin-right: 5px;
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
     cursor: pointer;
 }
 
-/* Form inputs */
-input[type="text"], button {
-    padding: 10px 15px;
-    border-radius: 5px;
-    border: 1px solid #d2d2d7;
-    font-size: 14px;
-    margin-bottom: 10px;
-    transition: border-color 0.2s ease;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-input[type="text"]:focus {
-    border-color: #007aff;
-    outline: none;
-    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
-}
-
-/* Button styling */
-.ModelManagementButton {
-    background-color: #007aff;
+.toggle-all-button {
+    background-color: #64748b;
     color: white;
-    cursor: pointer;
-    transition: background-color 0.3s ease, box-shadow 0.2s ease;
     border: none;
-}
-
-.ModelManagementButton:hover {
-    background-color: #0056b3;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.ModelManagementButton:disabled {
-    background-color: #b3d7ff;
-    cursor: not-allowed;
-}
-
-/* Operation result message */
-.operation-result {
-    padding: 10px 15px;
-    background-color: #f5f5f7;
-    color: #333;
-    border-radius: 5px;
-    border: 1px solid #d2d2d7;
-    margin-top: 20px;
+    padding: 8px 16px;
+    border-radius: 6px;
     font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.toggle-all-button:hover {
+    background-color: #475569;
+}
+
+.operation-result {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 6px;
+    background-color: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
 }
 
 .admin-dashboard {

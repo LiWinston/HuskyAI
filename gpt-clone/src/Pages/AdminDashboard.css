@@ -1,0 +1,82 @@
+.admin-dashboard {
+    padding: 20px;
+    background-color: #f5f7fa;
+    min-height: 100vh;
+}
+
+.dashboard-header {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+}
+
+.dashboard-header h2 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.dashboard-main {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: 1fr;
+}
+
+.dashboard-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #edf2f7;
+    background: #ffffff;
+}
+
+.section-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.section-content {
+    padding: 20px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.section-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.section-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.section-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.section-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 响应式布局 */
+@media (min-width: 1200px) {
+    .dashboard-main {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* 让会话历史占据整行 */
+    .dashboard-section:last-child {
+        grid-column: 1 / -1;
+    }
+} 
