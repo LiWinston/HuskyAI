@@ -506,29 +506,88 @@ function Chat() {
     const [isLoadingConversations, setIsLoadingConversations] = useState(false);
     const [isLoadingConversation, setIsLoadingConversation] = useState(false);
 
+    // 添加分页相关状态
+    const [hasMoreConversations, setHasMoreConversations] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const conversationListRef = useRef(null);
+
     // 修改 fetchConversations 函数
-    const fetchConversations = async () => {
-        setIsLoadingConversations(true);
+    const fetchConversations = async (page = 1) => {
+        if(page === 1) {
+            setIsLoadingConversations(true);
+        }
         try {
-            const response = await axios.get(`/api/chat`, {
-                params: {uuid: localStorage.getItem('userUUID')},
+            const response = await axios.get(`/api/chat/page`, {
+                params: {
+                    uuid: localStorage.getItem('userUUID'),
+                    current: page,
+                    size: 20
+                },
             });
-            const conversationsData = response.data.data.map(conv => ({
+            
+            const { records, total, size, current } = response.data.data;
+            const conversationsData = records.map(conv => ({
                 id: conv.conversationId,
                 title: conv.firstMessage,
                 timestampCreat: conv.createdAt,
                 timestampLast: conv.lastMessageAt,
             }));
 
-            setConversations(conversationsData);
+            if (page === 1) {
+                setConversations(conversationsData);
+            } else {
+                setConversations(prev => [...prev, ...conversationsData]);
+            }
+
+            // 检查是否还有更多数据
+            setHasMoreConversations(current * size < total);
             return conversationsData;
         } catch (error) {
             console.error('Error fetching conversations:', error);
             throw error;
         } finally {
-            setIsLoadingConversations(false);
+            if(page === 1) {
+                setIsLoadingConversations(false);
+            }
+            setIsLoadingMore(false);
         }
     };
+
+    // 添加滚动加载处理函数
+    const handleConversationListScroll = () => {
+        if (!conversationListRef.current || !hasMoreConversations || isLoadingMore) return;
+
+        const { scrollTop, scrollHeight, clientHeight } = conversationListRef.current;
+        
+        // 当滚动到距离底部100px时加载更多
+        if (scrollHeight - scrollTop - clientHeight < 100) {
+            loadMoreConversations();
+        }
+    };
+
+    // 加载更多对话
+    const loadMoreConversations = async () => {
+        if (isLoadingMore || !hasMoreConversations) return;
+        
+        setIsLoadingMore(true);
+        const nextPage = currentPage + 1;
+        setCurrentPage(nextPage);
+        await fetchConversations(nextPage);
+    };
+
+    // 添加滚动监听
+    useEffect(() => {
+        const listElement = conversationListRef.current;
+        if (listElement) {
+            listElement.addEventListener('scroll', handleConversationListScroll);
+        }
+        return () => {
+            if (listElement) {
+                listElement.removeEventListener('scroll', handleConversationListScroll);
+            }
+        };
+    }, [hasMoreConversations, isLoadingMore]);
 
     // 修改 loadConversation 函数
     const loadConversation = async (conversationId, showLoading = false) => {
@@ -1168,7 +1227,7 @@ function Chat() {
                     changeCodeBorderStyle={changeCodeBorderStyle}
                 />
             )}
-            <div className="conversation-list">
+            <div className="conversation-list" ref={conversationListRef}>
                 <div className="conversation-header">
                     <h3>{getText('conversations')}</h3>
                     <button className="new-conversation-btn" onClick={createNewConversation}>
@@ -1217,6 +1276,23 @@ function Chat() {
                             />
                         );
                     })
+                )}
+                
+                {isLoadingMore && (
+                    <div className="loading-more">
+                        <Lottie 
+                            animationData={loadingAnimation}
+                            loop={true}
+                            style={{ width: 40, height: 40 }}
+                        />
+                        <span>{isZH ? "加载更多..." : "Loading more..."}</span>
+                    </div>
+                )}
+                
+                {!hasMoreConversations && conversations.length > 0 && (
+                    <div className="no-more-conversations">
+                        {isZH ? "没有更多对话了" : "No more conversations"}
+                    </div>
                 )}
             </div>
 

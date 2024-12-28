@@ -9,6 +9,8 @@ import com.AI.Budgerigar.chatbot.Entity.AdminInfo;
 import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.AI.Budgerigar.chatbot.Entity.UserPw;
 import com.AI.Budgerigar.chatbot.result.Result;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -162,6 +164,26 @@ public class UserServiceImpl implements userService {
         catch (Exception e) {
             log.error("Admin registration confirmation failed.", e);
             return Result.error("Admin registration confirmation failed.");
+        }
+    }
+
+    @Override
+    public Page<Conversation> getConversationsWithPage(String uuid, Page<Conversation> page) {
+        log.info("开始分页查询对话列表: uuid={}, current={}, size={}", 
+                uuid, page.getCurrent(), page.getSize());
+        try {
+            IPage<Conversation> result = userMapper.getConversationsByUserUuidWithPage(page, uuid);
+            if(result == null) {
+                log.error("分页查询结果为空");
+                return new Page<>();
+            }
+            log.info("分页查询成功: total={}, pages={}, current={}, size={}", 
+                    result.getTotal(), result.getPages(), 
+                    result.getCurrent(), result.getSize());
+            return (Page<Conversation>) result;
+        } catch (Exception e) {
+            log.error("分页查询异常", e);
+            return new Page<>();
         }
     }
 

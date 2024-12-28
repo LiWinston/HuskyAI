@@ -4,6 +4,8 @@ import com.AI.Budgerigar.chatbot.Entity.AdminInfo;
 import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.AI.Budgerigar.chatbot.Entity.UserPw;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -127,5 +129,13 @@ public interface UserMapper extends BaseMapper<UserPw> {
      */
     @Update("UPDATE AdminInfo SET admin_level = #{adminLevel} WHERE uuid = #{uuid}")
     int updateAdminLevel(@Param("uuid") String uuid, @Param("adminLevel") int adminLevel);
+
+    /**
+     * 分页获取用户的对话列表
+     * @param page 分页参数
+     * @param uuid 用户UUID
+     * @return 分页后的对话列表
+     */
+    IPage<Conversation> getConversationsByUserUuidWithPage(Page<Conversation> page, @Param("uuid") String uuid);
 
 }
