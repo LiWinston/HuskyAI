@@ -136,6 +136,6 @@ public interface UserMapper extends BaseMapper<UserPw> {
      * @param uuid 用户UUID
      * @return 分页后的对话列表
      */
-    IPage<Conversation> getConversationsByUserUuidWithPage(Page<Conversation> page, @Param("uuid") String uuid);
+    IPage<Conversation> getConversationsByUserUuidWithPage(@Param("page") Page<Conversation> page, @Param("uuid") String uuid);
 
 }
