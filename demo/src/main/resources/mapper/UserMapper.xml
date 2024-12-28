@@ -63,6 +63,8 @@
         INNER JOIN uidcid uc ON c.conversationId = uc.conversationId
         WHERE uc.uuid = #{uuid}
         ORDER BY lastMessageAtForOrder DESC
+        LIMIT #{page.size}
+        OFFSET (#{page.current} - 1) * #{page.size}
     </select>
 
     <select id="selectAll" resultType="com.AI.Budgerigar.chatbot.Entity.UserPw">
