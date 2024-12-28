@@ -2,8 +2,13 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.AI.Budgerigar.chatbot.mapper.UserMapper">
+    <update id="promoteToAdminByUuid">
+        UPDATE userpw
+        SET role = 'ADMIN'
+        WHERE uuid = #{uuid}
+    </update>
+
     <update id="downgradeAdminByUuid">
--- 更新userpw表中的uuid对应的用户的role为普通用户,再删除admin表中的uuid对应的用户
         UPDATE userpw
         SET role = 'USER'
         WHERE uuid = #{uuid};

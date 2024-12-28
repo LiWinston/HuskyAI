@@ -56,7 +56,6 @@ public interface UserMapper extends BaseMapper<UserPw> {
      * Promote a user to admin by UUID
      * @param uuid user's only identifier UUID
      */
-    @Update("UPDATE UserPw SET role = 'admin' WHERE uuid = #{uuid}")
     void promoteToAdminByUuid(String uuid);
 
     /**
