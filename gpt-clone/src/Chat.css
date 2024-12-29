@@ -15,7 +15,6 @@
     padding: 20px;
     overflow-y: auto;
     position: relative;
-    height: calc(100vh - 40px);
 }
 
 .conversation-list h3 {
@@ -64,12 +63,13 @@
 /* Basic title style. */
 .conversation-item-title {
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 3; /* Limited to 3 lines. */
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: normal;
-    line-height: 24px;
+    text-overflow: ellipsis; /* Ellipsis for overflow. */
+    white-space: normal; /* Normal white space. */
+    line-height: 1.5em;
+    max-height: 4.5em; /* Limited to 4.5em. */
     width: calc(100% - 30px);
     transition: all 0.3s ease-in-out;   /* Add a smooth transition. */
 }
@@ -2116,11 +2116,11 @@ pre:hover::-webkit-scrollbar-thumb {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 0;
-    text-align: center;
+    padding: 12px;
     color: var(--text-secondary);
+    gap: 8px;
     font-size: 14px;
-    opacity: 0.8;
+    margin-top: 8px;
 }
 
 .no-more-conversations {
@@ -2130,4 +2130,53 @@ pre:hover::-webkit-scrollbar-thumb {
     font-size: 13px;
     opacity: 0.8;
     margin-top: 8px;
+}
+
+/* 添加加载失败相关样式 */
+.load-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    gap: 12px;
+    margin: 8px;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.load-error span {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.retry-button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    background-color: var(--accent-color);
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.retry-button:hover:not(:disabled) {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+.retry-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+[data-theme='dark'] .load-error {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .load-error span {
+    color: rgba(255, 255, 255, 0.7);
 }

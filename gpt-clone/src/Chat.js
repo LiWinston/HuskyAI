@@ -284,6 +284,8 @@ function Chat() {
     const [hasMoreConversations, setHasMoreConversations] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isFetching, setIsFetching] = useState(false);
+    const [loadError, setLoadError] = useState(false);
+    const [failedPage, setFailedPage] = useState(null);
 
     const chatWindowRef = useRef(null);
     const textareaRef = useRef(null);
@@ -462,12 +464,13 @@ function Chat() {
             return [];
         }
 
-        if (isFetching || (!hasMoreConversations && page > 1)) return [];
+        if (isFetching || (!hasMoreConversations && !loadError && page > 1)) return [];
         
         if (page === 1) {
             setIsLoadingConversations(true);
         }
         setIsFetching(true);
+        setLoadError(false);
         
         try {
             const response = await axios.get(`/api/chat/page`, {
@@ -509,8 +512,8 @@ function Chat() {
             });
 
             setHasMoreConversations(hasNextPage);
+            setFailedPage(null);
             
-            // 在数据加载完成后检查内容高度
             setTimeout(() => {
                 checkContentHeight();
             }, 100);
@@ -518,14 +521,51 @@ function Chat() {
             return conversationsData;
         } catch (error) {
             console.error('Error fetching conversations:', error);
-            setHasMoreConversations(false);
-            throw error;
+            setLoadError(true);
+            setFailedPage(page);
+            
+            if (error.response) {
+                switch (error.response.status) {
+                    case 401:
+                        notify(isZH ? '登录已过期，请重新登录' : 'Session expired, please login again', 'error');
+                        navigate('/');
+                        break;
+                    case 403:
+                        notify(isZH ? '没有访问权限' : 'Access denied', 'error');
+                        break;
+                    case 404:
+                        notify(isZH ? '请求的资源不存在' : 'Resource not found', 'error');
+                        break;
+                    case 405:
+                        notify(isZH ? '服务器未就绪，请稍后再试' : 'Server not ready, please try again later', 'warning');
+                        break;
+                    case 500:
+                        notify(isZH ? '服务器内部错误' : 'Internal server error', 'error');
+                        break;
+                    default:
+                        notify(isZH ? `请求失败 (${error.response.status})` : `Request failed (${error.response.status})`, 'error');
+                }
+            } else if (error.request) {
+                notify(isZH ? '无法连接到服务器，请检查网络连接' : 'Cannot connect to server, please check your network', 'error');
+            } else {
+                notify(isZH ? '请求出错，请稍后重试' : 'Request error, please try again later', 'error');
+            }
+            
+            return [];
         } finally {
             if (page === 1) {
                 setIsLoadingConversations(false);
             }
             setIsLoadingMore(false);
             setIsFetching(false);
+        }
+    };
+
+    // 添加重试函数
+    const handleRetry = async () => {
+        if (failedPage) {
+            setIsLoadingMore(true);
+            await fetchConversations(failedPage);
         }
     };
 
@@ -1384,7 +1424,20 @@ function Chat() {
                     </div>
                 )}
                 
-                {!hasMoreConversations && conversations.length > 0 && (
+                {loadError && (
+                    <div className="load-error">
+                        <span>{isZH ? "加载失败" : "Failed to load"}</span>
+                        <button 
+                            className="retry-button" 
+                            onClick={handleRetry}
+                            disabled={isFetching}
+                        >
+                            {isZH ? "重试" : "Retry"}
+                        </button>
+                    </div>
+                )}
+                
+                {!hasMoreConversations && !loadError && conversations.length > 0 && (
                     <div className="no-more-conversations">
                         {isZH ? "没有更多对话了" : "No more conversations"}
                     </div>
