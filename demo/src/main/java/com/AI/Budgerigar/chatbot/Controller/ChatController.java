@@ -1,10 +1,9 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
 import com.AI.Budgerigar.chatbot.DTO.PageDTO;
+import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.AI.Budgerigar.chatbot.Entity.Message;
 import com.AI.Budgerigar.chatbot.Services.*;
-import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
-import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +37,7 @@ public class ChatController {
     private ChatSyncService chatSyncService;
 
     @Autowired
-    private ConversationMapper conversationMapper;
+    private ConversationService conversationService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -65,8 +64,7 @@ public class ChatController {
             List<Conversation> conversations = userService.getConversations(uuid);
             return Result.success(conversations);
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return Result.error(e.getMessage());
         }
     }
@@ -80,20 +78,21 @@ public class ChatController {
      */
     @GetMapping("/{uuid}/{conversationId}")
     public Result<?> chat(@PathVariable String uuid, @PathVariable String conversationId) {
-        if (!conversationMapper.checkConversationExistsByUuid(uuid, conversationId)) {
+        if (!conversationService.checkConversationExists(uuid, conversationId)) {
             log.info("conversationId not exists, create new conversationId");
             try {
-                conversationMapper.createConversationForUuid(uuid, conversationId);
-            }
-            catch (Exception e) {
+                Result<?> result = conversationService.createConversation(uuid, conversationId);
+                if (result.getCode() == 0) {
+                    return result;
+                }
+            } catch (Exception e) {
                 return Result.error(e.getMessage());
             }
         }
         try {
             List<Message> messageList = chatSyncService.getHistory(conversationId);
             return Result.success(messageList);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return Result.error(e.getMessage());
         }
     }

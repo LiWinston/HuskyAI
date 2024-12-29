@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,7 @@ public class UserServiceImpl implements userService {
     private AdminWaitingListRedisDAO adminWaitingListRedisDAO;
 
     @Override
+    @Cacheable(cacheNames = "user", key = "'exists:' + #uuid", unless = "#result.code == 0")
     public Result<Boolean> checkUserExistsByUuid(String uuid) {
         try {
             UserPw user = userMapper.getUserByUuid(uuid);
@@ -78,8 +80,12 @@ public class UserServiceImpl implements userService {
     }
 
     @Override
+    @Cacheable(value = "conversations", key = "#uuid + ':list'", unless = "#result == null")
     public List<Conversation> getConversations(String uuid) {
-        return userMapper.getConversationsByUserUuid(uuid);
+        log.info("从数据库获取会话列表: uuid={}", uuid);
+        List<Conversation> result = userMapper.getConversationsByUserUuid(uuid);
+        log.info("获取到会话列表: uuid={}, size={}", uuid, result != null ? result.size() : 0);
+        return result;
     }
 
     @Override
@@ -171,8 +177,9 @@ public class UserServiceImpl implements userService {
     }
 
     @Override
+    @Cacheable(value = "conversations_page", key = "#uuid + ':page:' + #pageDTO.current + ':' + #pageDTO.size", unless = "#result == null")
     public PageInfo<Conversation> getConversationsWithPage(String uuid, PageDTO pageDTO) {
-        log.info("开始分页查询对话列表: uuid={}, current={}, size={}", 
+        log.info("从数据库获取分页会话列表: uuid={}, current={}, size={}", 
                 uuid, pageDTO.getCurrent(), pageDTO.getSize());
         
         // 开启分页
@@ -182,8 +189,8 @@ public class UserServiceImpl implements userService {
         // 封装分页信息
         PageInfo<Conversation> pageInfo = new PageInfo<>(list);
         
-        log.info("分页查询成功: total={}, pages={}, pageNum={}, pageSize={}", 
-                pageInfo.getTotal(), pageInfo.getPages(), 
+        log.info("获取到分页会话列表: uuid={}, total={}, pages={}, pageNum={}, pageSize={}", 
+                uuid, pageInfo.getTotal(), pageInfo.getPages(), 
                 pageInfo.getPageNum(), pageInfo.getPageSize());
         
         return pageInfo;

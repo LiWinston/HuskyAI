@@ -8,6 +8,7 @@ import com.AI.Budgerigar.chatbot.mapper.UserMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -172,6 +173,7 @@ public class ChatSyncServiceImpl implements ChatSyncService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = {"conversations", "conversations_page"}, key = "#uuid + '*'", allEntries = false)
     public Result<?> deleteConversation(String uuid, String conversationId) {
         try {
             // 1. MongoDB delete operation
@@ -196,16 +198,13 @@ public class ChatSyncServiceImpl implements ChatSyncService {
                 return Result.error("MySQL delete operation failed");
             }
             else {
-                log.info("SQL delete operation success for UUID: {}, conversation ID: {}", uuid, conversationId);
+                log.info("Successfully deleted conversation for UUID: {}, conversation ID: {}", uuid, conversationId);
+                return Result.success("Conversation deleted successfully");
             }
-
-            // 4. All operations succeeded, returning success result.
-            return Result.success(null, "Conversation deleted successfully");
         }
         catch (Exception e) {
-            // Capture and record exceptions.
-            log.error("Error occurred while deleting conversation ID: {} for UUID: {}", conversationId, uuid, e);
-            return Result.error("Error occurred while deleting conversation");
+            log.error("Error occurred while deleting conversation: {}", e.getMessage(), e);
+            return Result.error("Error deleting conversation: " + e.getMessage());
         }
     }
 

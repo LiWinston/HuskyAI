@@ -1,4 +1,4 @@
-package com.AI.Budgerigar.chatbot.Config;
+package com.AI.Budgerigar.chatbot.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -21,21 +22,26 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-@EnableCaching
+@Slf4j
 @Configuration
+@EnableCaching
 public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        log.info("初始化缓存管理器...");
+        
         // 创建ObjectMapper并配置
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         objectMapper.activateDefaultTyping(
             LaissezFaireSubTypeValidator.instance,
             ObjectMapper.DefaultTyping.NON_FINAL,
-            JsonTypeInfo.As.PROPERTY  // 使用属性方式而不是数组
+            JsonTypeInfo.As.PROPERTY
         );
+        // 添加Java 8日期时间模块
         objectMapper.registerModule(new JavaTimeModule());
+        log.info("配置ObjectMapper完成，已添加JavaTimeModule支持");
         
         // 创建序列化器
         GenericJackson2JsonRedisSerializer jsonRedisSerializer = new GenericJackson2JsonRedisSerializer(objectMapper);
@@ -50,19 +56,21 @@ public class CacheConfig {
         // 特定缓存配置
         Map<String, RedisCacheConfiguration> configMap = new HashMap<>();
         
-        // 用户存在性缓存 - 1天
-        configMap.put("userExists", defaultConfig.entryTtl(Duration.ofDays(1)));
+        // 用户存在性缓存配置 - 24小时过期
+        configMap.put("user", defaultConfig.entryTtl(Duration.ofHours(24)));
+        log.info("配置user缓存: 过期时间=24小时");
         
-        // 会话列表缓存 - 1周
-        configMap.put("conversations", defaultConfig.entryTtl(Duration.ofDays(7)));
-        configMap.put("conversationsPage", defaultConfig.entryTtl(Duration.ofDays(7)));
-        
-        // 会话UUID缓存 - 1天
-        configMap.put("conversationUuid", defaultConfig.entryTtl(Duration.ofDays(1)));
+        // 会话列表缓存配置 - 持久化缓存
+        configMap.put("conversations", defaultConfig.entryTtl(Duration.ZERO));  // 永不过期
+        configMap.put("conversations_page", defaultConfig.entryTtl(Duration.ZERO));  // 永不过期
+        log.info("配置conversations和conversations_page缓存: 永不过期");
 
-        return RedisCacheManager.builder(connectionFactory)
+        RedisCacheManager cacheManager = RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
                 .withInitialCacheConfigurations(configMap)
                 .build();
+                
+        log.info("缓存管理器初始化完成");
+        return cacheManager;
     }
 } 
