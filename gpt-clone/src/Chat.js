@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState, useCallback} from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
@@ -512,22 +512,40 @@ function Chat() {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const conversationListRef = useRef(null);
 
+    // 添加新的状态
+    const [averageTitleLines, setAverageTitleLines] = useState(2.5);
+    const [estimatedPageSize, setEstimatedPageSize] = useState(20);
+    const [isFirstLoad, setIsFirstLoad] = useState(true);
+
+    // 计算每页大小的函数
+    const calculatePageSize = useCallback((height, avgLines) => {
+        const estimatedItemHeight = avgLines * 24; // 假设每行24px
+        const visibleItems = Math.ceil(height / estimatedItemHeight);
+        return Math.ceil(visibleItems * (isFirstLoad ? 1.35 : 1));
+    }, [isFirstLoad]);
+
     // 修改 fetchConversations 函数
     const fetchConversations = async (page = 1) => {
         if(page === 1) {
             setIsLoadingConversations(true);
         }
         try {
+            // 计算动态页大小
+            const size = isFirstLoad ? estimatedPageSize : calculatePageSize(
+                conversationListRef.current?.clientHeight || 0,
+                averageTitleLines
+            );
+
             const response = await axios.get(`/api/chat/page`, {
                 params: {
                     uuid: localStorage.getItem('userUUID'),
                     current: page,
-                    size: 20
+                    size
                 },
             });
             
-            const { records, total, size, current } = response.data.data;
-            const conversationsData = records.map(conv => ({
+            const { list, total, size: responseSize, current, hasNextPage } = response.data.data;
+            const conversationsData = list.map(conv => ({
                 id: conv.conversationId,
                 title: conv.firstMessage,
                 timestampCreat: conv.createdAt,
@@ -536,12 +554,31 @@ function Chat() {
 
             if (page === 1) {
                 setConversations(conversationsData);
+                
+                // 首次加载后计算实际平均行数
+                if (isFirstLoad) {
+                    setTimeout(() => {
+                        const titleElements = document.querySelectorAll('.conversation-item-title');
+                        if (titleElements.length > 0) {
+                            let totalLines = 0;
+                            titleElements.forEach(el => {
+                                totalLines += Math.ceil(el.scrollHeight / 24);
+                            });
+                            const newAvgLines = totalLines / titleElements.length;
+                            setAverageTitleLines(newAvgLines);
+                            setEstimatedPageSize(calculatePageSize(
+                                conversationListRef.current?.clientHeight || 0,
+                                newAvgLines
+                            ));
+                            setIsFirstLoad(false);
+                        }
+                    }, 100);
+                }
             } else {
                 setConversations(prev => [...prev, ...conversationsData]);
             }
 
-            // 检查是否还有更多数据
-            setHasMoreConversations(current * size < total);
+            setHasMoreConversations(hasNextPage);
             return conversationsData;
         } catch (error) {
             console.error('Error fetching conversations:', error);
