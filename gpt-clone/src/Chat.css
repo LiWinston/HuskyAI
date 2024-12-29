@@ -15,6 +15,7 @@
     padding: 20px;
     overflow-y: auto;
     position: relative;
+    height: calc(100vh - 40px);
 }
 
 .conversation-list h3 {
@@ -63,13 +64,12 @@
 /* Basic title style. */
 .conversation-item-title {
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Limited to 3 lines. */
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis; /* Ellipsis for overflow. */
-    white-space: normal; /* Normal white space. */
-    line-height: 1.5em;
-    max-height: 4.5em; /* Limited to 4.5em. */
+    text-overflow: ellipsis;
+    white-space: normal;
+    line-height: 24px;
     width: calc(100% - 30px);
     transition: all 0.3s ease-in-out;   /* Add a smooth transition. */
 }
@@ -2116,11 +2116,11 @@ pre:hover::-webkit-scrollbar-thumb {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
+    padding: 8px 0;
+    text-align: center;
     color: var(--text-secondary);
-    gap: 8px;
     font-size: 14px;
-    margin-top: 8px;
+    opacity: 0.8;
 }
 
 .no-more-conversations {
