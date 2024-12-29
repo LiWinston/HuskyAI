@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,6 +49,7 @@ public class UserServiceImpl implements userService {
     private AdminWaitingListRedisDAO adminWaitingListRedisDAO;
 
     @Override
+    @Cacheable(value = "userExists", key = "#uuid", unless = "#result.code == 0")
     public Result<Boolean> checkUserExistsByUuid(String uuid) {
         try {
             UserPw user = userMapper.getUserByUuid(uuid);
@@ -78,12 +81,14 @@ public class UserServiceImpl implements userService {
     }
 
     @Override
+    @Cacheable(value = "conversations", key = "#uuid")
     public List<Conversation> getConversations(String uuid) {
         return userMapper.getConversationsByUserUuid(uuid);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = {"userExists", "conversations", "conversationsPage"}, key = "#userRegisterDTO.username")
     public Result<?> register(HttpServletRequest request, UserRegisterDTO userRegisterDTO) {
         log.info(userRegisterDTO.toString());
         String username = userRegisterDTO.getUsername();
@@ -139,6 +144,7 @@ public class UserServiceImpl implements userService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"userExists", "conversations", "conversationsPage"}, key = "#token")
     public Result<?> confirmAdmin(String token) {
         try {
             String uuid = adminWaitingListRedisDAO.getUuidByToken(token);
@@ -171,6 +177,7 @@ public class UserServiceImpl implements userService {
     }
 
     @Override
+    @Cacheable(value = "conversationsPage", key = "#uuid + '-' + #pageDTO.current + '-' + #pageDTO.size")
     public PageInfo<Conversation> getConversationsWithPage(String uuid, PageDTO pageDTO) {
         log.info("开始分页查询对话列表: uuid={}, current={}, size={}", 
                 uuid, pageDTO.getCurrent(), pageDTO.getSize());
@@ -188,5 +195,4 @@ public class UserServiceImpl implements userService {
         
         return pageInfo;
     }
-
 }

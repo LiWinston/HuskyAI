@@ -19,6 +19,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -236,12 +237,22 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
             Conversation conversation = conversationMapper.selectById(conversationId);
             if (conversation != null) {
                 conversation.setLastMessageAt(LocalDateTime.from(Instant.now()));
+                // 更新对话时间时清除缓存
+                String uuid = conversation.getUuid();
+                if (uuid != null) {
+                    clearConversationCache(uuid);
+                }
                 conversationMapper.updateById(conversation);
             }
             else {
                 log.warn("Conversation with id {} not found, unable to update lastMessageAt", conversationId);
             }
         });
+    }
+
+    @CacheEvict(value = {"conversations", "conversationsPage"}, key = "#uuid")
+    public void clearConversationCache(String uuid) {
+        // 方法体可以为空，注解会处理缓存清除
     }
 
     // private int getMongoConversationLength(String conversationId) {

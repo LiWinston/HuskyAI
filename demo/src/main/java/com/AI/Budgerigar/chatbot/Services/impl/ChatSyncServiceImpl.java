@@ -8,6 +8,7 @@ import com.AI.Budgerigar.chatbot.mapper.UserMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -172,6 +173,7 @@ public class ChatSyncServiceImpl implements ChatSyncService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"conversations", "conversationsPage"}, key = "#uuid")
     public Result<?> deleteConversation(String uuid, String conversationId) {
         try {
             // 1. MongoDB delete operation

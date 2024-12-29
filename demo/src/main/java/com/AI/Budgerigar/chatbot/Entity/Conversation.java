@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 @Data
 public class Conversation implements Serializable {
 
+    private String uuid;
+
     private String conversationId;
 
     private String firstMessage;

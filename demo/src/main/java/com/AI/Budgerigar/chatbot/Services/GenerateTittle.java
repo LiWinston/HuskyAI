@@ -12,6 +12,7 @@ import com.baidubce.qianfan.core.builder.ChatBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -134,6 +135,12 @@ public class GenerateTittle {
             }
             // Step 3: Update the 'firstmessage' field in the database
             conversationMapper.setMessageForShort(conversationId, summary);
+            
+            // 获取会话所属的uuid并清除相关缓存
+            String uuid = conversationMapper.getUuidByConversationId(conversationId);
+            if (uuid != null) {
+                clearConversationCache(uuid);
+            }
 
             return Result.success(summary);
 
@@ -143,6 +150,11 @@ public class GenerateTittle {
             e.printStackTrace();
             return Result.error("An error occurred while generating and setting the conversation title.");
         }
+    }
+
+    @CacheEvict(value = {"conversations", "conversationsPage"}, key = "#uuid")
+    public void clearConversationCache(String uuid) {
+        // 方法体可以为空，注解会处理缓存清除
     }
 
     private void rollAndSetModel(AtomicReference<String> _openAIUrl, AtomicReference<String> _model,
