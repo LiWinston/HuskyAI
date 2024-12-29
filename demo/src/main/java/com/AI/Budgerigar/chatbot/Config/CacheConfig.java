@@ -48,10 +48,25 @@ public class CacheConfig {
 
         // 特定缓存配置
         Map<String, RedisCacheConfiguration> configMap = new HashMap<>();
-        configMap.put("userExists", defaultConfig.entryTtl(Duration.ofDays(1))); // 用户存在性缓存1天
-        configMap.put("conversations", defaultConfig.entryTtl(Duration.ofMillis(700))); // 会话列表缓存700毫秒
-        configMap.put("conversationsPage", defaultConfig.entryTtl(Duration.ofMillis(700))); // 分页会话列表缓存700毫秒
-        configMap.put("conversationUuid", defaultConfig.entryTtl(Duration.ofDays(1))); // 会话UUID缓存1天
+        
+        // 用户存在性缓存 - 1天
+        // 因为用户信息变化不频繁，且在注册和管理员确认时会自动失效
+        configMap.put("userExists", defaultConfig.entryTtl(Duration.ofDays(1)));
+        
+        // 会话列表缓存 - 1周
+        // 已实现完善的缓存失效机制，包括：
+        // 1. 删除对话时自动失效
+        // 2. 创建新对话时自动失效
+        // 3. 更新对话标题时自动失效
+        // 4. 更新对话最后消息时间时自动失效
+        // 5. 用户注册时自动失效
+        // 6. 管理员确认时自动失效
+        configMap.put("conversations", defaultConfig.entryTtl(Duration.ofDays(7)));
+        configMap.put("conversationsPage", defaultConfig.entryTtl(Duration.ofDays(7)));
+        
+        // 会话UUID缓存 - 1天
+        // UUID与会话的关联关系基本不会改变，除非删除会话
+        configMap.put("conversationUuid", defaultConfig.entryTtl(Duration.ofDays(1)));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
