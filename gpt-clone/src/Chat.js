@@ -462,10 +462,21 @@ function Chat() {
             setConversations(prev => {
                 if (page === 1) return conversationsData;
                 
+                // 使用 Map 去重，保持最新的数据
                 const uniqueConversations = new Map();
-                [...prev, ...conversationsData].forEach(conv => {
+                
+                // 先添加已有的对话
+                prev.forEach(conv => {
                     uniqueConversations.set(conv.id, conv);
                 });
+                
+                // 再添加新的对话，如果有重复的会覆盖旧的
+                conversationsData.forEach(conv => {
+                    if (!uniqueConversations.has(conv.id)) {
+                        uniqueConversations.set(conv.id, conv);
+                    }
+                });
+                
                 return Array.from(uniqueConversations.values());
             });
 
@@ -687,6 +698,7 @@ function Chat() {
             await loadConversation(newConversationId, false); // 新建对话不显示动画
         } catch (error) {
             console.error('Failed to create new conversation', error);
+            notify('Failed to create new conversation', 'error');
         }
     };
 
