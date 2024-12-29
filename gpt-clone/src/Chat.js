@@ -249,14 +249,13 @@ const ThemeModal = React.memo(({
 function Chat() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
-    // eslint-disable-next-line no-unused-vars
-    const [rows, setRows] = useState(1); // New row status.
+    const [rows, setRows] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [conversations, setConversations] = useState([]); // Ensure initial state is an array
+    const [conversations, setConversations] = useState([]);
     const [selectedConversation, setSelectedConversation] = useState(null);
-    const [selectedModel, setSelectedModel] = useState(''); // The currently selected model.
-    const [models, setModels] = useState([]); // List of models
-    const [showModelOptions, setShowModelOptions] = useState(false); //
+    const [selectedModel, setSelectedModel] = useState('');
+    const [models, setModels] = useState([]);
+    const [showModelOptions, setShowModelOptions] = useState(false);
     const [useStream, setUseStream] = useState(false);
     const initialFetchRef = useRef(false);
     // Automatically update to localStorage when selectedConversation changes.
@@ -266,23 +265,56 @@ function Chat() {
             localStorage.setItem('selectedConversation', selectedConversation);
         }
     }, [selectedConversation]);
-    const chatWindowRef = useRef(null);
     const [textareaHeight, setTextareaHeight] = useState('auto');
-    const textareaRef = useRef(null);
-    // eslint-disable-next-line no-unused-vars
     const [animatingTitle, setAnimatingTitle] = useState(null);
     const [isShareMode, setIsShareMode] = useState(false);
     const [selectedMessages, setSelectedMessages] = useState([]);
     const [shareMessages, setShareMessages] = useState([]);
     const [sharedCid, setSharedCid] = useState(null);
     const [streamingMessage, setStreamingMessage] = useState(null);
-    const navigate = useNavigate();
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
     const [centerNotice, setCenterNotice] = useState({ visible: false, message: '' });
     const [codeBorderStyle, setCodeBorderStyle] = useState('default');
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [isDebouncing, setIsDebouncing] = useState(false);
     const [isInitialFetchDone, setIsInitialFetchDone] = useState(false);
+    const [isLoadingConversations, setIsLoadingConversations] = useState(false);
+    const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [hasMoreConversations, setHasMoreConversations] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [isFetching, setIsFetching] = useState(false);
+
+    const chatWindowRef = useRef(null);
+    const textareaRef = useRef(null);
+    const navigate = useNavigate();
+    const conversationListRef = useRef(null);
+    const PAGE_SIZE = 12;
+
+    // 添加检查内容高度的函数
+    const checkContentHeight = useCallback(
+        debounce(() => {
+            const element = conversationListRef.current;
+            if (!element || isLoadingMore || isFetching || !hasMoreConversations) return;
+
+            const containerHeight = element.clientHeight;
+            const contentHeight = element.scrollHeight;
+
+            // 如果内容高度小于容器高度，并且有更多数据可加载
+            if (contentHeight <= containerHeight && hasMoreConversations && !isDebouncing) {
+                setIsDebouncing(true);
+                setIsLoadingMore(true);
+                const nextPage = currentPage + 1;
+                setCurrentPage(nextPage);
+                fetchConversations(nextPage).finally(() => {
+                    setTimeout(() => {
+                        setIsDebouncing(false);
+                    }, 500); // 设置500ms的防抖时间
+                });
+            }
+        }, 200),
+        [hasMoreConversations, isLoadingMore, isFetching, currentPage, isDebouncing]
+    );
 
     // 添加语言检测
     const userLang = navigator.language || navigator.userLanguage;
@@ -426,7 +458,6 @@ function Chat() {
 
     // 修改 fetchConversations 函数
     const fetchConversations = async (page = 1, isInitialFetch = false) => {
-        // 防止初始化时的重复请求
         if (isInitialFetch && initialFetchRef.current) {
             return [];
         }
@@ -462,15 +493,12 @@ function Chat() {
             setConversations(prev => {
                 if (page === 1) return conversationsData;
                 
-                // 使用 Map 去重，保持最新的数据
                 const uniqueConversations = new Map();
                 
-                // 先添加已有的对话
                 prev.forEach(conv => {
                     uniqueConversations.set(conv.id, conv);
                 });
                 
-                // 再添加新的对话，如果有重复的会覆盖旧的
                 conversationsData.forEach(conv => {
                     if (!uniqueConversations.has(conv.id)) {
                         uniqueConversations.set(conv.id, conv);
@@ -482,7 +510,11 @@ function Chat() {
 
             setHasMoreConversations(hasNextPage);
             
-            console.log(`Page ${page}: Loaded ${list.length} items, Total: ${total}`);
+            // 在数据加载完成后检查内容高度
+            setTimeout(() => {
+                checkContentHeight();
+            }, 100);
+
             return conversationsData;
         } catch (error) {
             console.error('Error fetching conversations:', error);
@@ -496,6 +528,29 @@ function Chat() {
             setIsFetching(false);
         }
     };
+
+    // 添加监听 conversations 变化的 useEffect
+    useEffect(() => {
+        if (!isInitialFetchDone && conversations.length > 0) {
+            checkContentHeight();
+            setIsInitialFetchDone(true);
+        }
+    }, [conversations, isInitialFetchDone, checkContentHeight]);
+
+    // 添加监听窗口大小变化的 useEffect
+    useEffect(() => {
+        const handleResize = debounce(() => {
+            if (!isDebouncing) {
+                checkContentHeight();
+            }
+        }, 200);
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            handleResize.cancel();
+        };
+    }, [checkContentHeight, isDebouncing]);
 
     // 修改主要的初始化 useEffect
     useEffect(() => {
@@ -580,18 +635,6 @@ function Chat() {
 
         loadInitialConversation();
     }, [conversations, isInitialLoad]);
-
-    // 在现有的状态中添加新的加载状态
-    const [isLoadingConversations, setIsLoadingConversations] = useState(false);
-    const [isLoadingConversation, setIsLoadingConversation] = useState(false);
-
-    // 添加分页相关状态
-    const [currentPage, setCurrentPage] = useState(1);
-    const [hasMoreConversations, setHasMoreConversations] = useState(true);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [isFetching, setIsFetching] = useState(false);
-    const conversationListRef = useRef(null);
-    const PAGE_SIZE = 12; // 固定每页大小
 
     // 创建防抖的滚动处理函数
     const debouncedScroll = useCallback(
