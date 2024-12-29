@@ -53,16 +53,15 @@
     </select>
 
     <select id="getConversationsByUserUuidWithPage" resultType="com.AI.Budgerigar.chatbot.Entity.Conversation">
-        SELECT DISTINCT
+        SELECT 
             c.conversationId,
             c.firstMessage,
             c.createdAt AT TIME ZONE 'UTC' AS createdAt,
-            c.lastMessageAt AT TIME ZONE 'UTC' AS lastMessageAt,
-            c.lastMessageAt as lastMessageAtForOrder
+            c.lastMessageAt AT TIME ZONE 'UTC' AS lastMessageAt
         FROM cid c
         INNER JOIN uidcid uc ON c.conversationId = uc.conversationId
         WHERE uc.uuid = #{uuid}
-        ORDER BY lastMessageAtForOrder DESC
+        ORDER BY c.lastMessageAt DESC
     </select>
 
     <select id="selectAll" resultType="com.AI.Budgerigar.chatbot.Entity.UserPw">

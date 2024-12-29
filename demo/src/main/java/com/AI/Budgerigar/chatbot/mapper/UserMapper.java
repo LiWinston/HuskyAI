@@ -131,11 +131,10 @@ public interface UserMapper extends BaseMapper<UserPw> {
     int updateAdminLevel(@Param("uuid") String uuid, @Param("adminLevel") int adminLevel);
 
     /**
-     * 分页获取用户的对话列表
-     * @param page 分页参数
+     * 获取用户的对话列表
      * @param uuid 用户UUID
-     * @return 分页后的对话列表
+     * @return 对话列表
      */
-    IPage<Conversation> getConversationsByUserUuidWithPage(@Param("page") IPage<Conversation> page, @Param("uuid") String uuid);
+    List<Conversation> getConversationsByUserUuidWithPage(@Param("uuid") String uuid);
 
 }

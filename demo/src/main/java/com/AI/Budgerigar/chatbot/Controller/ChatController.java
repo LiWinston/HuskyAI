@@ -1,13 +1,14 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
+import com.AI.Budgerigar.chatbot.DTO.PageDTO;
 import com.AI.Budgerigar.chatbot.Entity.Message;
 import com.AI.Budgerigar.chatbot.Services.*;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.AI.Budgerigar.chatbot.result.Result;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -315,22 +316,21 @@ public class ChatController {
                 return Result.error(userExists.getMsg());
             }
 
-            // 创建分页对象
-            Page<Conversation> page = new Page<>(current, size);
+            // 创建分页参数
+            PageDTO pageDTO = new PageDTO();
+            pageDTO.setCurrent(current);
+            pageDTO.setSize(size);
+            
             // 获取分页后的对话列表
-            Page<Conversation> conversationPage = userService.getConversationsWithPage(uuid, page);
+            PageInfo<Conversation> pageInfo = userService.getConversationsWithPage(uuid, pageDTO);
             
-            if(conversationPage == null || conversationPage.getRecords() == null) {
-                log.error("获取分页对话列表失败: 结果为空");
-                return Result.error("获取对话列表失败");
-            }
+            log.info("成功获取分页对话列表: total={}, pages={}, current={}, size={}", 
+                    pageInfo.getTotal(), 
+                    pageInfo.getPages(), 
+                    pageInfo.getPageNum(), 
+                    pageInfo.getPageSize());
             
-            log.info("成功获取分页对话列表: total={}, current={}, size={}", 
-                    conversationPage.getTotal(), 
-                    conversationPage.getCurrent(), 
-                    conversationPage.getSize());
-            
-            return Result.success(conversationPage);
+            return Result.success(pageInfo);
         } catch (Exception e) {
             log.error("获取分页对话列表异常", e);
             return Result.error("获取对话列表失败: " + e.getMessage());

@@ -1,6 +1,7 @@
 package com.AI.Budgerigar.chatbot.Services.impl;
 
 import com.AI.Budgerigar.chatbot.Cache.AdminWaitingListRedisDAO;
+import com.AI.Budgerigar.chatbot.DTO.PageDTO;
 import com.AI.Budgerigar.chatbot.DTO.UserRegisterDTO;
 import com.AI.Budgerigar.chatbot.Services.EmailService;
 import com.AI.Budgerigar.chatbot.Services.userService;
@@ -19,6 +20,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 
 import java.util.List;
 import java.util.UUID;
@@ -168,23 +171,22 @@ public class UserServiceImpl implements userService {
     }
 
     @Override
-    public Page<Conversation> getConversationsWithPage(String uuid, Page<Conversation> page) {
+    public PageInfo<Conversation> getConversationsWithPage(String uuid, PageDTO pageDTO) {
         log.info("开始分页查询对话列表: uuid={}, current={}, size={}", 
-                uuid, page.getCurrent(), page.getSize());
-        try {
-            IPage<Conversation> result = userMapper.getConversationsByUserUuidWithPage(page, uuid);
-            if(result == null) {
-                log.error("分页查询结果为空");
-                return new Page<>();
-            }
-            log.info("分页查询成功: total={}, pages={}, current={}, size={}", 
-                    result.getTotal(), result.getPages(), 
-                    result.getCurrent(), result.getSize());
-            return (Page<Conversation>) result;
-        } catch (Exception e) {
-            log.error("分页查询异常", e);
-            return new Page<>();
-        }
+                uuid, pageDTO.getCurrent(), pageDTO.getSize());
+        
+        // 开启分页
+        PageHelper.startPage(pageDTO.getCurrent(), pageDTO.getSize());
+        // 执行查询
+        List<Conversation> list = userMapper.getConversationsByUserUuidWithPage(uuid);
+        // 封装分页信息
+        PageInfo<Conversation> pageInfo = new PageInfo<>(list);
+        
+        log.info("分页查询成功: total={}, pages={}, pageNum={}, pageSize={}", 
+                pageInfo.getTotal(), pageInfo.getPages(), 
+                pageInfo.getPageNum(), pageInfo.getPageSize());
+        
+        return pageInfo;
     }
 
 }
