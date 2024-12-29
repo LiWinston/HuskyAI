@@ -481,7 +481,20 @@ function Chat() {
                 },
             });
             
-            const { list, total, hasNextPage } = response.data.data;
+            const { list, total, hasNextPage, pages } = response.data.data;
+            
+            // 如果当前页大于总页数，说明已经没有更多数据了
+            if (page > pages) {
+                setHasMoreConversations(false);
+                return [];
+            }
+            
+            // 如果返回的列表为空且不是第一页，说明已经没有更多数据了
+            if (list.length === 0 && page > 1) {
+                setHasMoreConversations(false);
+                return [];
+            }
+
             const conversationsData = list.map(conv => ({
                 id: conv.conversationId,
                 title: conv.firstMessage,
@@ -511,12 +524,16 @@ function Chat() {
                 return Array.from(uniqueConversations.values());
             });
 
-            setHasMoreConversations(hasNextPage);
+            // 根据实际数据情况设置是否还有更多
+            setHasMoreConversations(hasNextPage && page < pages);
             setFailedPage(null);
             
-            setTimeout(() => {
-                checkContentHeight();
-            }, 100);
+            // 只在有数据的情况下检查内容高度
+            if (list.length > 0) {
+                setTimeout(() => {
+                    checkContentHeight();
+                }, 100);
+            }
 
             return conversationsData;
         } catch (error) {
