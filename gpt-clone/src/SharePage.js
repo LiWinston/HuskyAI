@@ -37,7 +37,7 @@ function SharePage() {
             try {
                 const response = await axios.get(`/api/chat/share/${shareCode}`);
                 // 确保消息按时间顺序排序
-                const sortedMessages = (response.data.data || []).sort((a, b) => 
+                const sortedMessages = (response.data.data || []).sort((a, b) =>
                     new Date(a.timestamp) - new Date(b.timestamp)
                 );
                 setMessages(sortedMessages);
@@ -70,13 +70,13 @@ function SharePage() {
 
     const handleExportAsImage = async () => {
         const container = chatWindowRef.current;
-        
+
         try {
             // 保存原始样式
             const originalStyle = container.style.cssText;
             const originalWidth = container.offsetWidth;
             const originalHeight = container.offsetHeight;
-            
+
             // 临时调整样式以获得更好的截图效果
             container.style.width = '1200px';
             container.style.height = 'auto';  // 确保高度自适应
@@ -84,7 +84,7 @@ function SharePage() {
             container.style.background = '#ffffff';
             container.style.position = 'relative';
             container.style.overflow = 'visible';
-            
+
             // 等待所有图片加载完成
             const images = container.getElementsByTagName('img');
             await Promise.all(Array.from(images).map(img => {
@@ -94,7 +94,7 @@ function SharePage() {
                     img.onerror = resolve;
                 });
             }));
-            
+
             // 使用 html2canvas 截图
             const canvas = await html2canvas(container, {
                 scale: 2,  // 提高清晰度
@@ -115,12 +115,12 @@ function SharePage() {
                     }
                 }
             });
-            
+
             // 恢复原始样式
             container.style.cssText = originalStyle;
             container.style.width = originalWidth + 'px';
             container.style.height = originalHeight + 'px';
-            
+
             // 创建下载链接
             const image = canvas.toDataURL('image/png', 1.0);
             const link = document.createElement('a');
@@ -135,16 +135,16 @@ function SharePage() {
 
     const handleExportAsPDF = async () => {
         const container = chatWindowRef.current;
-        
+
         try {
             // 保存原始样式
             const originalStyle = container.style.cssText;
-            
+
             // 设置临时样式
             container.style.width = '800px';
             container.style.padding = '40px';
             container.style.background = '#ffffff';
-            
+
             // 等待图片加载
             await Promise.all(
                 Array.from(container.getElementsByTagName('img'))
@@ -184,10 +184,10 @@ function SharePage() {
             // 计算缩放后的尺寸
             const imgWidth = contentWidth;
             const imgHeight = (canvas.height * contentWidth) / canvas.width;
-            
+
             // 计算总页数
             const pageCount = Math.ceil(imgHeight / contentHeight);
-            
+
             // 逐页添加内容
             for (let page = 0; page < pageCount; page++) {
                 if (page > 0) {
@@ -205,7 +205,7 @@ function SharePage() {
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = canvas.width;
                 tempCanvas.height = yHeight;
-                
+
                 const ctx = tempCanvas.getContext('2d');
                 ctx.drawImage(
                     canvas,
@@ -217,10 +217,10 @@ function SharePage() {
 
                 // 将裁剪后的内容添加到 PDF
                 const imgData = tempCanvas.toDataURL('image/jpeg', 1.0);
-                
+
                 // 计算当前页图片高度
                 const currentPageImgHeight = (yHeight * contentWidth) / canvas.width;
-                
+
                 pdf.addImage(
                     imgData,
                     'JPEG',
@@ -233,7 +233,7 @@ function SharePage() {
 
             // 恢复原始样式
             container.style.cssText = originalStyle;
-            
+
             // 保存 PDF
             pdf.save(`chat-${new Date().toISOString().slice(0,10)}.pdf`);
         } catch (error) {
@@ -290,7 +290,7 @@ function SharePage() {
                                     const codeContent = String(children).replace(/\n$/, '');
 
                                     // 判断是否应该内联显示
-                                    const shouldInline = inline || 
+                                    const shouldInline = inline ||
                                         (codeContent.length < 50 && !codeContent.includes('\n'));
 
                                     return shouldInline ? (
@@ -310,7 +310,7 @@ function SharePage() {
                                             >
                                                 {codeContent}
                                             </SyntaxHighlighter>
-                                            <button 
+                                            <button
                                                 className="copy-button"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -333,7 +333,7 @@ function SharePage() {
                         />
                     </MathJax>
                 </div>
-                <button 
+                <button
                     className="copy-button"
                     onClick={(e) => {
                         e.stopPropagation();
@@ -351,7 +351,7 @@ function SharePage() {
         const date = new Date(timestamp);
         const now = new Date();
         const diff = now - date;
-        
+
         // 如果是今天的消息
         if (date.toDateString() === now.toDateString()) {
             return date.toLocaleTimeString('en-US', {
@@ -360,7 +360,7 @@ function SharePage() {
                 hour12: false
             });
         }
-        
+
         // 如果是昨天的消息
         const yesterday = new Date(now);
         yesterday.setDate(yesterday.getDate() - 1);
@@ -371,7 +371,7 @@ function SharePage() {
                 hour12: false
             });
         }
-        
+
         // 如果是今年的消息
         if (date.getFullYear() === now.getFullYear()) {
             return date.toLocaleDateString('en-US', {
@@ -382,7 +382,7 @@ function SharePage() {
                 hour12: false
             });
         }
-        
+
         // 其他情况显示完整日期
         return date.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -397,7 +397,7 @@ function SharePage() {
     if (loading) {
         return (
             <div className="share-page__loading">
-                <Lottie 
+                <Lottie
                     animationData={loadingAnimation}
                     loop={true}
                     style={{ width: 120, height: 120 }}
@@ -419,22 +419,22 @@ function SharePage() {
                         Share ID: <span className="share-page__title-code">{shareCode}</span>
                     </div>
                     <div className="share-page__actions">
-                        <button 
-                            className="share-page__button" 
+                        <button
+                            className="share-page__button"
                             onClick={handleExportAsImage}
                             title="Export as Image"
                         >
                             <FaDownload/> Image
                         </button>
-                        <button 
-                            className="share-page__button" 
+                        <button
+                            className="share-page__button"
                             onClick={handleExportAsPDF}
                             title="Export as PDF"
                         >
                             <FaDownload/> PDF
                         </button>
-                        <a 
-                            href="https://lmsgpt.bitsleep.cn" 
+                        <a
+                            href="https://huskyAI.bitsleep.cn"
                             className="share-page__home-link"
                             target="_blank"
                             rel="noopener noreferrer"
