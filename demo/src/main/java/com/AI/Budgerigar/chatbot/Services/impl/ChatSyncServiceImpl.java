@@ -173,7 +173,7 @@ public class ChatSyncServiceImpl implements ChatSyncService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"conversations", "conversationsPage"}, key = "#uuid")
+    @CacheEvict(value = {"conversations", "conversationsPage"}, allEntries = true)
     public Result<?> deleteConversation(String uuid, String conversationId) {
         try {
             // 1. MongoDB delete operation

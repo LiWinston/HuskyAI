@@ -250,7 +250,7 @@ public class OpenAIChatServiceImpl implements ChatService, StreamChatService {
         });
     }
 
-    @CacheEvict(value = {"conversations", "conversationsPage"}, key = "#uuid")
+    @CacheEvict(value = {"conversations", "conversationsPage"}, allEntries = true)
     public void clearConversationCache(String uuid) {
         // 方法体可以为空，注解会处理缓存清除
     }

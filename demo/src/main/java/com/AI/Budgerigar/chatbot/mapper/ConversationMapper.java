@@ -14,7 +14,7 @@ public interface ConversationMapper extends BaseMapper<Conversation> {
 
     Boolean checkConversationExistsByUuid(@Param("uuid") String uuid, @Param("conversationId") String conversationId);
 
-    @CacheEvict(value = {"conversations", "conversationsPage"}, key = "#uuid")
+    @CacheEvict(value = {"conversations", "conversationsPage"}, allEntries = true)
     int createConversationForUuid(@Param("uuid") String uuid, @Param("conversationId") String conversationId);
 
     String getSummaryByCid(@Param("uuid") String uuid);
