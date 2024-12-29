@@ -258,6 +258,7 @@ function Chat() {
     const [models, setModels] = useState([]); // List of models
     const [showModelOptions, setShowModelOptions] = useState(false); //
     const [useStream, setUseStream] = useState(false);
+    const initialFetchRef = useRef(false);
     // Automatically update to localStorage when selectedConversation changes.
     useEffect(() => {
         if (selectedConversation !== null && !localStorage.getItem('isDeleting')) {
@@ -281,6 +282,7 @@ function Chat() {
     const [codeBorderStyle, setCodeBorderStyle] = useState('default');
     const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [isDebouncing, setIsDebouncing] = useState(false);
+    const [isInitialFetchDone, setIsInitialFetchDone] = useState(false);
 
     // 添加语言检测
     const userLang = navigator.language || navigator.userLanguage;
@@ -422,6 +424,69 @@ function Chat() {
         }
     };
 
+    // 修改 fetchConversations 函数
+    const fetchConversations = async (page = 1, isInitialFetch = false) => {
+        // 防止初始化时的重复请求
+        if (isInitialFetch && initialFetchRef.current) {
+            return [];
+        }
+
+        if (isFetching || (!hasMoreConversations && page > 1)) return [];
+        
+        if (page === 1) {
+            setIsLoadingConversations(true);
+        }
+        setIsFetching(true);
+        
+        try {
+            const response = await axios.get(`/api/chat/page`, {
+                params: {
+                    uuid: localStorage.getItem('userUUID'),
+                    current: page,
+                    size: PAGE_SIZE
+                },
+            });
+            
+            const { list, total, hasNextPage } = response.data.data;
+            const conversationsData = list.map(conv => ({
+                id: conv.conversationId,
+                title: conv.firstMessage,
+                timestampCreat: conv.createdAt,
+                timestampLast: conv.lastMessageAt,
+            }));
+
+            if (isInitialFetch) {
+                initialFetchRef.current = true;
+            }
+
+            setConversations(prev => {
+                if (page === 1) return conversationsData;
+                
+                const uniqueConversations = new Map();
+                [...prev, ...conversationsData].forEach(conv => {
+                    uniqueConversations.set(conv.id, conv);
+                });
+                return Array.from(uniqueConversations.values());
+            });
+
+            setHasMoreConversations(hasNextPage);
+            
+            console.log(`Page ${page}: Loaded ${list.length} items, Total: ${total}`);
+            return conversationsData;
+        } catch (error) {
+            console.error('Error fetching conversations:', error);
+            setHasMoreConversations(false);
+            throw error;
+        } finally {
+            if (page === 1) {
+                setIsLoadingConversations(false);
+            }
+            setIsLoadingMore(false);
+            setIsFetching(false);
+        }
+    };
+
+    // 修改主要的初始化 useEffect
     useEffect(() => {
         const fetchAndLoadConversation = async () => {
             try {
@@ -431,7 +496,7 @@ function Chat() {
                 notify('Fetching conversations...', 'info');
                 console.log('Fetching conversations for user:', userUUID);
                 
-                const conversationsData = await fetchConversations();
+                const conversationsData = await fetchConversations(1, true);
                 
                 if (!conversationsData || conversationsData.length === 0) {
                     return;
@@ -460,7 +525,6 @@ function Chat() {
                     }];
 
                 setMessages(loadedMessages);
-                
             } catch (e) {
                 console.error('Error loading conversation:', e);
                 notify('Failed to load conversations', 'error');
@@ -471,7 +535,9 @@ function Chat() {
 
         fetchModels().then(r => console.log(r)).catch(e => console.error('Error after fetchModels:', e));
 
-        fetchAndLoadConversation().then(() => console.log('Conversations fetched')).catch(e => console.error('Error after fetchAndLoadConversation:', e));
+        if (!initialFetchRef.current) {
+            fetchAndLoadConversation().then(() => console.log('Conversations fetched')).catch(e => console.error('Error after fetchAndLoadConversation:', e));
+        }
     }, []);
 
     const modelSelectorRef = useRef(null);
@@ -515,61 +581,6 @@ function Chat() {
     const [isFetching, setIsFetching] = useState(false);
     const conversationListRef = useRef(null);
     const PAGE_SIZE = 12; // 固定每页大小
-
-    // fetchConversations 函数
-    const fetchConversations = async (page = 1) => {
-        if (isFetching || (!hasMoreConversations && page > 1)) return;
-        
-        if (page === 1) {
-            setIsLoadingConversations(true);
-        }
-        setIsFetching(true);
-        
-        try {
-            const response = await axios.get(`/api/chat/page`, {
-                params: {
-                    uuid: localStorage.getItem('userUUID'),
-                    current: page,
-                    size: PAGE_SIZE
-                },
-            });
-            
-            const { list, total, hasNextPage } = response.data.data;
-            const conversationsData = list.map(conv => ({
-                id: conv.conversationId,
-                title: conv.firstMessage,
-                timestampCreat: conv.createdAt,
-                timestampLast: conv.lastMessageAt,
-            }));
-
-            setConversations(prev => {
-                if (page === 1) return conversationsData;
-                
-                // 使用 Map 保证数据唯一性和顺序
-                const uniqueConversations = new Map();
-                [...prev, ...conversationsData].forEach(conv => {
-                    uniqueConversations.set(conv.id, conv);
-                });
-                return Array.from(uniqueConversations.values());
-            });
-
-            setHasMoreConversations(hasNextPage);
-            
-            // 验证数据完整性
-            console.log(`Page ${page}: Loaded ${list.length} items, Total: ${total}`);
-            return conversationsData;
-        } catch (error) {
-            console.error('Error fetching conversations:', error);
-            setHasMoreConversations(false);
-            throw error;
-        } finally {
-            if (page === 1) {
-                setIsLoadingConversations(false);
-            }
-            setIsLoadingMore(false);
-            setIsFetching(false);
-        }
-    };
 
     // 创建防抖的滚动处理函数
     const debouncedScroll = useCallback(

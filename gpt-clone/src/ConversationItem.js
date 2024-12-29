@@ -179,10 +179,10 @@ const ConversationItem = ({
             await axios.delete(`/api/chat/${uuid}/${conversation.id}`);
             
             // 获取更新后的会话列表
-            const updatedConversations = await fetchConversations();
+            const updatedConversations = await fetchConversations(1);
 
             if (selectedConversation === conversation.id) {
-                if (updatedConversations.length > 0) {
+                if (updatedConversations && updatedConversations.length > 0) {
                     // 加载新的第一个对话，并更新 localStorage
                     const newSelectedId = updatedConversations[0].id;
                     await loadConversation(newSelectedId);
