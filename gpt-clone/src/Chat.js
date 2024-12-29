@@ -279,6 +279,7 @@ function Chat() {
     const [centerNotice, setCenterNotice] = useState({ visible: false, message: '' });
     const [codeBorderStyle, setCodeBorderStyle] = useState('default');
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [isDebouncing, setIsDebouncing] = useState(false);
 
     // 添加语言检测
     const userLang = navigator.language || navigator.userLanguage;
@@ -514,7 +515,7 @@ function Chat() {
 
     // 添加新的状态
     const [averageTitleLines, setAverageTitleLines] = useState(2.5);
-    const [estimatedPageSize, setEstimatedPageSize] = useState(20);
+    const [estimatedPageSize, setEstimatedPageSize] = useState(8);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
 
     // 计算每页大小的函数
@@ -529,13 +530,15 @@ function Chat() {
         if(page === 1) {
             setIsLoadingConversations(true);
         }
+        
+        if (isDebouncing && page > 1) {
+            return;
+        }
+        setIsDebouncing(true);
+        
         try {
-            // 计算动态页大小
-            const size = isFirstLoad ? estimatedPageSize : calculatePageSize(
-                conversationListRef.current?.clientHeight || 0,
-                averageTitleLines
-            );
-
+            const size = 12; // 使用固定大小
+            
             const response = await axios.get(`/api/chat/page`, {
                 params: {
                     uuid: localStorage.getItem('userUUID'),
@@ -544,7 +547,7 @@ function Chat() {
                 },
             });
             
-            const { list, total, size: responseSize, current, hasNextPage } = response.data.data;
+            const { list, hasNextPage } = response.data.data;
             const conversationsData = list.map(conv => ({
                 id: conv.conversationId,
                 title: conv.firstMessage,
@@ -554,28 +557,14 @@ function Chat() {
 
             if (page === 1) {
                 setConversations(conversationsData);
-                
-                // 首次加载后计算实际平均行数
-                if (isFirstLoad) {
-                    setTimeout(() => {
-                        const titleElements = document.querySelectorAll('.conversation-item-title');
-                        if (titleElements.length > 0) {
-                            let totalLines = 0;
-                            titleElements.forEach(el => {
-                                totalLines += Math.ceil(el.scrollHeight / 24);
-                            });
-                            const newAvgLines = totalLines / titleElements.length;
-                            setAverageTitleLines(newAvgLines);
-                            setEstimatedPageSize(calculatePageSize(
-                                conversationListRef.current?.clientHeight || 0,
-                                newAvgLines
-                            ));
-                            setIsFirstLoad(false);
-                        }
-                    }, 100);
-                }
             } else {
-                setConversations(prev => [...prev, ...conversationsData]);
+                setConversations(prev => {
+                    const uniqueConversations = new Map();
+                    [...prev, ...conversationsData].forEach(conv => {
+                        uniqueConversations.set(conv.id, conv);
+                    });
+                    return Array.from(uniqueConversations.values());
+                });
             }
 
             setHasMoreConversations(hasNextPage);
@@ -588,43 +577,42 @@ function Chat() {
                 setIsLoadingConversations(false);
             }
             setIsLoadingMore(false);
+            setTimeout(() => {
+                setIsDebouncing(false);
+            }, 300);
         }
     };
 
-    // 添加滚动加载处理函数
-    const handleConversationListScroll = () => {
-        if (!conversationListRef.current || !hasMoreConversations || isLoadingMore) return;
-
-        const { scrollTop, scrollHeight, clientHeight } = conversationListRef.current;
+    // 修改滚动处理函数
+    const handleScroll = useCallback((e) => {
+        const element = e.target;
+        const scrollBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
         
-        // 当滚动到距离底部100px时加载更多
-        if (scrollHeight - scrollTop - clientHeight < 100) {
-            loadMoreConversations();
+        if (
+            !isLoadingMore &&
+            !isDebouncing &&
+            hasMoreConversations &&
+            scrollBottom <= 100 &&
+            conversations.length > 0
+        ) {
+            setIsLoadingMore(true);
+            setCurrentPage(prev => prev + 1);
+            fetchConversations(currentPage + 1);
         }
-    };
-
-    // 加载更多对话
-    const loadMoreConversations = async () => {
-        if (isLoadingMore || !hasMoreConversations) return;
-        
-        setIsLoadingMore(true);
-        const nextPage = currentPage + 1;
-        setCurrentPage(nextPage);
-        await fetchConversations(nextPage);
-    };
+    }, [isLoadingMore, hasMoreConversations, currentPage, isDebouncing, conversations.length]);
 
     // 添加滚动监听
     useEffect(() => {
         const listElement = conversationListRef.current;
         if (listElement) {
-            listElement.addEventListener('scroll', handleConversationListScroll);
+            listElement.addEventListener('scroll', handleScroll);
         }
         return () => {
             if (listElement) {
-                listElement.removeEventListener('scroll', handleConversationListScroll);
+                listElement.removeEventListener('scroll', handleScroll);
             }
         };
-    }, [hasMoreConversations, isLoadingMore]);
+    }, [hasMoreConversations, isLoadingMore, isDebouncing]);
 
     // 修改 loadConversation 函数
     const loadConversation = async (conversationId, showLoading = false) => {
