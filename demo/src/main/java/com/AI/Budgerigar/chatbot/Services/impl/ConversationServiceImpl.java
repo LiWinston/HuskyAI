@@ -1,11 +1,11 @@
 package com.AI.Budgerigar.chatbot.Services.impl;
 
+import com.AI.Budgerigar.chatbot.Cache.CacheService;
 import com.AI.Budgerigar.chatbot.Services.ConversationService;
 import com.AI.Budgerigar.chatbot.mapper.ConversationMapper;
 import com.AI.Budgerigar.chatbot.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +16,9 @@ public class ConversationServiceImpl implements ConversationService {
     @Autowired
     private ConversationMapper conversationMapper;
 
+    @Autowired
+    private CacheService cacheService;
+
     @Override
     public boolean checkConversationExists(String uuid, String conversationId) {
         return conversationMapper.checkConversationExistsByUuid(uuid, conversationId);
@@ -23,11 +26,12 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = {"conversations", "conversations_page"}, key = "#uuid + '*'", allEntries = false)
     public Result<?> createConversation(String uuid, String conversationId) {
         try {
             int result = conversationMapper.createConversationForUuid(uuid, conversationId);
             if (result > 0) {
+                // Clear user's conversation caches
+                cacheService.clearUserConversationCaches(uuid);
                 log.info("Successfully created conversation for UUID: {}, conversation ID: {}", uuid, conversationId);
                 return Result.success("Conversation created successfully");
             } else {
