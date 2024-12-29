@@ -49,6 +49,7 @@ import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import loadingAnimation from './assets/loading.json';
 import CenterNotice from './Component/CenterNotice';
+import { debounce } from 'lodash';
 
 const CONVERSATION_SUMMARY_GENERATED = '#CVSG##CVSG##CVSG#';
 
@@ -508,46 +509,32 @@ function Chat() {
     const [isLoadingConversation, setIsLoadingConversation] = useState(false);
 
     // 添加分页相关状态
-    const [hasMoreConversations, setHasMoreConversations] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [hasMoreConversations, setHasMoreConversations] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [isFetching, setIsFetching] = useState(false);
     const conversationListRef = useRef(null);
+    const PAGE_SIZE = 12; // 固定每页大小
 
-    // 添加新的状态
-    const [averageTitleLines, setAverageTitleLines] = useState(2.5);
-    const [estimatedPageSize, setEstimatedPageSize] = useState(8);
-    const [isFirstLoad, setIsFirstLoad] = useState(true);
-
-    // 计算每页大小的函数
-    const calculatePageSize = useCallback((height, avgLines) => {
-        const estimatedItemHeight = avgLines * 24; // 假设每行24px
-        const visibleItems = Math.ceil(height / estimatedItemHeight);
-        return Math.ceil(visibleItems * (isFirstLoad ? 1.35 : 1));
-    }, [isFirstLoad]);
-
-    // 修改 fetchConversations 函数
+    // fetchConversations 函数
     const fetchConversations = async (page = 1) => {
-        if(page === 1) {
+        if (isFetching || (!hasMoreConversations && page > 1)) return;
+        
+        if (page === 1) {
             setIsLoadingConversations(true);
         }
-        
-        if (isDebouncing && page > 1) {
-            return;
-        }
-        setIsDebouncing(true);
+        setIsFetching(true);
         
         try {
-            const size = 12; // 使用固定大小
-            
             const response = await axios.get(`/api/chat/page`, {
                 params: {
                     uuid: localStorage.getItem('userUUID'),
                     current: page,
-                    size
+                    size: PAGE_SIZE
                 },
             });
             
-            const { list, hasNextPage } = response.data.data;
+            const { list, total, hasNextPage } = response.data.data;
             const conversationsData = list.map(conv => ({
                 id: conv.conversationId,
                 title: conv.firstMessage,
@@ -555,64 +542,81 @@ function Chat() {
                 timestampLast: conv.lastMessageAt,
             }));
 
-            if (page === 1) {
-                setConversations(conversationsData);
-            } else {
-                setConversations(prev => {
-                    const uniqueConversations = new Map();
-                    [...prev, ...conversationsData].forEach(conv => {
-                        uniqueConversations.set(conv.id, conv);
-                    });
-                    return Array.from(uniqueConversations.values());
+            setConversations(prev => {
+                if (page === 1) return conversationsData;
+                
+                // 使用 Map 保证数据唯一性和顺序
+                const uniqueConversations = new Map();
+                [...prev, ...conversationsData].forEach(conv => {
+                    uniqueConversations.set(conv.id, conv);
                 });
-            }
+                return Array.from(uniqueConversations.values());
+            });
 
             setHasMoreConversations(hasNextPage);
+            
+            // 验证数据完整性
+            console.log(`Page ${page}: Loaded ${list.length} items, Total: ${total}`);
             return conversationsData;
         } catch (error) {
             console.error('Error fetching conversations:', error);
+            setHasMoreConversations(false);
             throw error;
         } finally {
-            if(page === 1) {
+            if (page === 1) {
                 setIsLoadingConversations(false);
             }
             setIsLoadingMore(false);
-            setTimeout(() => {
-                setIsDebouncing(false);
-            }, 300);
+            setIsFetching(false);
         }
     };
 
-    // 修改滚动处理函数
-    const handleScroll = useCallback((e) => {
-        const element = e.target;
-        const scrollBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
-        
-        if (
-            !isLoadingMore &&
-            !isDebouncing &&
-            hasMoreConversations &&
-            scrollBottom <= 100 &&
-            conversations.length > 0
-        ) {
-            setIsLoadingMore(true);
-            setCurrentPage(prev => prev + 1);
-            fetchConversations(currentPage + 1);
-        }
-    }, [isLoadingMore, hasMoreConversations, currentPage, isDebouncing, conversations.length]);
+    // 创建防抖的滚动处理函数
+    const debouncedScroll = useCallback(
+        debounce(() => {
+            const element = conversationListRef.current;
+            if (!element) return;
 
-    // 添加滚动监听
+            const scrollBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
+            
+            if (
+                !isLoadingMore &&
+                !isFetching &&
+                hasMoreConversations &&
+                scrollBottom <= 100 &&
+                conversations.length > 0
+            ) {
+                setIsLoadingMore(true);
+                const nextPage = currentPage + 1;
+                setCurrentPage(nextPage);
+                fetchConversations(nextPage);
+            }
+        }, 200),
+        [isLoadingMore, isFetching, hasMoreConversations, conversations.length, currentPage]
+    );
+
+    // 滚动处理函数
+    const handleScroll = useCallback(() => {
+        debouncedScroll();
+    }, [debouncedScroll]);
+
+    // 初始化加载
+    useEffect(() => {
+        fetchConversations(1);
+    }, []);
+
+    // 滚动监听
     useEffect(() => {
         const listElement = conversationListRef.current;
-        if (listElement) {
-            listElement.addEventListener('scroll', handleScroll);
-        }
+        if (!listElement) return;
+
+        listElement.addEventListener('scroll', handleScroll);
+        
         return () => {
-            if (listElement) {
-                listElement.removeEventListener('scroll', handleScroll);
-            }
+            listElement.removeEventListener('scroll', handleScroll);
+            debouncedScroll.cancel();
         };
-    }, [hasMoreConversations, isLoadingMore, isDebouncing]);
+    }, [handleScroll]);
 
     // 修改 loadConversation 函数
     const loadConversation = async (conversationId, showLoading = false) => {
