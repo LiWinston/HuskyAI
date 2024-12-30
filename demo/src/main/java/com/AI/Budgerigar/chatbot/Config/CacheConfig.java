@@ -58,7 +58,7 @@ public class CacheConfig {
         Map<String, RedisCacheConfiguration> configMap = new HashMap<>();
         
         // 用户存在性缓存配置 - 24小时过期
-        configMap.put("user", defaultConfig.entryTtl(Duration.ofHours(24)));
+        configMap.put("user", defaultConfig.entryTtl(Duration.ZERO)); // 永不过期
         log.info("配置user缓存: 过期时间=24小时");
         
         // 会话列表缓存配置 - 持久化缓存
@@ -67,7 +67,7 @@ public class CacheConfig {
         log.info("配置conversations和conversations_page缓存: 永不过期");
 
         // 用户模型访问配置缓存 - 1小时过期
-        configMap.put("user_model_access", defaultConfig.entryTtl(Duration.ofHours(1)));
+        configMap.put("user_model_access", defaultConfig.entryTtl(Duration.ofDays(31)));
         log.info("配置user_model_access缓存: 过期时间=1小时");
 
         RedisCacheManager cacheManager = RedisCacheManager.builder(connectionFactory)
