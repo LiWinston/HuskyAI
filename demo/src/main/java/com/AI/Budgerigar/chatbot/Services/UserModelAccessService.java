@@ -1,11 +1,11 @@
 package com.AI.Budgerigar.chatbot.Services;
 
 import com.AI.Budgerigar.chatbot.Cache.CacheService;
+import com.AI.Budgerigar.chatbot.Cache.UserModelAccessCacheService;
 import com.AI.Budgerigar.chatbot.Nosql.UserModelAccessConfig;
 import com.AI.Budgerigar.chatbot.Nosql.UserModelAccessConfigRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -27,58 +27,61 @@ public class UserModelAccessService {
 
     @Autowired
     private CacheService cacheService;
+    
+    @Autowired
+    private UserModelAccessCacheService userModelAccessCacheService;
 
     /**
-     * Obtain the model services that the user is allowed to access.
+     * 获取用户允许访问的模型服务
      */
     public List<ChatService> getUserAllowedChatServices(String userId) {
-        Optional<UserModelAccessConfig> accessConfigOpt = getAccessConfigFromCache(userId);
+        Optional<UserModelAccessConfig> accessConfigOpt = userModelAccessCacheService.getAccessConfigFromCache(userId);
 
         if (accessConfigOpt.isPresent()) {
             try {
                 UserModelAccessConfig accessConfig = accessConfigOpt.get();
                 List<UserModelAccessConfig.ModelAccess> allowedModels = accessConfig.getAllowedModels();
 
-                // Filter the user-allowed model services from the global chatServices.
+                // 从全局chatServices中过滤出用户允许的模型服务
                 return allowedModels.stream()
                     .map(modelAccess -> chatServicesManageService.getChatServices()
                         .get(modelAccess.getUrl())
                         .get(modelAccess.getModel()))
-                    .filter(Objects::nonNull) // Filter out nonexistent services.
+                    .filter(Objects::nonNull) // 过滤掉不存在的服务
                     .collect(Collectors.toList());
             } catch (Exception e) {
-                log.error("Failed to get user allowed chat services", e);
+                log.error("获取用户允许的聊天服务失败", e);
                 throw new RuntimeException(e);
             }
         } else {
-            throw new AccessDeniedException("No access configuration found for user " + userId);
+            throw new AccessDeniedException("未找到用户 " + userId + " 的访问配置");
         }
     }
 
     public List<UserModelAccessConfig.ModelAccess> getUserAllowedModelAccess(String userId) {
-        Optional<UserModelAccessConfig> accessConfigOpt = getAccessConfigFromCache(userId);
+        Optional<UserModelAccessConfig> accessConfigOpt = userModelAccessCacheService.getAccessConfigFromCache(userId);
 
         if (accessConfigOpt.isPresent()) {
             UserModelAccessConfig accessConfig = accessConfigOpt.get();
             return accessConfig.getAllowedModels();
         } else {
-            throw new AccessDeniedException("No access configuration found for user " + userId);
+            throw new AccessDeniedException("未找到用户 " + userId + " 的访问配置");
         }
     }
 
     public void updateUserAccessConfig(String userId, List<UserModelAccessConfig.ModelAccess> newModelAccess) {
         Optional<UserModelAccessConfig> accessConfigOpt = userModelAccessConfigRepository.findById(userId);
 
-        // If the user's configuration is found, update it.
+        // 如果找到用户配置则更新
         if (accessConfigOpt.isPresent()) {
-            log.info("Updating user access config for user {}", userId);
+            log.info("更新用户访问配置: userId={}", userId);
             UserModelAccessConfig accessConfig = accessConfigOpt.get();
             accessConfig.setAllowedModels(newModelAccess);
             userModelAccessConfigRepository.save(accessConfig);
         }
-        // If the user's configuration cannot be found, create a new configuration.
+        // 如果未找到用户配置则创建新配置
         else {
-            log.info("Creating new user access config for user {}", userId);
+            log.info("创建新用户访问配置: userId={}", userId);
             UserModelAccessConfig newAccessConfig = new UserModelAccessConfig();
             newAccessConfig.setUserId(userId);
             newAccessConfig.setAllowedModels(newModelAccess);
@@ -97,14 +100,5 @@ public class UserModelAccessService {
             }
         }
         updateUserAccessConfig(userId, allModelAccess);
-    }
-
-    /**
-     * 从缓存获取用户访问配置
-     */
-    @Cacheable(value = "user_model_access", key = "#userId", unless = "#result.isEmpty()")
-    public Optional<UserModelAccessConfig> getAccessConfigFromCache(String userId) {
-        log.info("从MongoDB获取用户模型访问配置: userId={}", userId);
-        return userModelAccessConfigRepository.findById(userId);
     }
 }

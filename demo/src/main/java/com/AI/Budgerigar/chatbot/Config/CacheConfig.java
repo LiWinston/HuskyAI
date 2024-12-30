@@ -1,10 +1,11 @@
-package com.AI.Budgerigar.chatbot.Config;
+package com.AI.Budgerigar.chatbot.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
@@ -17,7 +18,6 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,9 +39,10 @@ public class CacheConfig {
             ObjectMapper.DefaultTyping.NON_FINAL,
             JsonTypeInfo.As.PROPERTY
         );
-        // 添加Java 8日期时间模块
+        // 添加Java 8日期时间模块和Optional支持
         objectMapper.registerModule(new JavaTimeModule());
-        log.info("配置ObjectMapper完成，已添加JavaTimeModule支持");
+        objectMapper.registerModule(new Jdk8Module());  // 添加JDK8模块，支持Optional
+        log.info("配置ObjectMapper完成，已添加JavaTimeModule和Jdk8Module支持");
         
         // 创建序列化器
         GenericJackson2JsonRedisSerializer jsonRedisSerializer = new GenericJackson2JsonRedisSerializer(objectMapper);
