@@ -100,4 +100,18 @@ public class CacheService {
     public void clearAllUserCaches(String uuid) {
         clearTypeRelatedCaches("user", uuid);
     }
+
+    /**
+     * 清除指定用户的模型访问配置缓存
+     * @param userId 用户ID
+     */
+    @CacheEvictPattern(type = "user", paramName = "userId")
+    public void clearUserModelAccessCache(String userId) {
+        String pattern = "user_model_access::" + userId;
+        Set<String> keys = redisTemplate.keys(pattern);
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+            log.info("清除用户模型访问配置缓存: pattern={}", pattern);
+        }
+    }
 } 

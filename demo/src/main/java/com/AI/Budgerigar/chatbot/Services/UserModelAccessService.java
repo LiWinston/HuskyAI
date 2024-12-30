@@ -1,9 +1,11 @@
 package com.AI.Budgerigar.chatbot.Services;
 
+import com.AI.Budgerigar.chatbot.Cache.CacheService;
 import com.AI.Budgerigar.chatbot.Nosql.UserModelAccessConfig;
 import com.AI.Budgerigar.chatbot.Nosql.UserModelAccessConfigRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +25,14 @@ public class UserModelAccessService {
     @Autowired
     private chatServicesManageService chatServicesManageService;
 
+    @Autowired
+    private CacheService cacheService;
+
     /**
      * Obtain the model services that the user is allowed to access.
      */
     public List<ChatService> getUserAllowedChatServices(String userId) {
-        Optional<UserModelAccessConfig> accessConfigOpt = userModelAccessConfigRepository.findById(userId);
+        Optional<UserModelAccessConfig> accessConfigOpt = getAccessConfigFromCache(userId);
 
         if (accessConfigOpt.isPresent()) {
             try {
@@ -41,25 +46,22 @@ public class UserModelAccessService {
                         .get(modelAccess.getModel()))
                     .filter(Objects::nonNull) // Filter out nonexistent services.
                     .collect(Collectors.toList());
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 log.error("Failed to get user allowed chat services", e);
                 throw new RuntimeException(e);
             }
-        }
-        else {
+        } else {
             throw new AccessDeniedException("No access configuration found for user " + userId);
         }
     }
 
     public List<UserModelAccessConfig.ModelAccess> getUserAllowedModelAccess(String userId) {
-        Optional<UserModelAccessConfig> accessConfigOpt = userModelAccessConfigRepository.findById(userId);
+        Optional<UserModelAccessConfig> accessConfigOpt = getAccessConfigFromCache(userId);
 
         if (accessConfigOpt.isPresent()) {
             UserModelAccessConfig accessConfig = accessConfigOpt.get();
             return accessConfig.getAllowedModels();
-        }
-        else {
+        } else {
             throw new AccessDeniedException("No access configuration found for user " + userId);
         }
     }
@@ -82,6 +84,9 @@ public class UserModelAccessService {
             newAccessConfig.setAllowedModels(newModelAccess);
             userModelAccessConfigRepository.save(newAccessConfig);
         }
+        
+        // 清除该用户的模型访问配置缓存
+        cacheService.clearUserModelAccessCache(userId);
     }
 
     public void grantAllAvailiableModels(String userId) {
@@ -94,14 +99,12 @@ public class UserModelAccessService {
         updateUserAccessConfig(userId, allModelAccess);
     }
 
-    // public boolean isModelAllowed(String userId, String url, String model) {
-    // return repository.findByUserIdAndAllowedModelsUrlAndAllowedModelsModel(userId, url,
-    // model) != null;
-    // }
-    //
-    // public List<UserModelAccessConfig.ModelAccess> getAllowedModels(String userId) {
-    // UserModelAccessConfig config = repository.findById(userId).orElse(null);
-    // return config == null ? List.of() : config.getAllowedModels();
-    // }
-
+    /**
+     * 从缓存获取用户访问配置
+     */
+    @Cacheable(value = "user_model_access", key = "#userId", unless = "#result.isEmpty()")
+    public Optional<UserModelAccessConfig> getAccessConfigFromCache(String userId) {
+        log.info("从MongoDB获取用户模型访问配置: userId={}", userId);
+        return userModelAccessConfigRepository.findById(userId);
+    }
 }

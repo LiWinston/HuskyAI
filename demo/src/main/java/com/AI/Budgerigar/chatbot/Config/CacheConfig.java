@@ -1,4 +1,4 @@
-package com.AI.Budgerigar.chatbot.config;
+package com.AI.Budgerigar.chatbot.Config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -64,6 +64,10 @@ public class CacheConfig {
         configMap.put("conversations", defaultConfig.entryTtl(Duration.ZERO));  // 永不过期
         configMap.put("conversations_page", defaultConfig.entryTtl(Duration.ZERO));  // 永不过期
         log.info("配置conversations和conversations_page缓存: 永不过期");
+
+        // 用户模型访问配置缓存 - 1小时过期
+        configMap.put("user_model_access", defaultConfig.entryTtl(Duration.ofHours(1)));
+        log.info("配置user_model_access缓存: 过期时间=1小时");
 
         RedisCacheManager cacheManager = RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
