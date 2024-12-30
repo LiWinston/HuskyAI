@@ -222,7 +222,7 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
-    // Keep the first three models unchanged and sort the other models by the model names
+    // Keep the first several models unchanged and sort the other models by the model names
     // within the service source.
     @PostMapping("/models")
     public Result<?> getModels(@RequestBody Map<String, String> body) {
