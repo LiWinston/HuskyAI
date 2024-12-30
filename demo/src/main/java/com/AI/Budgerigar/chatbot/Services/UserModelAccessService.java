@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -70,26 +72,37 @@ public class UserModelAccessService {
     }
 
     public void updateUserAccessConfig(String userId, List<UserModelAccessConfig.ModelAccess> newModelAccess) {
-        Optional<UserModelAccessConfig> accessConfigOpt = userModelAccessConfigRepository.findById(userId);
-
-        // 如果找到用户配置则更新
-        if (accessConfigOpt.isPresent()) {
-            log.info("更新用户访问配置: userId={}", userId);
-            UserModelAccessConfig accessConfig = accessConfigOpt.get();
-            accessConfig.setAllowedModels(newModelAccess);
-            userModelAccessConfigRepository.save(accessConfig);
-        }
-        // 如果未找到用户配置则创建新配置
-        else {
-            log.info("创建新用户访问配置: userId={}", userId);
-            UserModelAccessConfig newAccessConfig = new UserModelAccessConfig();
-            newAccessConfig.setUserId(userId);
-            newAccessConfig.setAllowedModels(newModelAccess);
-            userModelAccessConfigRepository.save(newAccessConfig);
-        }
+        // 先异步清除缓存
+        CompletableFuture<Boolean> clearCacheFuture = userModelAccessCacheService.asyncClearCache(userId);
         
-        // 清除该用户的模型访问配置缓存
-        cacheService.clearUserModelAccessCache(userId);
+        try {
+            Optional<UserModelAccessConfig> accessConfigOpt = userModelAccessConfigRepository.findById(userId);
+
+            // 如果找到用户配置则更新
+            if (accessConfigOpt.isPresent()) {
+                log.info("更新用户访问配置: userId={}", userId);
+                UserModelAccessConfig accessConfig = accessConfigOpt.get();
+                accessConfig.setAllowedModels(newModelAccess);
+                userModelAccessConfigRepository.save(accessConfig);
+            }
+            // 如果未找到用户配置则创建新配置
+            else {
+                log.info("创建新用户访问配置: userId={}", userId);
+                UserModelAccessConfig newAccessConfig = new UserModelAccessConfig();
+                newAccessConfig.setUserId(userId);
+                newAccessConfig.setAllowedModels(newModelAccess);
+                userModelAccessConfigRepository.save(newAccessConfig);
+            }
+            
+            // 等待缓存清除完成,如果失败则重试一次
+            if (!clearCacheFuture.get(5, TimeUnit.SECONDS)) {
+                log.warn("异步清除缓存失败,尝试同步清除: userId={}", userId);
+                cacheService.clearUserModelAccessCache(userId);
+            }
+        } catch (Exception e) {
+            log.error("更新用户访问配置失败: userId={}", userId, e);
+            throw new RuntimeException("更新用户访问配置失败", e);
+        }
     }
 
     public void grantAllAvailiableModels(String userId) {
