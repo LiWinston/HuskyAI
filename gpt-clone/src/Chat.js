@@ -932,8 +932,11 @@ function Chat() {
                 await loadConversation(cid, false); // 发送消息时创建新对话不显示动画
             }
 
+            // 找到当前对话在会话列表中的位置
             const conversationIndex = conversations.findIndex(conv => conv.id === selectedConversation);
+            let currentPage = null;
             if (conversationIndex >= 0) {
+                currentPage = Math.floor(conversationIndex / PAGE_SIZE) + 1;
                 const selectedConv = conversations[conversationIndex];
                 const timeGroup = getTimeGroup(selectedConv.timestampLast);
                 if (timeGroup !== "Today") {
@@ -945,14 +948,23 @@ function Chat() {
                 }
             }
 
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            
+            // 如果找到当前页,添加到请求头
+            if (currentPage !== null) {
+                headers['X-Conversation-Page'] = currentPage.toString();
+            }
+
             if (useStream) {
                 setStreamingMessage(
                     {sender: 'assistant', text: '', timestamp: timestamp});
 
                 const response = await fetch(`/api/chat/stream`, {
-                    method: 'POST', headers: {
-                        'Content-Type': 'application/json',
-                    }, body: JSON.stringify({
+                    method: 'POST', 
+                    headers: headers,
+                    body: JSON.stringify({
                         prompt: input,
                         conversationId: selectedConversation,
                         model: selectedModel,
@@ -1028,13 +1040,14 @@ function Chat() {
                 setLoading(false);
                 setStreamingMessage(null);
             } else {
-                // Non-streaming handling remains the same
+                // Non-streaming handling
                 const response = await axios.post('/api/chat', {
                     prompt: input,
                     conversationId: selectedConversation,
                     model: selectedModel,
                     stream: false,
                 }, {
+                    headers: headers,
                     timeout: 60000,
                 });
 

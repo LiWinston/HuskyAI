@@ -1,8 +1,10 @@
 package com.AI.Budgerigar.chatbot.Cache;
 
 import com.AI.Budgerigar.chatbot.Cache.annotation.CacheEvictPattern;
+import com.AI.Budgerigar.chatbot.Context.PageContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,8 @@ import java.util.Set;
 @Slf4j
 @Service
 public class CacheService {
+    
+    private static final int PAGE_SIZE = 12;  // 与前端保持一致的页面大小
     
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -113,5 +117,39 @@ public class CacheService {
             redisTemplate.delete(keys);
             log.info("清除用户模型访问配置缓存: pattern={}", pattern);
         }
+    }
+
+    /**
+     * 清除指定范围内的用户对话页面缓存
+     * @param userId 用户ID
+     * @param fromPage 起始页(包含)
+     * @param toPage 结束页(包含)
+     */
+    public void clearRangeUserConversationCaches(String userId, int fromPage, int toPage) {
+        log.info("清除用户{}的对话缓存, 范围从第{}页到第{}页", userId, fromPage, toPage);
+        for (int page = fromPage; page <= toPage; page++) {
+            String pattern = String.format("conversations_page::%s:page:%d:%d", userId, page, PAGE_SIZE);
+            Set<String> keys = redisTemplate.keys(pattern);
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+                log.debug("已清除第{}页缓存: pattern={}, count={}", page, pattern, keys.size());
+            }
+        }
+    }
+
+    /**
+     * 根据上下文清除受影响的对话页面缓存
+     * 当一个对话被更新时,它会移动到第一页,需要清除从它原来所在页到第一页的所有缓存
+     */
+    public void clearAffectedConversationCaches(String userId) {
+        Integer sourcePage = PageContext.getCurrentPage();
+        if (sourcePage == null || sourcePage <= 1) {
+            log.debug("源页面为空或为第一页,仅清除第一页缓存");
+            clearRangeUserConversationCaches(userId, 1, 1);
+            return;
+        }
+        
+        log.info("清除从第{}页到第1页的所有缓存", sourcePage);
+        clearRangeUserConversationCaches(userId, 1, sourcePage);
     }
 }
