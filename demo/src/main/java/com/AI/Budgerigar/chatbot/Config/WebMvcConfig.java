@@ -15,9 +15,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(pageContextInterceptor)
-                .addPathPatterns("/chat")  // 普通chat接口
-                .addPathPatterns("/chat/stream")  // 流式chat接口
-                .excludePathPatterns("/chat/**")  // 排除其他chat接口
+                .addPathPatterns("/chat", "/chat/stream")  // 只拦截这两个具体的接口
                 .order(1);  // 设置拦截器顺序
     }
 } 
