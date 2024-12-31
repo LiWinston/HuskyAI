@@ -840,11 +840,11 @@ function Chat() {
                     chatWindow.style.opacity = '1';
                 }, 50);
 
-                notify(getText('shareInstructions'), 'info', 3500);
+                notify(getText('shareInstructions'), 'info', 1500);
             }
         } catch (error) {
             console.error('Error fetching messages for share:', error);
-            notify(getText('loadFailed'), 'error', 3000);
+            notify(getText('loadFailed'), 'error', 1200);
         } finally {
             setIsLoadingMessages(false);
         }
@@ -855,7 +855,7 @@ function Chat() {
         setSelectedMessages([]);
         setShareMessages([]);
         setSharedCid(null);
-        notify(getText('shareExited'), 'info', 2000);
+        notify(getText('shareExited'), 'info', 1000);
     };
 
     const handleMessageClick = (index) => {
