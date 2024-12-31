@@ -2,6 +2,7 @@ package com.AI.Budgerigar.chatbot.Cache;
 
 import com.AI.Budgerigar.chatbot.Cache.annotation.CacheEvictPattern;
 import com.AI.Budgerigar.chatbot.Context.PageContext;
+import com.AI.Budgerigar.chatbot.Context.UserContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -144,20 +145,23 @@ public class CacheService {
      * 当一个对话被更新时,它会移动到第一页,需要清除从它原来所在页到第一页的所有缓存
      */
     @Async
-    public CompletableFuture<Void> asyncClearAffectedConversationCaches(String userId) {
+    public CompletableFuture<Void> asyncClearAffectedConversationCaches() {
+        // 在主线程中获取页码和用户ID
+        Integer sourcePage = PageContext.getCurrentPage();
+        String uuid = UserContext.getCurrentUuid();
+        log.debug("主线程中获取到当前页面: {}, 用户UUID: {}", sourcePage, uuid);
+        
         return CompletableFuture.runAsync(() -> {
             try {
-                Integer sourcePage = PageContext.getCurrentPage();
                 if (sourcePage == null || sourcePage <= 1) {
                     log.debug("源页面为空或为第一页,仅清除第一页缓存");
-                    clearRangeUserConversationCaches(userId, 1, 1);
-                    return;
+                    clearRangeUserConversationCaches(uuid, 1, 1);
+                } else {
+                    log.info("清除从第{}页到第1页的所有缓存", sourcePage);
+                    clearRangeUserConversationCaches(uuid, 1, sourcePage);
                 }
-                
-                log.info("清除从第{}页到第1页的所有缓存", sourcePage);
-                clearRangeUserConversationCaches(userId, 1, sourcePage);
             } catch (Exception e) {
-                log.error("异步清除缓存失败: userId={}", userId, e);
+                log.error("异步清除缓存失败: userId={}", uuid, e);
             }
         });
     }

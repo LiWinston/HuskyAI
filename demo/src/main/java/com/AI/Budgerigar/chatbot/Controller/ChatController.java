@@ -105,9 +105,8 @@ public class ChatController {
     public Result<String> chatPost(@RequestBody Map<String, String> body) {
         var chatServices = chatServicesManageService.getChatServices();
         try {
-            String uuid = body.get("uuid");
             // 异步清除受影响的页面缓存
-            cacheService.asyncClearAffectedConversationCaches(uuid)
+            cacheService.asyncClearAffectedConversationCaches()
                 .exceptionally(throwable -> {
                     log.error("清除缓存失败", throwable);
                     return null;
@@ -153,9 +152,8 @@ public class ChatController {
     public Flux<String> chatPostStream(@RequestBody Map<String, String> body) {
         var chatServices = chatServicesManageService.getChatServices();
         try {
-            String uuid = body.get("uuid");
             // 异步清除受影响的页面缓存
-            cacheService.asyncClearAffectedConversationCaches(uuid)
+            cacheService.asyncClearAffectedConversationCaches()
                 .exceptionally(throwable -> {
                     log.error("清除缓存失败", throwable);
                     return null;
