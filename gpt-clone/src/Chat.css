@@ -1596,27 +1596,37 @@ pre:hover::-webkit-scrollbar-thumb {
 }
 
 .selected-count {
-    color: var(--text-secondary);
     font-size: 14px;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    background-color: var(--bg-secondary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme='dark'] .selected-count {
+    background-color: var(--bg-tertiary);
 }
 
 .share-buttons {
     display: flex;
-    gap: 10px;
+    gap: 12px;
 }
 
 .share-buttons button {
     padding: 8px 16px;
     border-radius: 6px;
-    border: none;
-    cursor: pointer;
     font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
     transition: all 0.2s ease;
+    min-width: 80px;
 }
 
 .share-submit {
     background-color: var(--accent-color);
     color: white;
+    border: none;
 }
 
 .share-submit:disabled {
@@ -1625,17 +1635,27 @@ pre:hover::-webkit-scrollbar-thumb {
 }
 
 .share-cancel {
-    background-color: var(--bg-tertiary);
+    background-color: transparent;
+    border: 1px solid var(--border-color);
     color: var(--text-primary);
+}
+
+.share-cancel:hover {
+    background-color: var(--bg-hover);
+}
+
+.share-submit:not(:disabled):hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
 }
 
 @keyframes slideUp {
     from {
-        transform: translate(-50%, 100%);
+        transform: translateY(100%);
         opacity: 0;
     }
     to {
-        transform: translate(-50%, 0);
+        transform: translateY(0);
         opacity: 1;
     }
 }
@@ -2231,30 +2251,104 @@ pre:hover::-webkit-scrollbar-thumb {
 .expiration-select {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    padding: 8px 12px;
 }
 
 .expiration-select label {
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: 14px;
 }
 
 .expiration-select select {
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 6px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 4px 8px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
     font-size: 14px;
     cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
     outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+    padding-right: 32px;
 }
 
 .expiration-select select:hover {
     border-color: var(--accent-color);
+    background-color: var(--bg-hover);
 }
 
 .expiration-select select:focus {
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 2px var(--accent-color-alpha);
+    box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.2);
+}
+
+[data-theme='dark'] .expiration-select select {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+[data-theme='dark'] .expiration-select select:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--accent-color);
+}
+
+.selected-count {
+    font-size: 14px;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    background-color: var(--bg-secondary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+[data-theme='dark'] .selected-count {
+    background-color: var(--bg-tertiary);
+}
+
+.share-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.share-buttons button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 80px;
+}
+
+.share-submit {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+}
+
+.share-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.share-cancel {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.share-cancel:hover {
+    background-color: var(--bg-hover);
+}
+
+.share-submit:not(:disabled):hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
 }
