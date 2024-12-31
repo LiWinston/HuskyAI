@@ -102,19 +102,19 @@ const codeBlockBorders = {
 const ThemeSelector = React.memo(({ currentTheme, onThemeChange, isZH }) => {
     return (
         <div className="theme-options">
-            <div 
+            <div
                 className={`theme-option ${currentTheme === 'light' ? 'selected' : ''}`}
                 onClick={() => onThemeChange('light')}
             >
                 <span>☀️ {isZH ? "浅色模式" : "Light Mode"}</span>
             </div>
-            <div 
+            <div
                 className={`theme-option ${currentTheme === 'dark' ? 'selected' : ''}`}
                 onClick={() => onThemeChange('dark')}
             >
                 <span>🌙 {isZH ? "深色模式" : "Dark Mode"}</span>
             </div>
-            <div 
+            <div
                 className={`theme-option ${currentTheme === 'auto' ? 'selected' : ''}`}
                 onClick={() => onThemeChange('auto')}
             >
@@ -139,7 +139,7 @@ const CodeThemeSelector = React.memo(({ codeTheme, onCodeThemeChange, themeStyle
                     {Object.entries(themeStyles)
                         .filter(([_, theme]) => theme.type === 'light')
                         .map(([key, theme]) => (
-                            <div 
+                            <div
                                 key={key}
                                 className={`theme-option ${codeTheme === key ? 'selected' : ''}`}
                                 onClick={() => onCodeThemeChange(key)}
@@ -154,7 +154,7 @@ const CodeThemeSelector = React.memo(({ codeTheme, onCodeThemeChange, themeStyle
                     {Object.entries(themeStyles)
                         .filter(([_, theme]) => theme.type === 'dark')
                         .map(([key, theme]) => (
-                            <div 
+                            <div
                                 key={key}
                                 className={`theme-option ${codeTheme === key ? 'selected' : ''}`}
                                 onClick={() => onCodeThemeChange(key)}
@@ -166,8 +166,8 @@ const CodeThemeSelector = React.memo(({ codeTheme, onCodeThemeChange, themeStyle
                 </div>
             </div>
             <div className="theme-preview">
-                <CodeThemePreview 
-                    theme={themeStyles[codeTheme]} 
+                <CodeThemePreview
+                    theme={themeStyles[codeTheme]}
                     isZH={isZH}
                 />
             </div>
@@ -176,9 +176,9 @@ const CodeThemeSelector = React.memo(({ codeTheme, onCodeThemeChange, themeStyle
 });
 
 // 将 ThemeModal 组件提到外部
-const ThemeModal = React.memo(({ 
-    onClose, 
-    menuText, 
+const ThemeModal = React.memo(({
+    onClose,
+    menuText,
     currentTheme,
     toggleTheme,
     codeTheme,
@@ -186,17 +186,17 @@ const ThemeModal = React.memo(({
     themeStyles,
     isZH,
     codeBorderStyle,
-    changeCodeBorderStyle 
+    changeCodeBorderStyle
 }) => (
     <>
-        <div 
-            className="modal-backdrop" 
-            onClick={onClose} 
+        <div
+            className="modal-backdrop"
+            onClick={onClose}
         />
         <div className="theme-modal">
             <div className="theme-modal-header">
                 <h2>{menuText.themeSettings}</h2>
-                <button 
+                <button
                     className="close-button"
                     onClick={onClose}
                     aria-label={menuText.close}
@@ -204,20 +204,20 @@ const ThemeModal = React.memo(({
                     <FaTimes />
                 </button>
             </div>
-            
+
             <div className="theme-modal-content">
                 <div className="theme-section">
                     <h3>{menuText.interfaceTheme}</h3>
-                    <ThemeSelector 
+                    <ThemeSelector
                         currentTheme={currentTheme}
                         onThemeChange={toggleTheme}
                         isZH={isZH}
                     />
                 </div>
-                
+
                 <div className="theme-section">
                     <h3>{menuText.codeTheme}</h3>
-                    <CodeThemeSelector 
+                    <CodeThemeSelector
                         codeTheme={codeTheme}
                         onCodeThemeChange={changeCodeTheme}
                         themeStyles={themeStyles}
@@ -357,7 +357,7 @@ function Chat() {
         },
         // 可以继续添加其他语言...
     };
-    
+
     // 获取当前语言的文本,默认使用英文
     const getText = (key) => {
         const lang = userLang.startsWith('zh') ? 'zh' : 'en';
@@ -466,13 +466,13 @@ function Chat() {
         }
 
         if (isFetching || (!hasMoreConversations && !loadError && page > 1)) return [];
-        
+
         if (page === 1) {
             setIsLoadingConversations(true);
         }
         setIsFetching(true);
         setLoadError(false);
-        
+
         try {
             const response = await axiosInstance.get(`/chat/page`, {
                 params: {
@@ -481,15 +481,15 @@ function Chat() {
                     size: PAGE_SIZE
                 },
             });
-            
+
             const { list, total, hasNextPage, pages } = response.data.data;
-            
+
             // 如果当前页大于总页数，说明已经没有更多数据了
             if (page > pages) {
                 setHasMoreConversations(false);
                 return [];
             }
-            
+
             // 如果返回的列表为空且不是第一页，说明已经没有更多数据了
             if (list.length === 0 && page > 1) {
                 setHasMoreConversations(false);
@@ -509,26 +509,26 @@ function Chat() {
 
             setConversations(prev => {
                 if (page === 1) return conversationsData;
-                
+
                 const uniqueConversations = new Map();
-                
+
                 prev.forEach(conv => {
                     uniqueConversations.set(conv.id, conv);
                 });
-                
+
                 conversationsData.forEach(conv => {
                     if (!uniqueConversations.has(conv.id)) {
                         uniqueConversations.set(conv.id, conv);
                     }
                 });
-                
+
                 return Array.from(uniqueConversations.values());
             });
 
             // 根据实际数据情况设置是否还有更多
             setHasMoreConversations(hasNextPage && page < pages);
             setFailedPage(null);
-            
+
             // 只在有数据的情况下检查内容高度
             if (list.length > 0) {
                 setTimeout(() => {
@@ -541,7 +541,7 @@ function Chat() {
             console.error('Error fetching conversations:', error);
             setLoadError(true);
             setFailedPage(page);
-            
+
             if (error.response) {
                 switch (error.response.status) {
                     case 401:
@@ -568,7 +568,7 @@ function Chat() {
             } else {
                 notify(isZH ? '请求出错，请稍后重试' : 'Request error, please try again later', 'error');
             }
-            
+
             return [];
         } finally {
             if (page === 1) {
@@ -616,23 +616,23 @@ function Chat() {
             try {
                 const userUUID = localStorage.getItem('userUUID');
                 const storedConversationId = localStorage.getItem('selectedConversation');
-                
+
                 notify('Fetching conversations...', 'info');
                 console.log('Fetching conversations for user:', userUUID);
-                
+
                 const conversationsData = await fetchConversations(1, true);
-                
+
                 if (!conversationsData || conversationsData.length === 0) {
                     return;
                 }
-                
-                const storedConversationExists = storedConversationId && 
+
+                const storedConversationExists = storedConversationId &&
                     conversationsData.some(conv => conv.id === storedConversationId);
-                
+
                 const conversationToLoad = storedConversationExists ? storedConversationId : conversationsData[0].id;
-                
+
                 setSelectedConversation(conversationToLoad);
-                
+
                 const uuid = localStorage.getItem('userUUID');
                 const response = await axiosInstance.get(`/chat/${uuid}/${conversationToLoad}`);
 
@@ -701,7 +701,7 @@ function Chat() {
             if (!element) return;
 
             const scrollBottom = element.scrollHeight - element.scrollTop - element.clientHeight;
-            
+
             if (
                 !isLoadingMore &&
                 !isFetching &&
@@ -734,7 +734,7 @@ function Chat() {
         if (!listElement) return;
 
         listElement.addEventListener('scroll', handleScroll);
-        
+
         return () => {
             listElement.removeEventListener('scroll', handleScroll);
             debouncedScroll.cancel();
@@ -764,7 +764,7 @@ function Chat() {
 
             setMessages(loadedMessages);
             setSelectedConversation(conversationId);
-            
+
             // 只在非删除操作时更新 localStorage
             if (!localStorage.getItem('isDeleting')) {
                 localStorage.setItem('selectedConversation', conversationId);
@@ -808,38 +808,38 @@ function Chat() {
             setIsLoadingMessages(true);
             // 先加载对话内容
             const response = await axiosInstance.get(`/chat/${localStorage.getItem('userUUID')}/${conversationId}`);
-            
+
             // 设置选中的对话
             setSelectedConversation(conversationId);
-            
+
             // 使用动画过渡更新消息
             const chatWindow = chatWindowRef.current;
             if (chatWindow) {
                 // 添加淡出动画
                 chatWindow.style.opacity = '0';
                 chatWindow.style.transition = 'opacity 0.3s ease';
-                
+
                 // 等待淡出动画完成
                 await new Promise(resolve => setTimeout(resolve, 300));
-                
+
                 // 更新消息内容
                 setMessages(response.data.data.map(msg => ({
                     sender: msg.role,
                     text: msg.content,
                     timestamp: msg.timestamp,
                 })));
-                
+
                 // 设置分享相关状态
                 setShareMessages(response.data.data);
                 setSharedCid(conversationId);
                 setIsShareMode(true);
                 setSelectedMessages([]);
-                
+
                 // 添加淡入动画
                 setTimeout(() => {
                     chatWindow.style.opacity = '1';
                 }, 50);
-                
+
                 notify(getText('shareInstructions'), 'info', 3500);
             }
         } catch (error) {
@@ -860,7 +860,7 @@ function Chat() {
 
     const handleMessageClick = (index) => {
         if (!isShareMode) return;
-        
+
         setSelectedMessages(prev => {
             const isSelected = prev.includes(index);
             if (isSelected) {
@@ -953,7 +953,7 @@ function Chat() {
             const headers = {
                 'Content-Type': 'application/json',
             };
-            
+
             // 如果找到当前页,添加到请求头
             if (currentPage !== null) {
                 headers['X-Conversation-Page'] = currentPage.toString();
@@ -1283,7 +1283,7 @@ function Chat() {
     const [showThemeModal, setShowThemeModal] = useState(false);
     const [currentTheme, setCurrentTheme] = useState('light');
     const [codeTheme, setCodeTheme] = useState('synthwave84');
-    
+
     // 菜单文本的双语配置
     const menuText = {
         themeSettings: isZH ? "主题设置" : "Theme Settings",
@@ -1313,11 +1313,11 @@ function Chat() {
                 setShowThemeModal(false);
             }
         };
-        
+
         if (showThemeModal) {
             document.addEventListener('keydown', handleEsc);
         }
-        
+
         return () => {
             document.removeEventListener('keydown', handleEsc);
         };
@@ -1329,7 +1329,7 @@ function Chat() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             const savedCodeTheme = localStorage.getItem('codeTheme') || 'synthwave84';
             const savedBorderStyle = localStorage.getItem('codeBorderStyle') || 'default';
-            
+
             setCurrentTheme(savedTheme);
             setCodeTheme(savedCodeTheme);
             setCodeBorderStyle(savedBorderStyle);
@@ -1367,7 +1367,7 @@ function Chat() {
             const chatWindow = chatWindowRef.current;
             if (!chatWindow) return;
 
-            if (!e.target.closest('.message-container') && 
+            if (!e.target.closest('.message-container') &&
                 !e.target.closest('.share-controls')) {
                 handleShareCancel();
             }
@@ -1392,7 +1392,7 @@ function Chat() {
                 <FaSignOutAlt />
             </button>
             {showThemeModal && (
-                <ThemeModal 
+                <ThemeModal
                     onClose={() => setShowThemeModal(false)}
                     menuText={menuText}
                     currentTheme={currentTheme}
@@ -1406,9 +1406,10 @@ function Chat() {
                 />
             )}
             {showShareManageModal && (
-                <ShareManageModal 
+                <ShareManageModal
                     onClose={() => setShowShareManageModal(false)}
                     isZH={isZH}
+                    conversations={conversations}
                 />
             )}
             <div className="conversation-list" ref={conversationListRef}>
@@ -1423,7 +1424,7 @@ function Chat() {
                 {isLoadingConversations ? (
                     <div className="loading-overlay">
                         <div className="loading-container">
-                            <Lottie 
+                            <Lottie
                                 animationData={loadingAnimation}
                                 loop={true}
                                 style={{ width: 80, height: 80 }}
@@ -1461,10 +1462,10 @@ function Chat() {
                         );
                     })
                 )}
-                
+
                 {isLoadingMore && (
                     <div className="loading-more">
-                        <Lottie 
+                        <Lottie
                             animationData={loadingAnimation}
                             loop={true}
                             style={{ width: 40, height: 40 }}
@@ -1472,12 +1473,12 @@ function Chat() {
                         <span>{isZH ? "加载更多..." : "Loading more..."}</span>
                     </div>
                 )}
-                
+
                 {loadError && (
                     <div className="load-error">
                         <span>{isZH ? "加载失败" : "Failed to load"}</span>
-                        <button 
-                            className="retry-button" 
+                        <button
+                            className="retry-button"
                             onClick={handleRetry}
                             disabled={isFetching}
                         >
@@ -1485,7 +1486,7 @@ function Chat() {
                         </button>
                     </div>
                 )}
-                
+
                 {!hasMoreConversations && !loadError && conversations.length > 0 && (
                     <div className="no-more-conversations">
                         {isZH ? "没有更多对话了" : "No more conversations"}
@@ -1497,7 +1498,7 @@ function Chat() {
                 {isLoadingConversation ? (
                     <div className="loading-overlay">
                         <div className="loading-container">
-                            <Lottie 
+                            <Lottie
                                 animationData={loadingAnimation}
                                 loop={true}
                                 style={{ width: 80, height: 80 }}
@@ -1539,7 +1540,7 @@ function Chat() {
                         <AnimatePresence>
                             {messages.map((msg, index) => (
                                 <ErrorBoundary key={index}>
-                                    <MessageComponent 
+                                    <MessageComponent
                                         key={index}
                                         msg={msg}
                                         messages={messages}
@@ -1554,8 +1555,8 @@ function Chat() {
                             ))}
                         </AnimatePresence>
                         {streamingMessage && (
-                            <MessageComponent 
-                                msg={streamingMessage} 
+                            <MessageComponent
+                                msg={streamingMessage}
                                 messages={messages}
                                 index={messages.length}
                                 isStreaming={true}
@@ -1620,8 +1621,8 @@ function Chat() {
                             </span>
                             <div className="expiration-select">
                                 <label>{isZH ? '有效期：' : 'Expires in: '}</label>
-                                <select 
-                                    value={expirationHours} 
+                                <select
+                                    value={expirationHours}
                                     onChange={(e) => setExpirationHours(Number(e.target.value))}
                                 >
                                     <option value={24}>{isZH ? '24小时' : '24 hours'}</option>
@@ -1632,14 +1633,14 @@ function Chat() {
                             </div>
                         </div>
                         <div className="share-buttons">
-                            <button 
+                            <button
                                 className="share-submit"
                                 onClick={handleShareConfirm}
                                 disabled={selectedMessages.length === 0}
                             >
                                 {getText('share')}
                             </button>
-                            <button 
+                            <button
                                 className="share-cancel"
                                 onClick={handleShareCancel}
                             >
@@ -1653,7 +1654,7 @@ function Chat() {
             {isLoadingMessages && (
                 <div className="global-loading-overlay">
                     <div className="loading-container">
-                        <Lottie 
+                        <Lottie
                             animationData={loadingAnimation}
                             loop={true}
                             style={{ width: 120, height: 120 }}
@@ -1663,14 +1664,14 @@ function Chat() {
                 </div>
             )}
 
-            <CenterNotice 
+            <CenterNotice
                 message={centerNotice.message}
                 isVisible={centerNotice.visible}
                 onClose={() => setCenterNotice({ visible: false, message: '' })}
                 duration={5000}
             />
 
-            <ToastContainer 
+            <ToastContainer
                 position="bottom-center"
                 autoClose={3000}
                 hideProgressBar={false}
@@ -1726,11 +1727,11 @@ function formatMessageTime(timestamp) {
     const diff = now - date;
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
-    
+
     // 检测用户语言
     const userLang = navigator.language || navigator.userLanguage;
     const isZH = userLang.startsWith('zh');
-    
+
     // 双语文本配置
     const texts = {
         justNow: isZH ? "刚刚" : "just now",
@@ -1751,9 +1752,9 @@ function formatMessageTime(timestamp) {
     const minute = date.getMinutes();
     const isPM = hour >= 12;
     const hour12 = hour % 12 || 12;
-    
+
     // 格式化具体时间
-    const timeStr = isZH 
+    const timeStr = isZH
         ? `${texts[isPM ? 'afternoon' : 'morning']}${hour12}:${minute.toString().padStart(2, '0')}`
         : `${hour12}:${minute.toString().padStart(2, '0')} ${isPM ? 'PM' : 'AM'}`;
 
@@ -1761,7 +1762,7 @@ function formatMessageTime(timestamp) {
     if (seconds < 60) {
         return texts.justNow;
     }
-    
+
     // 59分钟内
     if (minutes < 60) {
         return `${minutes}${texts.minutesAgo}`;
@@ -1793,7 +1794,7 @@ function formatMessageTime(timestamp) {
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay());
     const isThisWeek = date >= startOfWeek;
-    
+
     // 本周内
     if (isThisWeek) {
         const weekday = texts.weekdays[isZH ? 'zh' : 'en'][date.getDay()];
@@ -1802,7 +1803,7 @@ function formatMessageTime(timestamp) {
 
     // 判断是否在本年内
     const isThisYear = date.getFullYear() === now.getFullYear();
-    
+
     // 本年内
     if (isThisYear) {
         if (isZH) {
@@ -1814,7 +1815,7 @@ function formatMessageTime(timestamp) {
             }) + ` ${timeStr}`;
         }
     }
-    
+
     // 超出本年
     if (isZH) {
         return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${timeStr}`;

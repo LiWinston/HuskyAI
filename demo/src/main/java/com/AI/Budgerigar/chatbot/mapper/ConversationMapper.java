@@ -14,7 +14,7 @@ public interface ConversationMapper extends BaseMapper<Conversation> {
 
     int createConversationForUuid(@Param("uuid") String uuid, @Param("conversationId") String conversationId);
 
-    String getSummaryByCid(@Param("uuid") String uuid);
+    String getSummaryByCid(@Param("conversationId") String conversationId);
 
     void setMessageForShort(@Param("cid") String cid, @Param("summary") String summary);
 

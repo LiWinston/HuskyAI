@@ -434,4 +434,41 @@
         width: 100%;
         justify-content: flex-end;
     }
+}
+
+.load-title-button {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.load-title-button:hover:not(:disabled) {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.load-title-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.loading-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 } 
