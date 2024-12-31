@@ -26,7 +26,45 @@ function Login() {
 
     const [isUsernameValid, setIsUsernameValid] = useState(false);
 
+    const [isLoading, setIsLoading] = useState(false);  // 手动登录的加载状态
+    const [isCheckingAuth, setIsCheckingAuth] = useState(false);  // 自动登录检查的状态
+
     const location = useLocation();
+
+    // 添加自动登录检查
+    useEffect(() => {
+        const checkAuth = async () => {
+            const token = localStorage.getItem('token');
+            const userUUID = localStorage.getItem('userUUID');
+            
+            if (token && userUUID) {
+                setIsCheckingAuth(true);  // 只在有token时显示检查状态
+                try {
+                    const response = await axiosInstance.get(`/chat/page`, {
+                        params: {
+                            uuid: userUUID,
+                            current: 1,
+                            size: 1
+                        }
+                    });
+                    
+                    if (response.data.code === 1) {
+                        navigate('/chat');
+                        return;
+                    }
+                } catch (error) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userUUID');
+                    console.error('Auto login failed:', error);
+                } finally {
+                    setIsCheckingAuth(false);
+                }
+            }
+        };
+
+        checkAuth();
+    }, [navigate]);
+
     useEffect(() => {
         // If the username is passed from the Confirm page, set it in the input box.
         if (location.state && location.state.username) {
@@ -88,8 +126,6 @@ function Login() {
             setAnimationTarget(null);
         }, 250);
     };
-
-    const [isLoading, setIsLoading] = useState(false);
 
     const handleLogin = async () => {
         setIsLoading(true);
@@ -258,95 +294,8 @@ function Login() {
     };
 
     return (
-        <div className="auth-container">
-            <h2>{isLogin ? text.login : text.register}</h2>
-            <form onSubmit={handleSubmit}>
-                <div className="username-container">
-                    <input
-                        ref={usernameInputRef}
-                        type="text"
-                        value={username}
-                        onChange={(e) => {
-                            setUsername(e.target.value);
-                            setIsUsernameValid(false);
-                        }}
-                        onBlur={handleUsernameBlur}
-                        placeholder={text.username}
-                        required
-                        className={isUsernameValid ? 'valid' : ''}
-                    />
-                    {isCheckingUsername && (
-                        <div className="loading-spinner">⏳</div>
-                    )}
-                    {!isLogin && isUsernameValid && !isCheckingUsername && (
-                        <div className="success-icon">✓</div>
-                    )}
-                    {showSuggestionPopup && (
-                        <div className="suggestion-popup">
-                            <span className="close-button"
-                                  onClick={() => setShowSuggestionPopup(false)}>&times;</span>
-                            <p>{text.usernameExists}</p>
-                            {suggestions.map((suggestion, index) => (
-                                <div
-                                    key={index}
-                                    className={`suggestion-item ${animationTarget === index ? 'clicked' : ''}`}
-                                    onClick={() => handleSuggestionClick(suggestion, index)}
-                                >
-                                    {suggestion}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-                <div className="password-container">
-                    <input
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder={text.password}
-                        required
-                    />
-                    <button
-                        type="button"
-                        className="toggle-password"
-                        onClick={() => setShowPassword(!showPassword)}
-                    >
-                        {showPassword ? '🙈' : '👁️'}
-                    </button>
-                </div>
-                {!isLogin && (
-                    <>
-                        <div className="admin-checkbox">
-                            <label>{text.asAdmin}</label>
-                            <input
-                                type="checkbox"
-                                checked={isAdmin}
-                                onChange={(e) => setIsAdmin(e.target.checked)}
-                            />
-                        </div>
-                        {isAdmin && (
-                            <div className="admin-email-container">
-                                <input
-                                    type="email"
-                                    value={adminEmail}
-                                    onChange={(e) => setAdminEmail(e.target.value)}
-                                    placeholder={text.adminEmail}
-                                    required
-                                />
-                            </div>
-                        )}
-                    </>
-                )}
-                <button type="submit" className="auth-button">
-                    {isLogin ? text.loginButton : text.registerButton}
-                </button>
-            </form>
-            <button onClick={() => setIsLogin(!isLogin)} className="auth-button">
-                {isLogin ? text.switchToRegister : text.switchToLogin}
-            </button>
-            {errorMessage && <p className="error-message">{errorMessage}</p>}
-            
-            {isLoading && (
+        <>
+            {isCheckingAuth ? (
                 <div className="global-loading-overlay">
                     <div className="loading-container">
                         <Lottie 
@@ -355,14 +304,118 @@ function Login() {
                             style={{ width: 80, height: 80 }}
                         />
                         <div className="loading-text">
-                            {isZH ? 
-                                (isLogin ? "登录中..." : "注册中...") : 
-                                (isLogin ? "Logging in..." : "Registering...")}
+                            {isZH ? "正在检查登录状态..." : "Checking login status..."}
                         </div>
                     </div>
                 </div>
+            ) : (
+                <div className="auth-container">
+                    <h2>{isLogin ? text.login : text.register}</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="username-container">
+                            <input
+                                ref={usernameInputRef}
+                                type="text"
+                                value={username}
+                                onChange={(e) => {
+                                    setUsername(e.target.value);
+                                    setIsUsernameValid(false);
+                                }}
+                                onBlur={handleUsernameBlur}
+                                placeholder={text.username}
+                                required
+                                className={isUsernameValid ? 'valid' : ''}
+                            />
+                            {isCheckingUsername && (
+                                <div className="loading-spinner">⏳</div>
+                            )}
+                            {!isLogin && isUsernameValid && !isCheckingUsername && (
+                                <div className="success-icon">✓</div>
+                            )}
+                            {showSuggestionPopup && (
+                                <div className="suggestion-popup">
+                                    <span className="close-button"
+                                          onClick={() => setShowSuggestionPopup(false)}>&times;</span>
+                                    <p>{text.usernameExists}</p>
+                                    {suggestions.map((suggestion, index) => (
+                                        <div
+                                            key={index}
+                                            className={`suggestion-item ${animationTarget === index ? 'clicked' : ''}`}
+                                            onClick={() => handleSuggestionClick(suggestion, index)}
+                                        >
+                                            {suggestion}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div className="password-container">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder={text.password}
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="toggle-password"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? '🙈' : '👁️'}
+                            </button>
+                        </div>
+                        {!isLogin && (
+                            <>
+                                <div className="admin-checkbox">
+                                    <label>{text.asAdmin}</label>
+                                    <input
+                                        type="checkbox"
+                                        checked={isAdmin}
+                                        onChange={(e) => setIsAdmin(e.target.checked)}
+                                    />
+                                </div>
+                                {isAdmin && (
+                                    <div className="admin-email-container">
+                                        <input
+                                            type="email"
+                                            value={adminEmail}
+                                            onChange={(e) => setAdminEmail(e.target.value)}
+                                            placeholder={text.adminEmail}
+                                            required
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
+                        <button type="submit" className="auth-button">
+                            {isLogin ? text.loginButton : text.registerButton}
+                        </button>
+                    </form>
+                    <button onClick={() => setIsLogin(!isLogin)} className="auth-button">
+                        {isLogin ? text.switchToRegister : text.switchToLogin}
+                    </button>
+                    {errorMessage && <p className="error-message">{errorMessage}</p>}
+                    
+                    {isLoading && (
+                        <div className="global-loading-overlay">
+                            <div className="loading-container">
+                                <Lottie 
+                                    animationData={loadingAnimation}
+                                    loop={true}
+                                    style={{ width: 80, height: 80 }}
+                                />
+                                <div className="loading-text">
+                                    {isZH ? 
+                                        (isLogin ? "登录中..." : "注册中...") : 
+                                        (isLogin ? "Logging in..." : "Registering...")}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             )}
-        </div>
+        </>
     );
 }
 
