@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState, useCallback} from 'react';
-import axiosInstance from './api/axiosConfig';
+import axiosInstance, { getCommonHeaders } from './api/axiosConfig';
 import ReactMarkdown from 'react-markdown';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {AnimatePresence, motion} from 'framer-motion';
@@ -961,25 +961,14 @@ function Chat() {
                 setStreamingMessage(
                     {sender: 'assistant', text: '', timestamp: timestamp});
 
-                // 获取token和userUUID
-                const token = localStorage.getItem('token');
-                const userUUID = localStorage.getItem('userUUID');
-                
-                // 构建请求头
-                const requestHeaders = {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                    'X-User-UUID': userUUID
-                };
-                
-                // 如果找到当前页,添加到请求头
-                if (currentPage !== null) {
-                    requestHeaders['X-Conversation-Page'] = currentPage.toString();
-                }
+                // 使用通用的请求头生成函数，并添加额外的页码头
+                const headers = getCommonHeaders(
+                    currentPage ? {'X-Conversation-Page': currentPage.toString()} : {}
+                );
 
                 const response = await fetch(`/api/chat/stream`, {
-                    method: 'POST', 
-                    headers: requestHeaders,
+                    method: 'POST',
+                    headers: headers,
                     body: JSON.stringify({
                         prompt: input,
                         conversationId: selectedConversation,

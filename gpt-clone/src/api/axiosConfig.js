@@ -1,5 +1,18 @@
 import axios from 'axios';
 
+// 通用的请求头生成函数
+export const getCommonHeaders = (additionalHeaders = {}) => {
+    const token = localStorage.getItem('token');
+    const userUUID = localStorage.getItem('userUUID');
+    
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : '',
+        'X-User-UUID': userUUID || '',
+        ...additionalHeaders
+    };
+};
+
 // 创建axios实例
 const axiosInstance = axios.create({
     baseURL: '/api'
@@ -7,30 +20,25 @@ const axiosInstance = axios.create({
 
 // 请求拦截器
 axiosInstance.interceptors.request.use(
-    config => {
-        const token = localStorage.getItem('token');
-        const userUUID = localStorage.getItem('userUUID');
-        
-        if (token && userUUID) {
-            config.headers.Authorization = `Bearer ${token}`;
-            config.headers['X-User-UUID'] = userUUID;
-        }
+    (config) => {
+        config.headers = getCommonHeaders(config.headers);
         return config;
     },
-    error => {
+    (error) => {
         return Promise.reject(error);
     }
 );
 
 // 响应拦截器
 axiosInstance.interceptors.response.use(
-    response => response,
-    error => {
+    (response) => response,
+    (error) => {
         if (error.response?.status === 401) {
-            // token过期或无效,清除本地存储并跳转到登录页
+            // 清除本地存储
             localStorage.removeItem('token');
             localStorage.removeItem('userUUID');
-            window.location.href = '/';
+            // 重定向到登录页
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }
