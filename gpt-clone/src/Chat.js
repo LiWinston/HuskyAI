@@ -961,9 +961,25 @@ function Chat() {
                 setStreamingMessage(
                     {sender: 'assistant', text: '', timestamp: timestamp});
 
+                // 获取token和userUUID
+                const token = localStorage.getItem('token');
+                const userUUID = localStorage.getItem('userUUID');
+                
+                // 构建请求头
+                const requestHeaders = {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-User-UUID': userUUID
+                };
+                
+                // 如果找到当前页,添加到请求头
+                if (currentPage !== null) {
+                    requestHeaders['X-Conversation-Page'] = currentPage.toString();
+                }
+
                 const response = await fetch(`/api/chat/stream`, {
                     method: 'POST', 
-                    headers: headers,
+                    headers: requestHeaders,
                     body: JSON.stringify({
                         prompt: input,
                         conversationId: selectedConversation,
