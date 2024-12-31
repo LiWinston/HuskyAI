@@ -105,12 +105,8 @@ public class ChatController {
     public Result<String> chatPost(@RequestBody Map<String, String> body) {
         var chatServices = chatServicesManageService.getChatServices();
         try {
-            // 异步清除受影响的页面缓存
-            cacheService.asyncClearAffectedConversationCaches()
-                .exceptionally(throwable -> {
-                    log.error("清除缓存失败", throwable);
-                    return null;
-                });
+            // 清除受影响的页面缓存
+            cacheService.clearAffectedConversationCaches();
             
             String model = body.get("model");
             if (model == null) {
@@ -152,12 +148,8 @@ public class ChatController {
     public Flux<String> chatPostStream(@RequestBody Map<String, String> body) {
         var chatServices = chatServicesManageService.getChatServices();
         try {
-            // 异步清除受影响的页面缓存
-            cacheService.asyncClearAffectedConversationCaches()
-                .exceptionally(throwable -> {
-                    log.error("清除缓存失败", throwable);
-                    return null;
-                });
+            // 清除受影响的页面缓存
+            cacheService.clearAffectedConversationCaches();
             
             String model = body.get("model");
             if (model == null) {

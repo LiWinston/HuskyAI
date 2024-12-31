@@ -141,28 +141,31 @@ public class CacheService {
     }
 
     /**
-     * 异步清除受影响的对话页面缓存
-     * 当一个对话被更新时,它会移动到第一页,需要清除从它原来所在页到第一页的所有缓存
+     * 异步清除受影响的对话缓存
      */
     @Async
-    public CompletableFuture<Void> asyncClearAffectedConversationCaches() {
-        // 在主线程中获取页码和用户ID
-        Integer sourcePage = PageContext.getCurrentPage();
-        String uuid = UserContext.getCurrentUuid();
-        log.debug("主线程中获取到当前页面: {}, 用户UUID: {}", sourcePage, uuid);
-        
-        return CompletableFuture.runAsync(() -> {
-            try {
-                if (sourcePage == null || sourcePage <= 1) {
-                    log.debug("源页面为空或为第一页,仅清除第一页缓存");
-                    clearRangeUserConversationCaches(uuid, 1, 1);
-                } else {
-                    log.info("清除从第{}页到第1页的所有缓存", sourcePage);
-                    clearRangeUserConversationCaches(uuid, 1, sourcePage);
-                }
-            } catch (Exception e) {
-                log.error("异步清除缓存失败: userId={}", uuid, e);
+    public void asyncClearAffectedConversationCaches(String uuid, Integer sourcePage) {
+        log.debug("异步线程开始清除缓存, 用户UUID: {}, 源页面: {}", uuid, sourcePage);
+        try {
+            if (sourcePage == null || sourcePage <= 1) {
+                log.debug("源页面为空或为第一页,仅清除第一页缓存");
+                clearRangeUserConversationCaches(uuid, 1, 1);
+            } else {
+                log.info("清除从第{}页到第1页的所有缓存", sourcePage);
+                clearRangeUserConversationCaches(uuid, 1, sourcePage);
             }
-        });
+        } catch (Exception e) {
+            log.error("异步清除缓存失败: userId={}", uuid, e);
+        }
+    }
+
+    /**
+     * 清除受影响的对话缓存
+     */
+    public void clearAffectedConversationCaches() {
+        String uuid = UserContext.getCurrentUuid();
+        Integer sourcePage = PageContext.getCurrentPage();
+        log.debug("主线程准备清除缓存, 用户UUID: {}, 源页面: {}", uuid, sourcePage);
+        asyncClearAffectedConversationCaches(uuid, sourcePage);
     }
 }
