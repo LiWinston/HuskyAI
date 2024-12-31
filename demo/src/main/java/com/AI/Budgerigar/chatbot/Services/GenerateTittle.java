@@ -113,7 +113,7 @@ public class GenerateTittle {
             };
 
             ChatRequestDTO chatRequestDTO = ChatRequestDTO.fromStringTuples(_model.get(), recentMessages);
-            log.info("ChatRequestDTO: " + chatRequestDTO.toString());
+//            log.info("ChatRequestDTO: " + chatRequestDTO.toString());
             ChatResponseDTO chatResponseDTO = restTemplate.postForObject(_openAIUrl.get(), chatRequestDTO,
                     ChatResponseDTO.class);
             String summary = chatResponseDTO.getChoices().get(0).getMessage().getContent();

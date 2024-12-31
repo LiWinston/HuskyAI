@@ -247,7 +247,7 @@ public class ChatSyncServiceImpl implements ChatSyncService {
         // messages.
         List<Message> mergedMessages = mergeMessages(redisMessages, mongoMessages);
         for (Message message : mergedMessages) {
-            log.info("Merged message: {}", message);
+//            log.info("Merged message: {}", message);
         }
 
         // Write the merged message back to Redis.
