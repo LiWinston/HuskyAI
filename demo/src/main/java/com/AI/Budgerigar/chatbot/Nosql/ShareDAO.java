@@ -3,6 +3,7 @@ package com.AI.Budgerigar.chatbot.Nosql;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
@@ -67,10 +68,7 @@ public class ShareDAO {
     // Update share expiration time
     public void updateExpireAt(String shareCode, Date newExpireAt) {
         Query query = new Query(Criteria.where("shareCode").is(shareCode));
-        ShareRecord record = mongoTemplate.findOne(query, ShareRecord.class);
-        if (record != null) {
-            record.setExpireAt(newExpireAt);
-            mongoTemplate.save(record);
-        }
+        Update update = new Update().set("expireAt", newExpireAt);
+        mongoTemplate.updateFirst(query, update, ShareRecord.class);
     }
 }

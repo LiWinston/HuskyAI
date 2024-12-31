@@ -1,33 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaEdit, FaTrash, FaCopy } from 'react-icons/fa';
+import { FaTimes, FaEdit, FaTrash, FaCopy, FaExternalLinkAlt } from 'react-icons/fa';
 import axiosInstance from '../api/axiosConfig';
 import './ShareManageModal.css';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+import { toast } from 'react-toastify';
 
 const ShareManageModal = ({ onClose, isZH }) => {
     const [shares, setShares] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [editingShare, setEditingShare] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [editMode, setEditMode] = useState('preset'); // 'preset' or 'custom'
+
+    const presetOptions = [
+        { value: 24, label: isZH ? '1天' : '1 day' },
+        { value: 72, label: isZH ? '3天' : '3 days' },
+        { value: 168, label: isZH ? '7天' : '7 days' },
+        { value: 720, label: isZH ? '30天' : '30 days' }
+    ];
 
     // 加载分享记录
     useEffect(() => {
-        const fetchShares = async () => {
-            try {
-                const uuid = localStorage.getItem('userUUID');
-                const response = await axiosInstance.get(`/chat/share/user/${uuid}`);
-                if (response.data.code === 1) {
-                    setShares(response.data.data);
-                } else {
-                    setError(response.data.msg);
-                }
-            } catch (error) {
-                setError(isZH ? '加载分享记录失败' : 'Failed to load share records');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchShares();
     }, [isZH]);
+
+    const fetchShares = async () => {
+        try {
+            const uuid = localStorage.getItem('userUUID');
+            const response = await axiosInstance.get(`/chat/share/user/${uuid}`);
+            if (response.data.code === 1) {
+                setShares(response.data.data);
+            } else {
+                setError(response.data.msg);
+            }
+        } catch (error) {
+            setError(isZH ? '加载分享记录失败' : 'Failed to load share records');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // 更新过期时间
     const handleUpdateExpiration = async (shareCode, newHours) => {
@@ -36,16 +49,30 @@ const ShareManageModal = ({ onClose, isZH }) => {
                 expirationHours: newHours
             });
             if (response.data.code === 1) {
-                // 重新加载分享记录
-                const uuid = localStorage.getItem('userUUID');
-                const sharesResponse = await axiosInstance.get(`/chat/share/user/${uuid}`);
-                if (sharesResponse.data.code === 1) {
-                    setShares(sharesResponse.data.data);
-                }
+                await fetchShares();
+                setEditingShare(null);
+                setSelectedDate(null);
+                toast.success(isZH ? '更新成功' : 'Update successful');
             }
         } catch (error) {
             console.error('Failed to update expiration:', error);
+            toast.error(isZH ? '更新失败' : 'Update failed');
         }
+    };
+
+    // 处理自定义日期更新
+    const handleCustomDateUpdate = async (shareCode) => {
+        if (!selectedDate) return;
+        
+        const now = new Date();
+        const diffHours = Math.ceil((selectedDate - now) / (1000 * 60 * 60));
+        
+        if (diffHours <= 0) {
+            toast.error(isZH ? '请选择未来的时间' : 'Please select a future time');
+            return;
+        }
+        
+        await handleUpdateExpiration(shareCode, diffHours);
     };
 
     // 删除分享
@@ -54,9 +81,11 @@ const ShareManageModal = ({ onClose, isZH }) => {
             const response = await axiosInstance.delete(`/chat/share/${shareCode}`);
             if (response.data.code === 1) {
                 setShares(shares.filter(share => share.shareCode !== shareCode));
+                toast.success(isZH ? '删除成功' : 'Delete successful');
             }
         } catch (error) {
             console.error('Failed to delete share:', error);
+            toast.error(isZH ? '删除失败' : 'Delete failed');
         }
     };
 
@@ -64,6 +93,13 @@ const ShareManageModal = ({ onClose, isZH }) => {
     const handleCopyLink = (shareCode) => {
         const shareLink = `${window.location.origin}/chat/share/${shareCode}`;
         navigator.clipboard.writeText(shareLink);
+        toast.success(isZH ? '链接已复制' : 'Link copied');
+    };
+
+    // 在新标签页打开分享链接
+    const handleOpenShare = (shareCode) => {
+        const shareLink = `${window.location.origin}/chat/share/${shareCode}`;
+        window.open(shareLink, '_blank');
     };
 
     // 格式化时间
@@ -101,35 +137,118 @@ const ShareManageModal = ({ onClose, isZH }) => {
                             {shares.map((share) => (
                                 <div key={share.shareCode} className="share-item">
                                     <div className="share-info">
-                                        <div className="share-code">
-                                            {isZH ? '分享码：' : 'Share Code: '}{share.shareCode}
+                                        <div className="share-title">
+                                            {share.conversationTitle || (isZH ? '未命名对话' : 'Untitled Conversation')}
+                                            <span className="message-count">
+                                                ({share.messageIndexes?.length || 0} {isZH ? '条消息' : 'messages'})
+                                            </span>
+                                        </div>
+                                        <div className="share-code" onClick={() => handleOpenShare(share.shareCode)}>
+                                            <span>{isZH ? '分享码：' : 'Share Code: '}</span>
+                                            <code>{share.shareCode}</code>
+                                            <FaExternalLinkAlt className="external-link-icon" />
+                                        </div>
+                                        <div className="share-link">
+                                            <span>{isZH ? '链接：' : 'Link: '}</span>
+                                            <code>{`${window.location.origin}/chat/share/${share.shareCode}`}</code>
+                                            <button 
+                                                className="copy-link-button"
+                                                onClick={() => handleCopyLink(share.shareCode)}
+                                                title={isZH ? "复制链接" : "Copy link"}
+                                            >
+                                                <FaCopy />
+                                            </button>
                                         </div>
                                         <div className="share-dates">
                                             <div>{isZH ? '创建时间：' : 'Created: '}{formatDate(share.createdAt)}</div>
                                             <div>{isZH ? '过期时间：' : 'Expires: '}{formatDate(share.expireAt)}</div>
                                         </div>
                                     </div>
-                                    <div className="share-actions">
-                                        <button 
-                                            onClick={() => handleUpdateExpiration(share.shareCode, 24)}
-                                            title={isZH ? "延长24小时" : "Extend 24 hours"}
-                                        >
-                                            <FaEdit />
-                                        </button>
-                                        <button 
-                                            onClick={() => handleCopyLink(share.shareCode)}
-                                            title={isZH ? "复制链接" : "Copy link"}
-                                        >
-                                            <FaCopy />
-                                        </button>
-                                        <button 
-                                            onClick={() => handleDelete(share.shareCode)}
-                                            title={isZH ? "删除" : "Delete"}
-                                            className="delete-button"
-                                        >
-                                            <FaTrash />
-                                        </button>
-                                    </div>
+                                    
+                                    {editingShare === share.shareCode ? (
+                                        <div className="edit-expiration">
+                                            <div className="edit-mode-selector">
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        value="preset"
+                                                        checked={editMode === 'preset'}
+                                                        onChange={(e) => setEditMode(e.target.value)}
+                                                    />
+                                                    {isZH ? '预设选项' : 'Preset Options'}
+                                                </label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        value="custom"
+                                                        checked={editMode === 'custom'}
+                                                        onChange={(e) => setEditMode(e.target.value)}
+                                                    />
+                                                    {isZH ? '自定义时间' : 'Custom Date'}
+                                                </label>
+                                            </div>
+                                            
+                                            {editMode === 'preset' ? (
+                                                <div className="preset-options">
+                                                    {presetOptions.map(option => (
+                                                        <button
+                                                            key={option.value}
+                                                            onClick={() => handleUpdateExpiration(share.shareCode, option.value)}
+                                                            className="preset-option-button"
+                                                        >
+                                                            {option.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="custom-date-picker">
+                                                    <DatePicker
+                                                        selected={selectedDate}
+                                                        onChange={date => setSelectedDate(date)}
+                                                        showTimeSelect
+                                                        timeFormat="HH:mm"
+                                                        timeIntervals={15}
+                                                        dateFormat="yyyy-MM-dd HH:mm"
+                                                        minDate={new Date()}
+                                                        placeholderText={isZH ? "选择截止时间" : "Select expiration time"}
+                                                    />
+                                                    <button
+                                                        className="confirm-date-button"
+                                                        onClick={() => handleCustomDateUpdate(share.shareCode)}
+                                                        disabled={!selectedDate}
+                                                    >
+                                                        {isZH ? '确认' : 'Confirm'}
+                                                    </button>
+                                                </div>
+                                            )}
+                                            
+                                            <button
+                                                className="cancel-edit-button"
+                                                onClick={() => {
+                                                    setEditingShare(null);
+                                                    setSelectedDate(null);
+                                                }}
+                                            >
+                                                {isZH ? '取消' : 'Cancel'}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="share-actions">
+                                            <button 
+                                                onClick={() => setEditingShare(share.shareCode)}
+                                                title={isZH ? "编辑过期时间" : "Edit expiration"}
+                                            >
+                                                <FaEdit />
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDelete(share.shareCode)}
+                                                title={isZH ? "删除" : "Delete"}
+                                                className="delete-button"
+                                            >
+                                                <FaTrash />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
