@@ -7,10 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -138,18 +140,25 @@ public class CacheService {
     }
 
     /**
-     * 根据上下文清除受影响的对话页面缓存
+     * 异步清除受影响的对话页面缓存
      * 当一个对话被更新时,它会移动到第一页,需要清除从它原来所在页到第一页的所有缓存
      */
-    public void clearAffectedConversationCaches(String userId) {
-        Integer sourcePage = PageContext.getCurrentPage();
-        if (sourcePage == null || sourcePage <= 1) {
-            log.debug("源页面为空或为第一页,仅清除第一页缓存");
-            clearRangeUserConversationCaches(userId, 1, 1);
-            return;
-        }
-        
-        log.info("清除从第{}页到第1页的所有缓存", sourcePage);
-        clearRangeUserConversationCaches(userId, 1, sourcePage);
+    @Async
+    public CompletableFuture<Void> asyncClearAffectedConversationCaches(String userId) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                Integer sourcePage = PageContext.getCurrentPage();
+                if (sourcePage == null || sourcePage <= 1) {
+                    log.debug("源页面为空或为第一页,仅清除第一页缓存");
+                    clearRangeUserConversationCaches(userId, 1, 1);
+                    return;
+                }
+                
+                log.info("清除从第{}页到第1页的所有缓存", sourcePage);
+                clearRangeUserConversationCaches(userId, 1, sourcePage);
+            } catch (Exception e) {
+                log.error("异步清除缓存失败: userId={}", userId, e);
+            }
+        });
     }
 }

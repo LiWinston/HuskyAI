@@ -1,5 +1,6 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
+import com.AI.Budgerigar.chatbot.Cache.CacheService;
 import com.AI.Budgerigar.chatbot.DTO.PageDTO;
 import com.AI.Budgerigar.chatbot.Entity.Conversation;
 import com.AI.Budgerigar.chatbot.Entity.Message;
@@ -48,6 +49,9 @@ public class ChatController {
 
     @Autowired
     private UserModelAccessService userModelAccessService;
+    
+    @Autowired
+    private CacheService cacheService;
 
     // Get all conversation list from DB for user to choose.
     // Each conversation list contains conversation ID and conversation excerpt
@@ -101,6 +105,14 @@ public class ChatController {
     public Result<String> chatPost(@RequestBody Map<String, String> body) {
         var chatServices = chatServicesManageService.getChatServices();
         try {
+            String uuid = body.get("uuid");
+            // 异步清除受影响的页面缓存
+            cacheService.asyncClearAffectedConversationCaches(uuid)
+                .exceptionally(throwable -> {
+                    log.error("清除缓存失败", throwable);
+                    return null;
+                });
+            
             String model = body.get("model");
             if (model == null) {
                 model = "baidu";
@@ -141,6 +153,14 @@ public class ChatController {
     public Flux<String> chatPostStream(@RequestBody Map<String, String> body) {
         var chatServices = chatServicesManageService.getChatServices();
         try {
+            String uuid = body.get("uuid");
+            // 异步清除受影响的页面缓存
+            cacheService.asyncClearAffectedConversationCaches(uuid)
+                .exceptionally(throwable -> {
+                    log.error("清除缓存失败", throwable);
+                    return null;
+                });
+            
             String model = body.get("model");
             if (model == null) {
                 model = "baidu" + MODELALIAS_MODELID_SEPARATOR + "baidu";
