@@ -3,6 +3,7 @@ import axios from 'axios';
 import {FaEllipsisV} from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import './Chat.css';
+import axiosInstance from './api/axiosConfig';
 
 const ConversationItem = ({
                               conversation,
@@ -176,7 +177,7 @@ const ConversationItem = ({
                 localStorage.removeItem('selectedConversation');
             }
 
-            await axios.delete(`/api/chat/${uuid}/${conversation.id}`);
+            await axiosInstance.delete(`/chat/${uuid}/${conversation.id}`);
             
             // 获取更新后的会话列表
             const updatedConversations = await fetchConversations(1);
@@ -207,7 +208,7 @@ const ConversationItem = ({
                 theme: localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'
             });
         } catch (error) {
-            console.error('Failed to delete conversation', error);
+            console.error('Error deleting conversation:', error);
             // 清除删除标记
             localStorage.removeItem('isDeleting');
             // 如果删除失败，移除动画类

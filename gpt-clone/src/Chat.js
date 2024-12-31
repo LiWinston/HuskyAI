@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState, useCallback} from 'react';
-import axios from 'axios';
+import axiosInstance from './api/axiosConfig';
 import ReactMarkdown from 'react-markdown';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {AnimatePresence, motion} from 'framer-motion';
@@ -430,8 +430,8 @@ function Chat() {
     const fetchModels = async () => {
         document.body.style.cursor = 'wait'; // 设置鼠标为等待状态
         try {
-            const response = await axios.post('/api/chat/models', {
-                uuid: localStorage.getItem('userUUID'),
+            const response = await axiosInstance.post('/chat/models', {
+                uuid: localStorage.getItem('userUUID')
             });
             if (response.data.code === 1) {
                 setModels(response.data.data); // Set models from response
@@ -452,7 +452,7 @@ function Chat() {
                 console.error('Error fetching models:', response.data.msg);
             }
         } catch (error) {
-            console.error('Failed to fetch models:', error);
+            console.error('Error fetching models:', error);
         } finally {
             document.body.style.cursor = 'default'; // 恢复默认鼠标样式
         }
@@ -473,7 +473,7 @@ function Chat() {
         setLoadError(false);
         
         try {
-            const response = await axios.get(`/api/chat/page`, {
+            const response = await axiosInstance.get(`/chat/page`, {
                 params: {
                     uuid: localStorage.getItem('userUUID'),
                     current: page,
@@ -633,7 +633,7 @@ function Chat() {
                 setSelectedConversation(conversationToLoad);
                 
                 const uuid = localStorage.getItem('userUUID');
-                const response = await axios.get(`/api/chat/${uuid}/${conversationToLoad}`);
+                const response = await axiosInstance.get(`/chat/${uuid}/${conversationToLoad}`);
 
                 const loadedMessages = response.data.data.length
                     ? response.data.data.map(msg => ({
@@ -747,7 +747,7 @@ function Chat() {
         }
         try {
             const uuid = localStorage.getItem('userUUID');
-            const response = await axios.get(`/api/chat/${uuid}/${conversationId}`);
+            const response = await axiosInstance.get(`/chat/${uuid}/${conversationId}`);
 
             const loadedMessages = response.data.data.length
                 ? response.data.data.map(msg => ({
@@ -806,7 +806,7 @@ function Chat() {
         try {
             setIsLoadingMessages(true);
             // 先加载对话内容
-            const response = await axios.get(`/api/chat/${localStorage.getItem('userUUID')}/${conversationId}`);
+            const response = await axiosInstance.get(`/chat/${localStorage.getItem('userUUID')}/${conversationId}`);
             
             // 设置选中的对话
             setSelectedConversation(conversationId);
@@ -875,7 +875,7 @@ function Chat() {
 
         try {
             const selectedMsgs = selectedMessages.map(index => shareMessages[index]);
-            const response = await axios.post('/api/chat/share', {
+            const response = await axiosInstance.post('/chat/share', {
                 uuid: localStorage.getItem('userUUID'),
                 conversationId: sharedCid,
                 messageIndexes: selectedMessages,
@@ -1041,7 +1041,7 @@ function Chat() {
                 setStreamingMessage(null);
             } else {
                 // Non-streaming handling
-                const response = await axios.post('/api/chat', {
+                const response = await axiosInstance.post('/chat', {
                     prompt: input,
                     conversationId: selectedConversation,
                     model: selectedModel,

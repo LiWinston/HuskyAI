@@ -1,6 +1,6 @@
 // ModelManagement.js
 import React, {useEffect, useState} from 'react';
-import axios from 'axios';
+import axiosInstance from '../api/axiosConfig';
 import './admin.css';
 import '../Component/sweetAlertUtil';
 import {showSweetAlertWithRetVal} from "../Component/sweetAlertUtil";
@@ -14,7 +14,7 @@ function ModelManagement() {
 // Retrieve the current list of models.
     const fetchModels = async () => {
         try {
-            const response = await axios.get('/api/admin/models');
+            const response = await axiosInstance.get('/admin/models');
             setModels(response.data.data.modelServices);  // Adapt to the new VO structure.
         } catch (error) {
             console.error('Error fetching models:', error);
@@ -28,7 +28,7 @@ function ModelManagement() {
     // Dynamic registration model.
     const registerModel = async () => {
         try {
-            const response = await axios.post('/api/admin/models', newModel);
+            const response = await axiosInstance.post('/admin/models', newModel);
             if (response.data.code !== 0) {
                 setOperationResult('Model registered successfully.');
                 showSweetAlertWithRetVal('Model registered successfully.', {icon: 'success', title: 'Success'}).then(async () => {
@@ -47,7 +47,7 @@ function ModelManagement() {
     // Update model information.
     const updateModel = async (name, model, operation) => {
         try {
-            await axios.post('/api/admin/models', {name, model, operation});
+            await axiosInstance.post('/admin/models', {name, model, operation});
             await fetchModels();
         } catch (error) {
             console.error('Error updating model:', error);
@@ -57,7 +57,7 @@ function ModelManagement() {
     // Manually refresh the model.
     const refreshModels = async () => {
         try {
-            await axios.post('/api/admin/models/refresh').then(res => {
+            await axiosInstance.post('/admin/models/refresh').then(res => {
                 showSweetAlertWithRetVal("Added " + res.data.data.add + " models, removed " + res.data.data.remove + " models."
                     + (res.data.data.add + res.data.data.remove > 0 ? " Refreshed Log: " + res.data.msg : " No changes.")
                     , {
@@ -82,7 +82,7 @@ function ModelManagement() {
     const toggleMultiModels = async (name, models, operation) => {
     try {
         const modelIds = models.map((m) => m.model);
-        const response = await axios.post('/api/admin/models/manage', {
+        const response = await axiosInstance.post('/admin/models/manage', {
             name,
             model: modelIds,
             operation: operation

@@ -1,5 +1,4 @@
 import React, {useEffect, useRef, useState} from 'react';
-import axios from 'axios';
 import {useLocation, useNavigate} from 'react-router-dom';
 import './login.css';
 import {showSweetAlert, showSweetAlertWithRetVal, showSweetError} from './Component/sweetAlertUtil';
@@ -7,6 +6,7 @@ import Swal from "sweetalert2";
 import detectIP from "./Component/ip";
 import Lottie from "lottie-react";
 import loadingAnimation from "./assets/loading.json";
+import axiosInstance from './api/axiosConfig';
 
 function Login() {
     const [isLogin, setIsLogin] = useState(true);
@@ -46,14 +46,13 @@ function Login() {
             }
             setIsCheckingUsername(true);
             try {
-                const response = await axios.get(`/api/user/register/checkUsername`, {params: {username}});
+                const response = await axiosInstance.get(`/user/register/checkUsername`, {params: {username}});
                 const result = response.data;
                 if (result.code === 0) {
                     setSuggestions(result.data);
                     setShowSuggestionPopup(true);
                     setIsUsernameValid(false);
                 } else {
-                    // 用户名可用
                     setIsUsernameValid(true);
                     setShowSuggestionPopup(false);
                 }
@@ -98,7 +97,7 @@ function Login() {
             const ipInfo = await detectIP();
             console.log(ipInfo);
             const loginDto = {username, password};
-            axios.post(`/api/user/login/ip`,
+            axiosInstance.post(`/user/login/ip`,
                 {
                     loginDTO: loginDto,
                     ipInfoDTO: ipInfo
@@ -110,7 +109,7 @@ function Login() {
 
         try {
             await UserIpInfo(username, password);
-            const response = await axios.post(`/api/user/login`,
+            const response = await axiosInstance.post(`/user/login`,
                 {username, password},
                 {headers: {'Content-Type': 'application/json'}});
             const result = response.data;
@@ -191,7 +190,7 @@ function Login() {
                 requestData.isAdmin = false;
             }
 
-            const response = await axios.post(`/api/user/register`, requestData);
+            const response = await axiosInstance.post(`/user/register`, requestData);
             const result = response.data;
 
             if (result.code === 1) {

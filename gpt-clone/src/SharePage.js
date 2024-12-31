@@ -12,6 +12,7 @@ import {FaCopy, FaDownload, FaHome} from 'react-icons/fa';
 import Lottie from 'lottie-react';
 import loadingAnimation from './assets/loading.json';
 import {MathJax, MathJaxContext} from 'better-react-mathjax';
+import axiosInstance from './api/axiosConfig';
 
 // 使用开源头像链接
 const userAvatarUrl = 'https://img.icons8.com/?size=100&id=23265&format=png&color=000000';  // 示例头像：用户
@@ -35,7 +36,7 @@ function SharePage() {
     useEffect(() => {
         const fetchMessages = async () => {
             try {
-                const response = await axios.get(`/api/chat/share/${shareCode}`);
+                const response = await axiosInstance.get(`/chat/share/${shareCode}`);
                 // 确保消息按时间顺序排序
                 const sortedMessages = (response.data.data || []).sort((a, b) =>
                     new Date(a.timestamp) - new Date(b.timestamp)

@@ -1,6 +1,6 @@
 // ConversationHistory.js
 import React, {useEffect, useState} from 'react';
-import axios from 'axios';
+import axiosInstance from '../api/axiosConfig';
 
 function ConversationHistory({userId}) {
     const [conversations, setConversations] = useState([]);
@@ -10,7 +10,7 @@ function ConversationHistory({userId}) {
     useEffect(() => {
         const fetchConversations = async () => {
             try {
-                const response = await axios.get(`/chat/${userId}`);
+                const response = await axiosInstance.get(`/chat/${userId}`);
                 setConversations(response.data);
             } catch (error) {
                 console.error('Error fetching conversations:', error);
@@ -24,11 +24,20 @@ function ConversationHistory({userId}) {
 
     const loadConversation = async (conversationId) => {
         try {
-            const response = await axios.get(`/chat/${userId}/${conversationId}`);
+            const response = await axiosInstance.get(`/chat/${userId}/${conversationId}`);
             setMessages(response.data);
             setSelectedConversation(conversationId);
         } catch (error) {
             console.error('Error loading conversation:', error);
+        }
+    };
+
+    const fetchMessages = async (conversationId) => {
+        try {
+            const response = await axiosInstance.get(`/chat/${userId}/${conversationId}`);
+            setMessages(response.data);
+        } catch (error) {
+            console.error('Error fetching messages:', error);
         }
     };
 

@@ -5,6 +5,7 @@ import {ChevronDown, ChevronUp} from 'lucide-react';
 import './um.css';
 import {showSweetAlertWithRetVal} from "../Component/sweetAlertUtil";
 import Swal from "sweetalert2";
+import axiosInstance from '../api/axiosConfig';
 
 function UserManagement() {
     const [users, setUsers] = useState([]);
@@ -22,23 +23,7 @@ function UserManagement() {
 
     const fetchUsers = async () => {
         try {
-            const currentUserUUID = localStorage.getItem('userUUID');
-            if (!currentUserUUID) {
-                throw new Error('User authentication required');
-            }
-
-            console.log('Sending request with UUID:', currentUserUUID); // 调试日志
-            const response = await axios.get('/api/admin/user', {
-                headers: {
-                    'X-User-UUID': currentUserUUID
-                }
-            });
-            
-            console.log('Response:', response.data); // 调试日志
-            if (response.data.code === 0) {
-                throw new Error(response.data.msg);
-            }
-            
+            const response = await axiosInstance.get('/admin/user');
             setUsers(response.data.data || []);
         } catch (error) {
             console.error('Error fetching users:', error);
@@ -61,16 +46,7 @@ function UserManagement() {
 
     const fetchUserModelAccess = async () => {
         try {
-            const currentUserUUID = localStorage.getItem('userUUID');
-            if (!currentUserUUID) {
-                throw new Error('User authentication required');
-            }
-
-            const response = await axios.get('/api/admin/user/modelAccess', {
-                headers: {
-                    'X-User-UUID': currentUserUUID
-                }
-            });
+            const response = await axiosInstance.get('/admin/user/modelAccess');
             
             // 添加空值检查
             if (!response.data || !response.data.data) {
@@ -106,16 +82,7 @@ function UserManagement() {
 
     const updateUser = async (userId, updatedData) => {
         try {
-            const currentUserUUID = localStorage.getItem('userUUID');
-            if (!currentUserUUID) {
-                throw new Error('User authentication required');
-            }
-
-            await axios.post(`/api/admin/user/${userId}`, updatedData, {
-                headers: {
-                    'X-User-UUID': currentUserUUID
-                }
-            });
+            const response = await axiosInstance.post(`/admin/user/${userId}`, updatedData);
             await fetchUsers();
         } catch (error) {
             console.error('Error updating user:', error);
@@ -216,20 +183,11 @@ function UserManagement() {
 
     const handlePromoteSubmit = async () => {
         try {
-            const currentUserUUID = localStorage.getItem('userUUID');
-            if (!currentUserUUID) {
-                throw new Error('User authentication required');
-            }
-
-            const response = await axios.post(`/api/admin/user/${promotingUser.uuid}`, {
+            const response = await axiosInstance.post(`/admin/user/${promotingUser.uuid}`, {
                 role: 'ADMIN',
                 email: adminInfo.email,
                 adminLevel: adminInfo.adminLevel,
                 verified: true
-            }, {
-                headers: {
-                    'X-User-UUID': currentUserUUID
-                }
             });
 
             // 检查响应状态
@@ -250,17 +208,8 @@ function UserManagement() {
 
     const handleDemoteClick = async (userId) => {
         try {
-            const currentUserUUID = localStorage.getItem('userUUID');
-            if (!currentUserUUID) {
-                throw new Error('User authentication required');
-            }
-
-            const response = await axios.post(`/api/admin/user/${userId}`, {
+            const response = await axiosInstance.post(`/admin/user/${userId}`, {
                 role: 'USER'
-            }, {
-                headers: {
-                    'X-User-UUID': currentUserUUID
-                }
             });
 
             // 检查响应状态
@@ -277,22 +226,13 @@ function UserManagement() {
 
     const handleAdminInfoSubmit = async () => {
         try {
-            const currentUserUUID = localStorage.getItem('userUUID');
-            if (!currentUserUUID) {
-                throw new Error('User authentication required');
-            }
-
             const isPromoting = editingUser.role === 'USER' && adminInfo.role === 'ADMIN';
             const isDemoting = editingUser.role === 'ADMIN' && adminInfo.role === 'USER';
             
-            const response = await axios.post(`/api/admin/user/${editingUser.uuid}`, {
+            const response = await axiosInstance.post(`/admin/user/${editingUser.uuid}`, {
                 role: adminInfo.role,
                 email: adminInfo.email,
                 adminLevel: adminInfo.adminLevel
-            }, {
-                headers: {
-                    'X-User-UUID': currentUserUUID
-                }
             });
 
             // 检查响应状态
@@ -316,17 +256,8 @@ function UserManagement() {
 
     const saveModelAccess = async (userId) => {
         try {
-            const currentUserUUID = localStorage.getItem('userUUID');
-            if (!currentUserUUID) {
-                throw new Error('User authentication required');
-            }
-
             const modelAccess = userModelAccess[userId] || [];
-            const response = await axios.put(`/api/admin/user/modelAccess/${userId}`, modelAccess, {
-                headers: {
-                    'X-User-UUID': currentUserUUID
-                }
-            });
+            const response = await axiosInstance.put(`/admin/user/modelAccess/${userId}`, modelAccess);
 
             // 检查响应状态
             if (response.data.code === 0) {
@@ -669,7 +600,7 @@ function UserManagement() {
     );
 }
 
-// ���加样式
+// 加样式
 const modalStyles = `
 .modal {
     position: fixed;
