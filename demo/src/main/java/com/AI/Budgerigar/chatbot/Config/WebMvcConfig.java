@@ -21,7 +21,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // 添加JWT认证拦截器,优先级最高
         registry.addInterceptor(jwtAuthInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/user/login", "/user/register/**", "/health", "/chat/share/**")
+                .excludePathPatterns(
+                    "/user/login", 
+                    "/user/register/**", 
+                    "/health",
+                    "/chat/share/{shareCode}"  // 只排除查看分享内容的接口
+                )
                 .order(1);
 
         // 页面上下文拦截器

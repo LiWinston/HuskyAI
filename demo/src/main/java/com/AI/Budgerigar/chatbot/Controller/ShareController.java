@@ -1,6 +1,7 @@
 package com.AI.Budgerigar.chatbot.Controller;
 
 import com.AI.Budgerigar.chatbot.Entity.Message;
+import com.AI.Budgerigar.chatbot.Nosql.ShareRecord;
 import com.AI.Budgerigar.chatbot.Services.ShareService;
 import com.AI.Budgerigar.chatbot.result.Result;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,18 +29,20 @@ public class ShareController {
         return ResponseEntity.ok().build();
     }
 
-    // Generate sharing link.
+    // Generate sharing link with expiration time
     @PostMapping
     public Result<String> generateShareLink(@RequestBody Map<String, Object> requestData) {
         try {
             String uuid = (String) requestData.get("uuid");
             String conversationId = (String) requestData.get("conversationId");
             List<Integer> messageIndexes = (List<Integer>) requestData.get("messageIndexes");
+            Integer expirationHours = (Integer) requestData.get("expirationHours");
 
-            // Call the service to generate a share link.
-            String shareCode = shareService.generateShareLink(uuid, conversationId, messageIndexes);
+            if (expirationHours == null || expirationHours <= 0) {
+                expirationHours = 24; // Default to 24 hours if not specified or invalid
+            }
 
-            // Return the generated share link.
+            String shareCode = shareService.generateShareLink(uuid, conversationId, messageIndexes, expirationHours);
             return Result.success(shareCode);
         }
         catch (Exception e) {
@@ -48,12 +51,15 @@ public class ShareController {
         }
     }
 
-    // Get details of the shared conversation.
+    // Get details of the shared conversation
     @GetMapping("/{shareCode}")
     public Result<List<Message>> getSharedConversation(HttpServletRequest request, @PathVariable String shareCode) {
         log.info("Request Method: {}", request.getMethod());
         try {
             List<Message> sharedMessages = shareService.getSharedConversation(shareCode);
+            if (sharedMessages.isEmpty()) {
+                return Result.error("Share not found or has expired.");
+            }
             return Result.success(sharedMessages);
         }
         catch (Exception e) {
@@ -62,7 +68,38 @@ public class ShareController {
         }
     }
 
-    // Delete a shared conversation.
+    // Get all shares for a user
+    @GetMapping("/user/{uuid}")
+    public Result<List<ShareRecord>> getUserShares(@PathVariable String uuid) {
+        try {
+            List<ShareRecord> shares = shareService.getUserShares(uuid);
+            return Result.success(shares);
+        }
+        catch (Exception e) {
+            log.error("Failed to retrieve user shares: ", e);
+            return Result.error("Failed to retrieve user shares.");
+        }
+    }
+
+    // Update share expiration time
+    @PutMapping("/{shareCode}/expiration")
+    public Result<String> updateShareExpiration(@PathVariable String shareCode, @RequestBody Map<String, Object> requestData) {
+        try {
+            Integer newExpirationHours = (Integer) requestData.get("expirationHours");
+            if (newExpirationHours == null || newExpirationHours <= 0) {
+                return Result.error("Invalid expiration hours.");
+            }
+
+            shareService.updateShareExpiration(shareCode, newExpirationHours);
+            return Result.success("Share expiration updated successfully.");
+        }
+        catch (Exception e) {
+            log.error("Failed to update share expiration: ", e);
+            return Result.error("Failed to update share expiration.");
+        }
+    }
+
+    // Delete a shared conversation
     @DeleteMapping("/{shareCode}")
     public Result<String> deleteShare(@PathVariable String shareCode) {
         try {
@@ -75,4 +112,16 @@ public class ShareController {
         }
     }
 
+    // Delete all shares for a conversation
+    @DeleteMapping("/conversation/{conversationId}")
+    public Result<String> deleteSharesByConversation(@PathVariable String conversationId) {
+        try {
+            shareService.deleteSharesByConversation(conversationId);
+            return Result.success("All shares for the conversation deleted successfully.");
+        }
+        catch (Exception e) {
+            log.error("Failed to delete conversation shares: ", e);
+            return Result.error("Failed to delete conversation shares.");
+        }
+    }
 }

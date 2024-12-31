@@ -37,7 +37,7 @@ import {
     hopscotch,
     lucario,
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import {FaPlus, FaSignOutAlt, FaAdjust, FaTimes, FaEllipsisV} from 'react-icons/fa';
+import {FaPlus, FaSignOutAlt, FaAdjust, FaTimes, FaEllipsisV, FaShareAlt} from 'react-icons/fa';
 import ConversationItem from './ConversationItem';
 import './Component/Toggle.css';
 import {showSweetAlertWithRetVal} from './Component/sweetAlertUtil';
@@ -50,6 +50,7 @@ import Lottie from 'lottie-react';
 import loadingAnimation from './assets/loading.json';
 import CenterNotice from './Component/CenterNotice';
 import { debounce } from 'lodash';
+import ShareManageModal from './components/ShareManageModal';
 
 const CONVERSATION_SUMMARY_GENERATED = '#CVSG##CVSG##CVSG#';
 
@@ -879,6 +880,7 @@ function Chat() {
                 uuid: localStorage.getItem('userUUID'),
                 conversationId: sharedCid,
                 messageIndexes: selectedMessages,
+                expirationHours: expirationHours
             });
 
             if (response.data.code === 1) {
@@ -1375,10 +1377,16 @@ function Chat() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [isShareMode]);
 
+    const [showShareManageModal, setShowShareManageModal] = useState(false);
+    const [expirationHours, setExpirationHours] = useState(24);
+
     return (
         <div className="chat-interface">
             <button className="theme-button" onClick={() => setShowThemeModal(true)}>
                 <FaAdjust />
+            </button>
+            <button className="share-manage-button" onClick={() => setShowShareManageModal(true)}>
+                <FaShareAlt />
             </button>
             <button className="logout-button" onClick={handleLogout}>
                 <FaSignOutAlt />
@@ -1395,6 +1403,12 @@ function Chat() {
                     isZH={isZH}
                     codeBorderStyle={codeBorderStyle}
                     changeCodeBorderStyle={changeCodeBorderStyle}
+                />
+            )}
+            {showShareManageModal && (
+                <ShareManageModal 
+                    onClose={() => setShowShareManageModal(false)}
+                    isZH={isZH}
                 />
             )}
             <div className="conversation-list" ref={conversationListRef}>
@@ -1600,9 +1614,23 @@ function Chat() {
             {isShareMode && (
                 <div className="share-controls">
                     <div className="share-controls-content">
-                        <span className="selected-count">
-                            {getText('selectedMessages').replace('{count}', selectedMessages.length)}
-                        </span>
+                        <div className="share-controls-left">
+                            <span className="selected-count">
+                                {getText('selectedMessages').replace('{count}', selectedMessages.length)}
+                            </span>
+                            <div className="expiration-select">
+                                <label>{isZH ? '有效期：' : 'Expires in: '}</label>
+                                <select 
+                                    value={expirationHours} 
+                                    onChange={(e) => setExpirationHours(Number(e.target.value))}
+                                >
+                                    <option value={24}>{isZH ? '24小时' : '24 hours'}</option>
+                                    <option value={72}>{isZH ? '3天' : '3 days'}</option>
+                                    <option value={168}>{isZH ? '7天' : '7 days'}</option>
+                                    <option value={720}>{isZH ? '30天' : '30 days'}</option>
+                                </select>
+                            </div>
+                        </div>
                         <div className="share-buttons">
                             <button 
                                 className="share-submit"

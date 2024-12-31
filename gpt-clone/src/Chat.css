@@ -2188,3 +2188,62 @@ pre:hover::-webkit-scrollbar-thumb {
 [data-theme='dark'] .load-error span {
     color: rgba(255, 255, 255, 0.7);
 }
+
+.share-manage-button {
+    position: fixed;
+    top: 20px;
+    right: 70px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 100;
+}
+
+.share-manage-button:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.share-controls-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.expiration-select {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.expiration-select label {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.expiration-select select {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+}
+
+.expiration-select select:hover {
+    border-color: var(--accent-color);
+}
+
+.expiration-select select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px var(--accent-color-alpha);
+}

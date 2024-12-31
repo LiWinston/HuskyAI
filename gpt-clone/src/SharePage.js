@@ -1,5 +1,4 @@
 import React, {useEffect, useRef, useState} from 'react';
-import axios from 'axios';
 import {useParams} from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
